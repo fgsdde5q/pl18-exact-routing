@@ -1,0 +1,55 @@
+<?xml version='1.0' encoding="UTF-8" ?>
+<schema
+   targetNamespace="http://mapserver.gis.umn.edu/mapserver" 
+   xmlns:ms="http://mapserver.gis.umn.edu/mapserver" 
+   xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+   xmlns="http://www.w3.org/2001/XMLSchema"
+   xmlns:gml="http://www.opengis.net/gml/3.2"
+   elementFormDefault="qualified" version="0.1" >
+
+  <import namespace="http://www.opengis.net/gml/3.2"
+          schemaLocation="http://schemas.opengis.net/gml/3.2.1/gml.xsd" />
+
+  <element name="A03_Granice_gmin" 
+           type="ms:A03_Granice_gminType" 
+           substitutionGroup="gml:AbstractFeature" />
+
+  <complexType name="A03_Granice_gminType">
+    <complexContent>
+      <extension base="gml:AbstractFeatureType">
+        <sequence>
+          <element name="msGeometry" type="gml:GeometryPropertyType" minOccurs="0" maxOccurs="1"/>
+          <element name="JPT_KOD_JE" minOccurs="0" type="string"/>
+          <element name="JPT_SJR_KO" minOccurs="0" type="string"/>
+          <element name="JPT_NAZWA_" minOccurs="0" type="string"/>
+          <element name="JPT_POWIER" minOccurs="0" type="string"/>
+          <element name="JPT_ORGAN_" minOccurs="0" type="string"/>
+          <element name="JPT_KOD__1" minOccurs="0" type="string"/>
+          <element name="JPT_NAZWA1" minOccurs="0" type="string"/>
+          <element name="JPT_ORGAN1" minOccurs="0" type="string"/>
+          <element name="JPT_WAZNA_" minOccurs="0" type="string"/>
+          <element name="IIP_PRZEST" minOccurs="0" type="string"/>
+          <element name="IIP_IDENTY" minOccurs="0" type="string"/>
+          <element name="JPT_KJ_IIP" minOccurs="0" type="string"/>
+          <element name="JPT_KJ_I_1" minOccurs="0" type="string"/>
+          <element name="JPT_KJ_I_2" minOccurs="0" type="string"/>
+          <element name="JPT_SPS_KO" minOccurs="0" type="string"/>
+          <element name="JPT_POWI_1" minOccurs="0" type="string"/>
+          <element name="JPT_KJ_I_3" minOccurs="0" type="string"/>
+          <element name="JPT_JOR_ID" minOccurs="0" type="string"/>
+          <element name="WERSJA_OD" minOccurs="0" type="string"/>
+          <element name="WERSJA_DO" minOccurs="0" type="string"/>
+          <element name="WAZNY_OD" minOccurs="0" type="string"/>
+          <element name="WAZNY_DO" minOccurs="0" type="string"/>
+          <element name="IIP_WERSJA" minOccurs="0" type="string"/>
+          <element name="JPT_OPIS" minOccurs="0" type="string"/>
+          <element name="JPT_ID" minOccurs="0" type="string"/>
+          <element name="REGON" minOccurs="0" type="string"/>
+          <element name="SHAPE_LENG" minOccurs="0" type="string"/>
+          <element name="SHAPE_AREA" minOccurs="0" type="string"/>
+        </sequence>
+      </extension>
+    </complexContent>
+  </complexType>
+
+</schema>
