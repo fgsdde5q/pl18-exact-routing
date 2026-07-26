@@ -154,17 +154,19 @@ int main(int argc, char *argv[])
         if (edge.data.forward)
         {
             turns << edge.source << '\t' << edge.target << '\t'
-                  << value(osm_node_ids[turn.from_id]) << '\t'
-                  << value(osm_node_ids[turn.via_id]) << '\t'
-                  << value(osm_node_ids[turn.to_id]) << '\t' << duration << "\tallowed\n";
+                  << value(static_cast<OSMNodeID>(osm_node_ids[turn.from_id])) << '\t'
+                  << value(static_cast<OSMNodeID>(osm_node_ids[turn.via_id])) << '\t'
+                  << value(static_cast<OSMNodeID>(osm_node_ids[turn.to_id])) << '\t' << duration
+                  << "\tallowed\n";
             ++directed_turn_count;
         }
         if (edge.data.backward)
         {
             turns << edge.target << '\t' << edge.source << '\t'
-                  << value(osm_node_ids[turn.to_id]) << '\t'
-                  << value(osm_node_ids[turn.via_id]) << '\t'
-                  << value(osm_node_ids[turn.from_id]) << '\t' << duration << "\tallowed\n";
+                  << value(static_cast<OSMNodeID>(osm_node_ids[turn.to_id])) << '\t'
+                  << value(static_cast<OSMNodeID>(osm_node_ids[turn.via_id])) << '\t'
+                  << value(static_cast<OSMNodeID>(osm_node_ids[turn.from_id])) << '\t' << duration
+                  << "\tallowed\n";
             ++directed_turn_count;
         }
     }
