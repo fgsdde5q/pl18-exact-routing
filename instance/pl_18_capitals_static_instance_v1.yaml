@@ -24,7 +24,7 @@ sources:
     expected_size_bytes: 2078786520
     published_md5_url: https://download.geofabrik.de/europe/poland-260725.osm.pbf.md5
     published_md5: eb188df5acafd002244ed84bb7b650ab
-    sha256: COMPUTED_BY_PREFLIGHT
+    sha256: 2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28
   administrative_boundaries:
     provider: Główny Urząd Geodezji i Kartografii
     registry: Państwowy Rejestr Granic
