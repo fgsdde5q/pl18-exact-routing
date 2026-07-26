@@ -271,16 +271,28 @@ local function project_access(profile, way, result, data)
   end
 end
 
+local function project_has_nonpositive_numeric_maxspeed(value)
+  if not value then
+    return false
+  end
+  local numeric = tonumber(string.match(value, "^%s*([%+%-]?[%d%.]+)"))
+  return numeric and numeric <= 0
+end
+
 local function project_maxspeed(profile, way, result, data)
-  local forward = way:get_value_by_key("maxspeed:forward") or way:get_value_by_key("maxspeed")
-  local backward = way:get_value_by_key("maxspeed:backward") or way:get_value_by_key("maxspeed")
+  local forward_value = way:get_value_by_key("maxspeed:forward") or way:get_value_by_key("maxspeed")
+  local backward_value = way:get_value_by_key("maxspeed:backward") or way:get_value_by_key("maxspeed")
   local symbolic = way:get_value_by_key("source:maxspeed")
-  forward = WayHandlers.parse_maxspeed(forward or symbolic, profile)
-  backward = WayHandlers.parse_maxspeed(backward or symbolic, profile)
-  if forward and forward > 0 and result.forward_speed > 0 then
+  local forward = WayHandlers.parse_maxspeed(forward_value or symbolic, profile)
+  local backward = WayHandlers.parse_maxspeed(backward_value or symbolic, profile)
+  if project_has_nonpositive_numeric_maxspeed(forward_value) then
+    result.forward_mode = mode.inaccessible
+  elseif forward and forward > 0 and result.forward_speed > 0 then
     result.forward_speed = math.min(result.forward_speed, forward * profile.speed_reduction)
   end
-  if backward and backward > 0 and result.backward_speed > 0 then
+  if project_has_nonpositive_numeric_maxspeed(backward_value) then
+    result.backward_mode = mode.inaccessible
+  elseif backward and backward > 0 and result.backward_speed > 0 then
     result.backward_speed = math.min(result.backward_speed, backward * profile.speed_reduction)
   end
 end

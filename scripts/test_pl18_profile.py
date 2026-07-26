@@ -72,6 +72,7 @@ class Pl18ProfileTests(unittest.TestCase):
             "unknown highway forbidden": "not profile.speeds.highway[data.highway]",
             "directional maxspeed": 'get_value_by_key("maxspeed:forward")',
             "static maxspeed cap": "math.min(result.forward_speed, forward * profile.speed_reduction)",
+            "nonpositive maxspeed removes edge": "result.forward_mode = mode.inaccessible",
             "no traffic or stop penalty": "Obstacles.process_node(profile, node)",
             "gate penalty": "gate = 60,",
             "lift gate penalty": "lift_gate = 60,",
