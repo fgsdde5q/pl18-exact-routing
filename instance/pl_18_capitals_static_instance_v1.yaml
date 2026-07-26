@@ -1,0 +1,145 @@
+schema_version: 1
+instance_id: pl_18_capitals_static_instance_v1
+title: Exact route through the 18 Polish voivodeship capitals
+country:
+  name: Poland
+  iso_3166_1_alpha2: PL
+target_count: 18
+solver_status: SOLVER_NOT_STARTED
+
+problem:
+  family: exact_route_optimization
+  route_shape: closed_tour
+  visit_policy: visit_each_target_once
+  routing_terminals:
+    status: NOT_MATERIALIZED
+    note: Road-network terminals and the objective matrix belong to a later stage.
+
+sources:
+  road_network:
+    provider: Geofabrik GmbH
+    format: osm.pbf
+    filename: poland-260725.osm.pbf
+    url: https://download.geofabrik.de/europe/poland-260725.osm.pbf
+    expected_size_bytes: 2078786520
+    published_md5_url: https://download.geofabrik.de/europe/poland-260725.osm.pbf.md5
+    published_md5: eb188df5acafd002244ed84bb7b650ab
+    sha256: 2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28
+  administrative_boundaries:
+    provider: Główny Urząd Geodezji i Kartografii
+    registry: Państwowy Rejestr Granic
+    service: WFS
+    endpoint: https://mapy.geoportal.gov.pl/wss/service/PZGIK/PRG/WFS/AdministrativeBoundaries
+    capabilities_request:
+      service: WFS
+      request: GetCapabilities
+
+targets:
+  - id: bialystok
+    name_pl: Białystok
+    voivodeship:
+      teryt: "20"
+      name_pl: podlaskie
+    capital_role: [voivode, marshal, regional_assembly]
+  - id: bydgoszcz
+    name_pl: Bydgoszcz
+    voivodeship:
+      teryt: "04"
+      name_pl: kujawsko-pomorskie
+    capital_role: [voivode]
+  - id: gdansk
+    name_pl: Gdańsk
+    voivodeship:
+      teryt: "22"
+      name_pl: pomorskie
+    capital_role: [voivode, marshal, regional_assembly]
+  - id: gorzow_wielkopolski
+    name_pl: Gorzów Wielkopolski
+    voivodeship:
+      teryt: "08"
+      name_pl: lubuskie
+    capital_role: [voivode]
+  - id: katowice
+    name_pl: Katowice
+    voivodeship:
+      teryt: "24"
+      name_pl: śląskie
+    capital_role: [voivode, marshal, regional_assembly]
+  - id: kielce
+    name_pl: Kielce
+    voivodeship:
+      teryt: "26"
+      name_pl: świętokrzyskie
+    capital_role: [voivode, marshal, regional_assembly]
+  - id: krakow
+    name_pl: Kraków
+    voivodeship:
+      teryt: "12"
+      name_pl: małopolskie
+    capital_role: [voivode, marshal, regional_assembly]
+  - id: lublin
+    name_pl: Lublin
+    voivodeship:
+      teryt: "06"
+      name_pl: lubelskie
+    capital_role: [voivode, marshal, regional_assembly]
+  - id: lodz
+    name_pl: Łódź
+    voivodeship:
+      teryt: "10"
+      name_pl: łódzkie
+    capital_role: [voivode, marshal, regional_assembly]
+  - id: olsztyn
+    name_pl: Olsztyn
+    voivodeship:
+      teryt: "28"
+      name_pl: warmińsko-mazurskie
+    capital_role: [voivode, marshal, regional_assembly]
+  - id: opole
+    name_pl: Opole
+    voivodeship:
+      teryt: "16"
+      name_pl: opolskie
+    capital_role: [voivode, marshal, regional_assembly]
+  - id: poznan
+    name_pl: Poznań
+    voivodeship:
+      teryt: "30"
+      name_pl: wielkopolskie
+    capital_role: [voivode, marshal, regional_assembly]
+  - id: rzeszow
+    name_pl: Rzeszów
+    voivodeship:
+      teryt: "18"
+      name_pl: podkarpackie
+    capital_role: [voivode, marshal, regional_assembly]
+  - id: szczecin
+    name_pl: Szczecin
+    voivodeship:
+      teryt: "32"
+      name_pl: zachodniopomorskie
+    capital_role: [voivode, marshal, regional_assembly]
+  - id: torun
+    name_pl: Toruń
+    voivodeship:
+      teryt: "04"
+      name_pl: kujawsko-pomorskie
+    capital_role: [marshal, regional_assembly]
+  - id: warszawa
+    name_pl: Warszawa
+    voivodeship:
+      teryt: "14"
+      name_pl: mazowieckie
+    capital_role: [voivode, marshal, regional_assembly]
+  - id: wroclaw
+    name_pl: Wrocław
+    voivodeship:
+      teryt: "02"
+      name_pl: dolnośląskie
+    capital_role: [voivode, marshal, regional_assembly]
+  - id: zielona_gora
+    name_pl: Zielona Góra
+    voivodeship:
+      teryt: "08"
+      name_pl: lubuskie
+    capital_role: [marshal, regional_assembly]

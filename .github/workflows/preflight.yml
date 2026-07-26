@@ -1,0 +1,69 @@
+name: Preflight
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/preflight.yml"
+      - "instance/pl_18_capitals_static_instance_v1.yaml"
+      - "scripts/list_wfs_layers.py"
+      - "scripts/preflight.sh"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/preflight.yml"
+      - "instance/pl_18_capitals_static_instance_v1.yaml"
+      - "scripts/list_wfs_layers.py"
+      - "scripts/preflight.sh"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: preflight-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  preflight:
+    name: Verify static inputs
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+
+      - name: Restore PBF cache
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ runner.temp }}/pl18-pbf/poland-260725.osm.pbf
+          key: pl18-pbf-v1-2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28
+
+      - name: Run preflight
+        shell: bash
+        env:
+          PBF_CACHE_DIR: ${{ runner.temp }}/pl18-pbf
+        run: bash scripts/preflight.sh preflight-output
+
+      - name: Publish job summary
+        if: always()
+        shell: bash
+        run: |
+          if [[ -f preflight-output/preflight-summary.md ]]; then
+            cat preflight-output/preflight-summary.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload compact preflight evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: preflight-${{ github.run_id }}
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 9
+          path: |
+            preflight-output/SHA256SUMS
+            preflight-output/environment.txt
+            preflight-output/prg-capabilities.xml
+            preflight-output/prg-layers.txt
+            preflight-output/preflight-summary.md
