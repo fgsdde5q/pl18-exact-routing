@@ -106,8 +106,8 @@ int main(int argc, char *argv[])
             {
                 const auto from_internal = geometry[ordinal];
                 const auto to_internal = geometry[ordinal + 1];
-                const auto from_osm = osm_node_ids[from_internal];
-                const auto to_osm = osm_node_ids[to_internal];
+                const OSMNodeID from_osm = osm_node_ids[from_internal];
+                const OSMNodeID to_osm = osm_node_ids[to_internal];
                 const auto length = util::coordinate_calculation::greatCircleDistance(
                     coordinates[from_internal], coordinates[to_internal]);
                 segments << edge_based_node_id << '\t' << ordinal << '\t' << value(from_osm)
@@ -119,8 +119,8 @@ int main(int argc, char *argv[])
                          << static_cast<double>(util::toFloating(coordinates[to_internal].lon))
                          << '\t'
                          << static_cast<double>(util::toFloating(coordinates[to_internal].lat))
-                         << '\t' << std::setprecision(3) << length << '\t' << value(*duration)
-                         << '\n';
+                         << '\t' << std::setprecision(3) << length << '\t'
+                         << value(static_cast<SegmentDuration>(*duration)) << '\n';
             }
 
             directed_geometry[edge_based_node_id] = {
