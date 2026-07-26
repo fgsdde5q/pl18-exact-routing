@@ -38,6 +38,7 @@ jobs:
       PBF_SHA256: 2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28
       OSRM_COMMIT: 3c32a51bf58d12bf30efd0808d0b6ad51d334122
       VCPKG_COMMIT: c3867e714dd3a51c272826eea77267876517ed99
+      PYOSMIUM_VERSION: 4.1.1
 
     steps:
       - name: Check out repository
@@ -101,7 +102,13 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             autoconf automake build-essential ca-certificates ccache cmake \
             curl git jq libtool ninja-build pkg-config ruby tar unzip zip zstd \
-            python3-gdal python3-osmium python3-pyproj
+            python3-gdal python3-pip python3-pyproj python3-venv
+          python3 -m venv --system-site-packages "${RUNNER_TEMP}/stage2a-python"
+          "${RUNNER_TEMP}/stage2a-python/bin/python" -m pip install \
+            --disable-pip-version-check \
+            --only-binary=:all: \
+            "osmium==${PYOSMIUM_VERSION}"
+          echo "${RUNNER_TEMP}/stage2a-python/bin" >> "$GITHUB_PATH"
 
       - name: Restore vcpkg binary cache
         if: steps.graph-cache.outputs.cache-hit != 'true'
