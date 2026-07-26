@@ -18,6 +18,9 @@ if [[ "$(git -C "$OSRM_SOURCE" rev-parse --short=7 HEAD)" != "3c32a51" ]]; then
   exit 1
 fi
 
+grep -Fq "inline ToNumeric from_alias" "${OSRM_SOURCE}/include/util/alias.hpp"
+grep -Fq "osrm::from_alias<typename Alias::value_type>(input)" "$TOOL_SOURCE"
+
 cp -- "$TOOL_SOURCE" "$TOOL_TARGET"
 
 python3 - "$CMAKE_FILE" <<'PY'

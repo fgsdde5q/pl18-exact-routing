@@ -26,7 +26,7 @@ std::filesystem::path with_suffix(const std::filesystem::path &base, const std::
 
 template <typename Alias> auto value(const Alias &input)
 {
-    return util::from_alias<typename Alias::value_type>(input);
+    return osrm::from_alias<typename Alias::value_type>(input);
 }
 
 struct DirectedGeometry

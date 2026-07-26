@@ -41,6 +41,7 @@ verify_equal "PBF MD5" "$EXPECTED_PBF_MD5" "$(md5sum "$PBF_PATH" | awk '{print $
 verify_equal "PBF SHA-256" "$EXPECTED_PBF_SHA256" "$(sha256sum "$PBF_PATH" | awk '{print $1}')"
 
 python3 "${REPOSITORY_ROOT}/scripts/test_stage2a_manifest_contract.py"
+python3 "${REPOSITORY_ROOT}/scripts/test_stage2a_cache_contract.py"
 python3 "${REPOSITORY_ROOT}/scripts/generate_pl18_profile.py" \
   --manifest "$MANIFEST" \
   --upstream-car "${OSRM_SOURCE}/profiles/car.lua" \
@@ -50,23 +51,9 @@ UPSTREAM_CAR_PROFILE="${OSRM_SOURCE}/profiles/car.lua" \
   python3 "${REPOSITORY_ROOT}/scripts/test_pl18_profile.py"
 python3 "${REPOSITORY_ROOT}/scripts/test_graph_metadata_export.py"
 
-bash "${REPOSITORY_ROOT}/scripts/prepare_osrm_source.sh" "$OSRM_SOURCE"
-
-cmake_arguments=(
-  -S "$OSRM_SOURCE"
-  -B "$OSRM_BUILD"
-  -G Ninja
-  -DCMAKE_BUILD_TYPE=Release
-  -DBUILD_TESTING=OFF
-  -DENABLE_ASSERTIONS=OFF
-)
-if [[ -n "${VCPKG_ROOT:-}" ]]; then
-  cmake_arguments+=("-DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
-fi
-cmake "${cmake_arguments[@]}"
-cmake --build "$OSRM_BUILD" \
-  --target osrm-extract osrm-partition osrm-customize osrm-graph-dump \
-  --parallel "$JOBS"
+for executable in osrm-extract osrm-partition osrm-customize osrm-graph-dump; do
+  test -x "${OSRM_BUILD}/${executable}"
+done
 
 readonly TOOLCHAIN="${WORK_ROOT}/toolchain.txt"
 {

@@ -10,6 +10,7 @@ on:
       - "instance/pl_18_capitals_static_instance_v2.yaml"
       - "profiles/pl18-car.lua"
       - "scripts/certify_graph_stage.py"
+      - "scripts/build_osrm_stage2a.sh"
       - "scripts/export_graph_metadata.py"
       - "scripts/generate_pl18_profile.py"
       - "scripts/graph_stage.sh"
@@ -17,6 +18,7 @@ on:
       - "scripts/prepare_osrm_source.sh"
       - "scripts/test_graph_metadata_export.py"
       - "scripts/test_pl18_profile.py"
+      - "scripts/test_stage2a_cache_contract.py"
       - "scripts/test_stage2a_manifest_contract.py"
       - "tools/osrm_graph_dump.cpp"
   workflow_dispatch:
@@ -39,6 +41,9 @@ jobs:
       OSRM_COMMIT: 3c32a51bf58d12bf30efd0808d0b6ad51d334122
       VCPKG_COMMIT: c3867e714dd3a51c272826eea77267876517ed99
       PYOSMIUM_VERSION: 4.1.1
+      CCACHE_MAXSIZE: 750M
+      VCPKG_CACHE_MAX_BYTES: 1610612736
+      GRAPH_CACHE_MAX_BYTES: 4831838208
 
     steps:
       - name: Check out repository
@@ -55,8 +60,10 @@ jobs:
             echo "OSRM_BUILD=${RUNNER_TEMP}/osrm-build"
             echo "GRAPH_WORK=${RUNNER_TEMP}/pl18-graph-work"
             echo "GRAPH_CACHE=${RUNNER_TEMP}/pl18-graph-cache"
+            echo "GRAPH_ARCHIVE=${RUNNER_TEMP}/pl18-graph-cache.tar.zst"
             echo "VCPKG_ROOT=${RUNNER_TEMP}/vcpkg"
             echo "VCPKG_DEFAULT_BINARY_CACHE=${RUNNER_TEMP}/vcpkg-bincache"
+            echo "CCACHE_DIR=${RUNNER_TEMP}/ccache"
           } >> "$GITHUB_ENV"
 
       - name: Restore frozen PBF cache
@@ -82,8 +89,8 @@ jobs:
         id: graph-cache
         uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
         with:
-          path: ${{ env.GRAPH_CACHE }}
-          key: pl18-graph-v1-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ github.sha }}
+          path: ${{ env.GRAPH_ARCHIVE }}
+          key: pl18-graph-v2-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ hashFiles('instance/pl_18_capitals_static_instance_v2.yaml') }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp', 'scripts/export_graph_metadata.py') }}
 
       - name: Free hosted-runner disk space
         if: steps.graph-cache.outputs.cache-hit != 'true'
@@ -111,13 +118,24 @@ jobs:
           echo "${RUNNER_TEMP}/stage2a-python/bin" >> "$GITHUB_PATH"
 
       - name: Restore vcpkg binary cache
+        id: vcpkg-cache
         if: steps.graph-cache.outputs.cache-hit != 'true'
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
         with:
           path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
-          key: vcpkg-stage2a-${{ runner.os }}-${{ runner.arch }}-${{ env.VCPKG_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp') }}
+          key: vcpkg-stage2a-v2-${{ runner.os }}-${{ runner.arch }}-${{ env.VCPKG_COMMIT }}-${{ env.OSRM_COMMIT }}
           restore-keys: |
-            vcpkg-stage2a-${{ runner.os }}-${{ runner.arch }}-${{ env.VCPKG_COMMIT }}-
+            vcpkg-stage2a-v2-${{ runner.os }}-${{ runner.arch }}-${{ env.VCPKG_COMMIT }}-
+
+      - name: Restore compiler cache
+        id: ccache
+        if: steps.graph-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-stage2a-v1-${{ runner.os }}-${{ runner.arch }}-${{ env.OSRM_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp') }}
+          restore-keys: |
+            ccache-stage2a-v1-${{ runner.os }}-${{ runner.arch }}-${{ env.OSRM_COMMIT }}-
 
       - name: Check out pinned OSRM source
         if: steps.graph-cache.outputs.cache-hit != 'true'
@@ -137,7 +155,68 @@ jobs:
           git -C "$VCPKG_ROOT" checkout "$VCPKG_COMMIT"
           test "$(git -C "$VCPKG_ROOT" rev-parse HEAD)" = "$VCPKG_COMMIT"
           "$VCPKG_ROOT/bootstrap-vcpkg.sh" -disableMetrics
-          mkdir -p "$VCPKG_DEFAULT_BINARY_CACHE"
+          mkdir -p "$VCPKG_DEFAULT_BINARY_CACHE" "$CCACHE_DIR"
+
+      - name: Configure compiler cache
+        if: steps.graph-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          ccache --set-config "cache_dir=${CCACHE_DIR}"
+          ccache --set-config "max_size=${CCACHE_MAXSIZE}"
+          ccache --set-config compression=true
+          ccache --zero-stats
+
+      - name: Build pinned OSRM tools
+        if: steps.graph-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bash scripts/build_osrm_stage2a.sh "$OSRM_SOURCE" "$OSRM_BUILD"
+
+      - name: Check dependency cache budgets
+        id: dependency-cache-budget
+        if: always() && steps.graph-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          ccache --cleanup || true
+          ccache --show-stats || true
+          vcpkg_bytes="$(du -sb "$VCPKG_DEFAULT_BINARY_CACHE" 2>/dev/null | awk '{print $1}')"
+          vcpkg_bytes="${vcpkg_bytes:-0}"
+          echo "vcpkg_bytes=${vcpkg_bytes}" >> "$GITHUB_OUTPUT"
+          if (( vcpkg_bytes > 0 && vcpkg_bytes <= VCPKG_CACHE_MAX_BYTES )); then
+            echo "vcpkg_eligible=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "vcpkg_eligible=false" >> "$GITHUB_OUTPUT"
+          fi
+          ccache_bytes="$(du -sb "$CCACHE_DIR" 2>/dev/null | awk '{print $1}')"
+          ccache_bytes="${ccache_bytes:-0}"
+          echo "ccache_bytes=${ccache_bytes}" >> "$GITHUB_OUTPUT"
+          if (( ccache_bytes > 0 )); then
+            echo "ccache_eligible=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ccache_eligible=false" >> "$GITHUB_OUTPUT"
+          fi
+          {
+            echo "### Dependency cache budget"
+            echo "- vcpkg: ${vcpkg_bytes} / ${VCPKG_CACHE_MAX_BYTES} bytes"
+            echo "- ccache: ${ccache_bytes} bytes; configured maximum ${CCACHE_MAXSIZE}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Save vcpkg binary cache
+        if: always() && steps.vcpkg-cache.outputs.cache-hit != 'true' && steps.dependency-cache-budget.outputs.vcpkg_eligible == 'true'
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
+          key: vcpkg-stage2a-v2-${{ runner.os }}-${{ runner.arch }}-${{ env.VCPKG_COMMIT }}-${{ env.OSRM_COMMIT }}
+
+      - name: Save compiler cache
+        if: always() && steps.ccache.outputs.cache-hit != 'true' && steps.dependency-cache-budget.outputs.ccache_eligible == 'true'
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-stage2a-v1-${{ runner.os }}-${{ runner.arch }}-${{ env.OSRM_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp') }}
 
       - name: Build twice and certify graph
         if: steps.graph-cache.outputs.cache-hit != 'true'
@@ -158,6 +237,8 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
+          mkdir -p "$GRAPH_CACHE"
+          tar --extract --use-compress-program=unzstd --file="$GRAPH_ARCHIVE" --directory="$GRAPH_CACHE"
           rm -rf results/graph
           mkdir -p results/graph
           cp -R "${GRAPH_CACHE}/results/." results/graph/
@@ -166,12 +247,33 @@ jobs:
             sha256sum --check SHA256SUMS
           )
 
-      - name: Save certified graph products
+      - name: Pack certified graph within cache budget
+        id: graph-cache-budget
         if: steps.graph-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          tar --create --use-compress-program="zstd -T0 -6" \
+            --file="$GRAPH_ARCHIVE" --directory="$GRAPH_CACHE" .
+          graph_bytes="$(stat --format='%s' "$GRAPH_ARCHIVE")"
+          echo "graph_bytes=${graph_bytes}" >> "$GITHUB_OUTPUT"
+          if (( graph_bytes <= GRAPH_CACHE_MAX_BYTES )); then
+            echo "eligible=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "eligible=false" >> "$GITHUB_OUTPUT"
+            rm -f "$GRAPH_ARCHIVE"
+          fi
+          {
+            echo "### Graph cache budget"
+            echo "- archive: ${graph_bytes} / ${GRAPH_CACHE_MAX_BYTES} bytes"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Save certified graph products
+        if: steps.graph-cache.outputs.cache-hit != 'true' && steps.graph-cache-budget.outputs.eligible == 'true'
         uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25
         with:
-          path: ${{ env.GRAPH_CACHE }}
-          key: pl18-graph-v1-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ github.sha }}
+          path: ${{ env.GRAPH_ARCHIVE }}
+          key: pl18-graph-v2-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ hashFiles('instance/pl_18_capitals_static_instance_v2.yaml') }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp', 'scripts/export_graph_metadata.py') }}
 
       - name: Publish validation summary
         if: always()
@@ -186,7 +288,7 @@ jobs:
         with:
           name: road-graph-certificates-${{ github.run_id }}
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 14
           compression-level: 9
           path: results/graph/
 

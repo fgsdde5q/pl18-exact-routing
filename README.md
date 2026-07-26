@@ -10,6 +10,8 @@
 
 `profiles/pl18-car.lua` is generated from the pinned OSRM v26.5.0 `car.lua` and frozen manifest v2. The `Stage 2A road graph` workflow restores the frozen PBF from Actions cache, verifies all input hashes, builds the MLD edge-based graph twice, compares canonical sorted metadata, caches large graph products, and commits only compact certificates under `results/graph/`.
 
+Stage 2A uses separate semantic caches for the frozen PBF, pinned vcpkg binaries, ccache objects, and the certified graph. The dependency caches are saved even when a later build step fails. The graph key excludes the Git commit SHA and instead includes the PBF, manifest, profile, OSRM, exporter, and metadata-export semantics. Enforced cache ceilings reserve at least 500 MB below GitHub's default 10 GB repository cache limit.
+
 No PRG geometry refresh, city-region intersection, M-boundary construction, or route optimization is performed in Stage 2A.
 
 ## Stage 0: preflight
