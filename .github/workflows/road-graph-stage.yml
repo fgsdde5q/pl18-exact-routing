@@ -20,6 +20,7 @@ on:
       - "scripts/test_pl18_profile.py"
       - "scripts/test_stage2a_cache_contract.py"
       - "scripts/test_stage2a_manifest_contract.py"
+      - "scripts/validate_graph_metadata.py"
       - "tools/osrm_graph_dump.cpp"
   workflow_dispatch:
 
@@ -282,6 +283,15 @@ jobs:
           if [[ -f results/graph/validation-report.md ]]; then
             cat results/graph/validation-report.md >> "$GITHUB_STEP_SUMMARY"
           fi
+
+      - name: Upload exporter mismatch diagnostics
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: stage2a-export-mismatches-${{ github.run_attempt }}
+          path: ${{ env.GRAPH_WORK }}/first/metadata/export-mismatches.tsv
+          if-no-files-found: ignore
+          retention-days: 3
 
       - name: Upload compact certificates
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a

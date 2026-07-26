@@ -166,6 +166,9 @@ PY
 
 build_graph first
 
+python3 "${REPOSITORY_ROOT}/scripts/validate_graph_metadata.py" \
+  --metadata "${WORK_ROOT}/first/metadata"
+
 zstd -19 -T0 --rm "${WORK_ROOT}/first/metadata/directed-base-edges.tsv"
 zstd -19 -T0 --rm "${WORK_ROOT}/first/metadata/edge-based-turn-states.tsv"
 rm -rf -- "${WORK_ROOT}/first/graph" "${WORK_ROOT}/first/dump" "${WORK_ROOT}/first/sort-temp"

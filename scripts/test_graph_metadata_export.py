@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import importlib.util
 import json
 import os
 import subprocess
@@ -18,6 +19,7 @@ OSM_FIXTURE = """<?xml version="1.0" encoding="UTF-8"?>
     <nd ref="1"/><nd ref="2"/>
     <tag k="highway" v="residential"/>
     <tag k="maxspeed" v="30"/>
+    <tag k="oneway" v="alternating"/>
   </way>
   <way id="11">
     <nd ref="2"/><nd ref="3"/>
@@ -102,6 +104,61 @@ class GraphMetadataExportTests(unittest.TestCase):
             )
             self.assertLess(snap["distance_m"], 1)
             self.assertEqual(len(snap["available_legal_initial_directions"]), 2)
+
+            subprocess.run(
+                [
+                    "python3",
+                    str(repository_root / "scripts/validate_graph_metadata.py"),
+                    "--metadata",
+                    str(output),
+                ],
+                check=True,
+                env=os.environ.copy(),
+            )
+
+    def test_all_unmatched_pairs_are_reported_together(self) -> None:
+        repository_root = Path(__file__).resolve().parent.parent
+        spec = importlib.util.spec_from_file_location(
+            "export_graph_metadata",
+            repository_root / "scripts/export_graph_metadata.py",
+        )
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            segments = root / "segments.tsv"
+            segments.write_text(
+                "00000000000000000001/00000000000000000002\t0\t0\t1\t2\t0\t0\t1\t1\t1\t1\n"
+                "00000000000000000003/00000000000000000004\t1\t0\t3\t4\t0\t0\t1\t1\t1\t1\n",
+                encoding="utf-8",
+            )
+            candidates = root / "candidates.tsv"
+            candidates.write_text("", encoding="utf-8")
+            diagnostics = root / "mismatches.tsv"
+            with self.assertRaisesRegex(ValueError, "2 OSRM node pairs"):
+                module.resolve_segments(
+                    segments,
+                    candidates,
+                    root / "resolved.tsv",
+                    diagnostics,
+                )
+            self.assertEqual(len(diagnostics.read_text(encoding="utf-8").splitlines()), 3)
+
+    def test_dynamic_oneway_values_match_osrm_behavior(self) -> None:
+        repository_root = Path(__file__).resolve().parent.parent
+        spec = importlib.util.spec_from_file_location(
+            "export_graph_metadata_oneway",
+            repository_root / "scripts/export_graph_metadata.py",
+        )
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        handler = module.CandidateExporter.__new__(module.CandidateExporter)
+        for value in ("alternating", "reversible"):
+            with self.subTest(oneway=value):
+                self.assertEqual(
+                    handler.direction_flags({"oneway": value}, "secondary"),
+                    (True, True),
+                )
 
 
 if __name__ == "__main__":

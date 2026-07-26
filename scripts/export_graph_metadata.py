@@ -220,7 +220,7 @@ class CandidateExporter(osmium.SimpleHandler):
         ):
             return True, False
         if oneway in {"reversible", "alternating"}:
-            return False, False
+            return True, True
         return True, True
 
     def effective_speed(self, tags, highway: str, direction: str) -> float:
@@ -354,11 +354,24 @@ def parse_stable(identifier: str) -> tuple[int, int, int, int, int]:
     return tuple(int(value) for value in identifier.split("/"))
 
 
-def resolve_segments(segment_sorted: Path, candidate_sorted: Path, resolved: Path) -> int:
+def resolve_segments(
+    segment_sorted: Path,
+    candidate_sorted: Path,
+    resolved: Path,
+    unmatched: Path,
+) -> int:
     count = 0
+    unmatched_keys = 0
+    unmatched_segments = 0
     with segment_sorted.open(encoding="utf-8", newline="") as segment_source, candidate_sorted.open(
         encoding="utf-8", newline=""
-    ) as candidate_source, resolved.open("w", encoding="utf-8", newline="") as output:
+    ) as candidate_source, resolved.open("w", encoding="utf-8", newline="") as output, unmatched.open(
+        "w", encoding="utf-8", newline=""
+    ) as diagnostics:
+        diagnostics.write(
+            "pair_key\tedge_based_node_id\tgeometry_segment_ordinal\tfrom_node_id"
+            "\tto_node_id\tlength_m\tduration_ds\n"
+        )
         segment_groups = group_rows(csv.reader(segment_source, delimiter="\t"))
         candidate_groups = group_rows(csv.reader(candidate_source, delimiter="\t"))
         candidate_key, candidates = next(candidate_groups, (None, None))
@@ -366,7 +379,24 @@ def resolve_segments(segment_sorted: Path, candidate_sorted: Path, resolved: Pat
             while candidate_key is not None and candidate_key < key:
                 candidate_key, candidates = next(candidate_groups, (None, None))
             if candidate_key != key:
-                raise ValueError(f"no legal OSM candidate for OSRM segment {key}")
+                unmatched_keys += 1
+                unmatched_segments += len(segments)
+                for segment in segments:
+                    diagnostics.write(
+                        "\t".join(
+                            [
+                                key,
+                                segment[1],
+                                segment[2],
+                                segment[3],
+                                segment[4],
+                                segment[9],
+                                segment[10],
+                            ]
+                        )
+                        + "\n"
+                    )
+                continue
             for segment in segments:
                 (
                     _,
@@ -425,6 +455,12 @@ def resolve_segments(segment_sorted: Path, candidate_sorted: Path, resolved: Pat
                     + "\n"
                 )
                 count += 1
+    if unmatched_keys:
+        raise ValueError(
+            f"{unmatched_keys} OSRM node pairs ({unmatched_segments} segments) have no legal "
+            f"OSM candidate; see {unmatched}"
+        )
+    unmatched.unlink()
     return count
 
 
@@ -636,7 +672,12 @@ def main() -> int:
     sort_file(segment_keyed, segment_sorted, ["-k1,1"], args.temp)
     sort_file(candidates, candidate_sorted, ["-k1,1", "-k2,2n", "-k3,3n", "-k4,4n"], args.temp)
     resolved = args.temp / "resolved-segments.tsv"
-    resolved_segment_count = resolve_segments(segment_sorted, candidate_sorted, resolved)
+    resolved_segment_count = resolve_segments(
+        segment_sorted,
+        candidate_sorted,
+        resolved,
+        args.output / "export-mismatches.tsv",
+    )
 
     base_edges = args.output / "directed-base-edges.tsv"
     sort_file(resolved, base_edges, ["-k1,1"], args.temp, unique=True)
