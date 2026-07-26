@@ -1,0 +1,61 @@
+name: Preflight
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/preflight.yml"
+      - "instance/pl_18_capitals_static_instance_v1.yaml"
+      - "scripts/list_wfs_layers.py"
+      - "scripts/preflight.sh"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/preflight.yml"
+      - "instance/pl_18_capitals_static_instance_v1.yaml"
+      - "scripts/list_wfs_layers.py"
+      - "scripts/preflight.sh"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: preflight-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  preflight:
+    name: Verify static inputs
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Run preflight
+        shell: bash
+        run: bash scripts/preflight.sh preflight-output
+
+      - name: Publish job summary
+        if: always()
+        shell: bash
+        run: |
+          if [[ -f preflight-output/preflight-summary.md ]]; then
+            cat preflight-output/preflight-summary.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload compact preflight evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: preflight-${{ github.run_id }}
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 9
+          path: |
+            preflight-output/SHA256SUMS
+            preflight-output/environment.txt
+            preflight-output/prg-capabilities.xml
+            preflight-output/prg-layers.txt
+            preflight-output/preflight-summary.md
