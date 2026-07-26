@@ -1,5 +1,17 @@
 # pl18-exact-routing
 
+## Frozen manifests
+
+- `instance/pl_18_capitals_static_instance_v1.yaml` preserves the Stage 1 contract and provenance.
+- `instance/pl_18_capitals_static_instance_v2.yaml` is the sole semantic source for Stage 2A.
+- `instance/CURRENT` is the machine-readable pointer to the current manifest.
+
+## Stage 2A
+
+`profiles/pl18-car.lua` is generated from the pinned OSRM v26.5.0 `car.lua` and frozen manifest v2. The `Stage 2A road graph` workflow restores the frozen PBF from Actions cache, verifies all input hashes, builds the MLD edge-based graph twice, compares canonical sorted metadata, caches large graph products, and commits only compact certificates under `results/graph/`.
+
+No PRG geometry refresh, city-region intersection, M-boundary construction, or route optimization is performed in Stage 2A.
+
 ## Stage 0: preflight
 
 The preflight workflow verifies the pinned Poland OSM PBF and records the

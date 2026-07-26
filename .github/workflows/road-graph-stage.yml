@@ -1,0 +1,191 @@
+name: Stage 2A road graph
+
+on:
+  push:
+    branches:
+      - codex/stage-2a-road-graph
+    paths:
+      - ".github/workflows/road-graph-stage.yml"
+      - "instance/CURRENT"
+      - "instance/pl_18_capitals_static_instance_v2.yaml"
+      - "profiles/pl18-car.lua"
+      - "scripts/certify_graph_stage.py"
+      - "scripts/export_graph_metadata.py"
+      - "scripts/generate_pl18_profile.py"
+      - "scripts/graph_stage.sh"
+      - "scripts/manifest_json.rb"
+      - "scripts/prepare_osrm_source.sh"
+      - "scripts/test_graph_metadata_export.py"
+      - "scripts/test_pl18_profile.py"
+      - "scripts/test_stage2a_manifest_contract.py"
+      - "tools/osrm_graph_dump.cpp"
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: write
+
+concurrency:
+  group: road-graph-stage-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  road-graph:
+    name: Build and certify frozen graph
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    env:
+      PBF_SHA256: 2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28
+      OSRM_COMMIT: 3c32a51bf58d12bf30efd0808d0b6ad51d334122
+      PBF_CACHE_DIR: ${{ runner.temp }}/pl18-pbf
+      OSRM_SOURCE: ${{ runner.temp }}/osrm-backend
+      OSRM_BUILD: ${{ runner.temp }}/osrm-build
+      GRAPH_WORK: ${{ runner.temp }}/pl18-graph-work
+      GRAPH_CACHE: ${{ runner.temp }}/pl18-graph-cache
+      VCPKG_ROOT: ${{ runner.temp }}/vcpkg
+      VCPKG_COMMIT: c3867e714dd3a51c272826eea77267876517ed99
+      VCPKG_DEFAULT_BINARY_CACHE: ${{ runner.temp }}/vcpkg-bincache
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+
+      - name: Restore frozen PBF cache
+        id: pbf-cache
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ env.PBF_CACHE_DIR }}/poland-260725.osm.pbf
+          key: pl18-pbf-v2-${{ runner.os }}-${{ runner.arch }}-${{ env.PBF_SHA256 }}
+          restore-keys: |
+            pl18-pbf-v1-${{ env.PBF_SHA256 }}
+
+      - name: Require cached PBF and verify frozen bytes
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          pbf="${PBF_CACHE_DIR}/poland-260725.osm.pbf"
+          test -f "$pbf"
+          test "$(stat --format='%s' "$pbf")" = "2078786520"
+          test "$(md5sum "$pbf" | awk '{print $1}')" = "eb188df5acafd002244ed84bb7b650ab"
+          test "$(sha256sum "$pbf" | awk '{print $1}')" = "$PBF_SHA256"
+
+      - name: Restore certified graph cache
+        id: graph-cache
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ env.GRAPH_CACHE }}
+          key: pl18-graph-v1-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ github.sha }}
+
+      - name: Free hosted-runner disk space
+        if: steps.graph-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup
+          df -h /
+
+      - name: Install pinned-build dependencies
+        if: steps.graph-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            autoconf automake build-essential ca-certificates ccache cmake \
+            curl git jq libtool ninja-build pkg-config ruby tar unzip zip zstd \
+            python3-gdal python3-osmium python3-pyproj
+
+      - name: Restore vcpkg binary cache
+        if: steps.graph-cache.outputs.cache-hit != 'true'
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
+          key: vcpkg-stage2a-${{ runner.os }}-${{ runner.arch }}-${{ env.VCPKG_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp') }}
+          restore-keys: |
+            vcpkg-stage2a-${{ runner.os }}-${{ runner.arch }}-${{ env.VCPKG_COMMIT }}-
+
+      - name: Check out pinned OSRM source
+        if: steps.graph-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git clone --filter=blob:none https://github.com/Project-OSRM/osrm-backend.git "$OSRM_SOURCE"
+          git -C "$OSRM_SOURCE" checkout "$OSRM_COMMIT"
+          test "$(git -C "$OSRM_SOURCE" rev-parse HEAD)" = "$OSRM_COMMIT"
+
+      - name: Set up pinned vcpkg
+        if: steps.graph-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git clone --filter=blob:none https://github.com/microsoft/vcpkg.git "$VCPKG_ROOT"
+          git -C "$VCPKG_ROOT" checkout "$VCPKG_COMMIT"
+          test "$(git -C "$VCPKG_ROOT" rev-parse HEAD)" = "$VCPKG_COMMIT"
+          "$VCPKG_ROOT/bootstrap-vcpkg.sh" -disableMetrics
+          mkdir -p "$VCPKG_DEFAULT_BINARY_CACHE"
+
+      - name: Build twice and certify graph
+        if: steps.graph-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$GRAPH_WORK" "$GRAPH_CACHE" results/graph
+          bash scripts/graph_stage.sh \
+            "${PBF_CACHE_DIR}/poland-260725.osm.pbf" \
+            "$OSRM_SOURCE" \
+            "$OSRM_BUILD" \
+            "$GRAPH_WORK" \
+            "$GRAPH_CACHE" \
+            "${GITHUB_WORKSPACE}/results/graph"
+
+      - name: Restore compact certificates from graph cache
+        if: steps.graph-cache.outputs.cache-hit == 'true'
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          rm -rf results/graph
+          mkdir -p results/graph
+          cp -R "${GRAPH_CACHE}/results/." results/graph/
+          (
+            cd results/graph
+            sha256sum --check SHA256SUMS
+          )
+
+      - name: Save certified graph products
+        if: steps.graph-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ env.GRAPH_CACHE }}
+          key: pl18-graph-v1-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ github.sha }}
+
+      - name: Publish validation summary
+        if: always()
+        shell: bash
+        run: |
+          if [[ -f results/graph/validation-report.md ]]; then
+            cat results/graph/validation-report.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload compact certificates
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: road-graph-certificates-${{ github.run_id }}
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 9
+          path: results/graph/
+
+      - name: Commit compact certificates to branch
+        if: github.event_name == 'push' && steps.graph-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/graph
+          if ! git diff --cached --quiet; then
+            git commit -m "Add Stage 2A graph certificates"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
