@@ -22,6 +22,7 @@ readonly EXPECTED_PBF_MD5="eb188df5acafd002244ed84bb7b650ab"
 readonly EXPECTED_PBF_SHA256="2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28"
 readonly OSRM_COMMIT="3c32a51bf58d12bf30efd0808d0b6ad51d334122"
 readonly JOBS="${JOBS:-$(nproc)}"
+readonly OSRM_PROFILE_LUA_PATH="${OSRM_SOURCE}/profiles/?.lua;${OSRM_SOURCE}/profiles/?/init.lua;;"
 
 mkdir -p -- "$WORK_ROOT" "$CACHE_ROOT" "$RESULTS_ROOT"
 
@@ -54,6 +55,7 @@ python3 "${REPOSITORY_ROOT}/scripts/test_graph_metadata_export.py"
 for executable in osrm-extract osrm-partition osrm-customize osrm-graph-dump; do
   test -x "${OSRM_BUILD}/${executable}"
 done
+test -f "${OSRM_SOURCE}/profiles/lib/set.lua"
 
 readonly TOOLCHAIN="${WORK_ROOT}/toolchain.txt"
 {
@@ -94,6 +96,7 @@ build_graph() {
   mkdir -p -- "$graph_root" "$dump_root" "$metadata_root" "$temp_root"
 
   /usr/bin/time -v -o "${build_root}/extract.time" \
+    env "LUA_PATH=${OSRM_PROFILE_LUA_PATH}" \
     "${OSRM_BUILD}/osrm-extract" \
     --threads "$JOBS" \
     --profile "$PROFILE" \

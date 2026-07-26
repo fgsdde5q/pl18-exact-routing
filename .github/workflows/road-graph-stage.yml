@@ -90,7 +90,7 @@ jobs:
         uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
         with:
           path: ${{ env.GRAPH_ARCHIVE }}
-          key: pl18-graph-v2-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ hashFiles('instance/pl_18_capitals_static_instance_v2.yaml') }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp', 'scripts/export_graph_metadata.py') }}
+          key: pl18-graph-v2-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ hashFiles('instance/pl_18_capitals_static_instance_v2.yaml') }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp', 'scripts/export_graph_metadata.py', 'scripts/graph_stage.sh') }}
 
       - name: Free hosted-runner disk space
         if: steps.graph-cache.outputs.cache-hit != 'true'
@@ -273,7 +273,7 @@ jobs:
         uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25
         with:
           path: ${{ env.GRAPH_ARCHIVE }}
-          key: pl18-graph-v2-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ hashFiles('instance/pl_18_capitals_static_instance_v2.yaml') }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp', 'scripts/export_graph_metadata.py') }}
+          key: pl18-graph-v2-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ hashFiles('instance/pl_18_capitals_static_instance_v2.yaml') }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp', 'scripts/export_graph_metadata.py', 'scripts/graph_stage.sh') }}
 
       - name: Publish validation summary
         if: always()
