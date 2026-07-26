@@ -7,6 +7,7 @@ readonly PBF_URL="https://download.geofabrik.de/europe/${PBF_FILENAME}"
 readonly PBF_MD5_URL="${PBF_URL}.md5"
 readonly EXPECTED_PBF_SIZE_BYTES="2078786520"
 readonly EXPECTED_PBF_MD5="eb188df5acafd002244ed84bb7b650ab"
+readonly EXPECTED_PBF_SHA256="2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28"
 readonly PRG_WFS_URL="https://mapy.geoportal.gov.pl/wss/service/PZGIK/PRG/WFS/AdministrativeBoundaries"
 
 if (( $# > 1 )); then
@@ -18,11 +19,18 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 readonly SCRIPT_DIR
 readonly OUTPUT_DIR="${1:-${SCRIPT_DIR}/../preflight-output}"
 readonly TEMP_ROOT="${RUNNER_TEMP:-${TMPDIR:-/tmp}}"
+readonly PBF_CACHE_DIR="${PBF_CACHE_DIR:-}"
 WORK_DIR="$(mktemp -d "${TEMP_ROOT%/}/pl18-preflight.XXXXXX")"
 readonly WORK_DIR
 trap 'rm -rf -- "$WORK_DIR"' EXIT
 
-readonly PBF_PATH="${WORK_DIR}/${PBF_FILENAME}"
+if [[ -n "$PBF_CACHE_DIR" ]]; then
+  mkdir -p -- "$PBF_CACHE_DIR"
+  PBF_PATH="${PBF_CACHE_DIR%/}/${PBF_FILENAME}"
+else
+  PBF_PATH="${WORK_DIR}/${PBF_FILENAME}"
+fi
+readonly PBF_PATH
 readonly MD5_PATH="${WORK_DIR}/${PBF_FILENAME}.md5"
 readonly CAPABILITIES_PATH="${OUTPUT_DIR}/prg-capabilities.xml"
 readonly LAYERS_PATH="${OUTPUT_DIR}/prg-layers.txt"
@@ -60,19 +68,26 @@ if [[ "$published_md5" != "$EXPECTED_PBF_MD5" ]]; then
   exit 1
 fi
 
-echo "Downloading ${PBF_FILENAME} into runner temporary storage..."
-curl \
-  --fail \
-  --location \
-  --silent \
-  --show-error \
-  --retry 5 \
-  --retry-all-errors \
-  --retry-delay 5 \
-  --connect-timeout 30 \
-  --continue-at - \
-  --output "$PBF_PATH" \
-  "$PBF_URL"
+if [[ -f "$PBF_PATH" ]]; then
+  pbf_cache_status="hit"
+  echo "Using cached ${PBF_FILENAME}..."
+else
+  pbf_cache_status="miss"
+  echo "Downloading ${PBF_FILENAME} into runner temporary storage..."
+  curl \
+    --fail \
+    --location \
+    --silent \
+    --show-error \
+    --retry 5 \
+    --retry-all-errors \
+    --retry-delay 5 \
+    --connect-timeout 30 \
+    --continue-at - \
+    --output "$PBF_PATH" \
+    "$PBF_URL"
+fi
+readonly pbf_cache_status
 
 actual_size_bytes="$(stat --format='%s' "$PBF_PATH")"
 readonly actual_size_bytes
@@ -81,15 +96,21 @@ if [[ "$actual_size_bytes" != "$EXPECTED_PBF_SIZE_BYTES" ]]; then
   exit 1
 fi
 
-echo "Checking the downloaded PBF against the published MD5..."
-(
-  cd -- "$WORK_DIR"
-  md5sum --check --strict "${PBF_FILENAME}.md5"
-)
+echo "Checking the PBF against the published MD5..."
+pbf_md5="$(md5sum "$PBF_PATH" | awk '{print $1}')"
+readonly pbf_md5
+if [[ "$pbf_md5" != "$published_md5" ]]; then
+  echo "PBF MD5 mismatch: expected ${published_md5}, got ${pbf_md5}" >&2
+  exit 1
+fi
 
 echo "Computing SHA-256..."
 pbf_sha256="$(sha256sum "$PBF_PATH" | awk '{print $1}')"
 readonly pbf_sha256
+if [[ "$pbf_sha256" != "$EXPECTED_PBF_SHA256" ]]; then
+  echo "PBF SHA-256 mismatch: expected ${EXPECTED_PBF_SHA256}, got ${pbf_sha256}" >&2
+  exit 1
+fi
 
 echo "Fetching PRG WFS GetCapabilities..."
 curl \
@@ -120,6 +141,7 @@ readonly capabilities_sha256
 
 {
   printf 'solver_status=SOLVER_NOT_STARTED\n'
+  printf 'pbf_cache_status=%s\n' "$pbf_cache_status"
   printf 'generated_at_utc=%s\n' "$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
   printf 'runner_os=%s\n' "${RUNNER_OS:-unknown}"
   printf 'runner_arch=%s\n' "${RUNNER_ARCH:-unknown}"
@@ -136,12 +158,13 @@ readonly capabilities_sha256
 {
   printf '# Preflight summary\n\n'
   printf -- "- Status: \`SOLVER_NOT_STARTED\`\n"
+  printf -- "- PBF cache: \`%s\`\n" "$pbf_cache_status"
   printf -- "- OSM input: \`%s\`\n" "$PBF_FILENAME"
   printf -- "- Verified size: \`%s\` bytes\n" "$actual_size_bytes"
   printf -- "- Verified published MD5: \`%s\`\n" "$published_md5"
   printf -- "- Computed PBF SHA-256: \`%s\`\n" "$pbf_sha256"
   printf -- "- PRG WFS FeatureType count: \`%s\`\n" "$layer_count"
-  printf -- '- PBF artifact policy: omitted; the 2 GB input remains in temporary runner storage only.\n'
+  printf -- '- PBF artifact policy: omitted; persistence is handled only by GitHub Actions cache.\n'
   printf '\nNo optimizer or solver was executed during this stage.\n'
 } > "$SUMMARY_PATH"
 
