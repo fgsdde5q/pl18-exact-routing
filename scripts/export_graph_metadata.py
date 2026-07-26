@@ -24,6 +24,21 @@ def stable_id(way: int, ordinal: int, direction: int, from_node: int, to_node: i
     return f"{way}/{ordinal}/{direction}/{from_node}/{to_node}"
 
 
+def is_zero_cost_duplicate_segment(row: dict[str, str]) -> bool:
+    if row["from_node_id"] != row["to_node_id"]:
+        return False
+    coordinates_match = (
+        float(row["from_longitude"]) == float(row["to_longitude"])
+        and float(row["from_latitude"]) == float(row["to_latitude"])
+    )
+    if not coordinates_match or float(row["length_m"]) > 0.001 or int(row["duration_ds"]) != 0:
+        raise ValueError(
+            "OSRM self-loop segment is not a zero-cost duplicate: "
+            f"{row['edge_based_node_id']}/{row['geometry_segment_ordinal']}"
+        )
+    return True
+
+
 def load_manifest(repository_root: Path, manifest_path: Path) -> dict:
     result = subprocess.run(
         [
@@ -532,7 +547,11 @@ def main() -> int:
         "w", encoding="utf-8", newline=""
     ) as target:
         reader = csv.DictReader(source, delimiter="\t")
+        skipped_zero_cost_duplicate_segments = 0
         for row in reader:
+            if is_zero_cost_duplicate_segment(row):
+                skipped_zero_cost_duplicate_segments += 1
+                continue
             from_node = int(row["from_node_id"])
             to_node = int(row["to_node_id"])
             needed_pairs.add((from_node << 64) | to_node)
@@ -598,6 +617,7 @@ def main() -> int:
         "osm_ways_read": handler.ways_read,
         "legal_candidate_segments": handler.legal_candidates,
         "resolved_osrm_geometry_segments": resolved_segment_count,
+        "skipped_zero_cost_duplicate_osrm_segments": skipped_zero_cost_duplicate_segments,
         "legal_directed_motorcar_edges": sum(1 for _ in base_edges.open(encoding="utf-8")),
         "edge_based_turn_states": sum(1 for _ in turn_states.open(encoding="utf-8")),
         "enforced_turn_restrictions": handler.enforced_restrictions,

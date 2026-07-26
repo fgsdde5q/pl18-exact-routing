@@ -45,7 +45,8 @@ class GraphMetadataExportTests(unittest.TestCase):
                 "edge_based_node_id\tgeometry_segment_ordinal\tfrom_node_id\tto_node_id"
                 "\tfrom_longitude\tfrom_latitude\tto_longitude\tto_latitude"
                 "\tlength_m\tduration_ds\n"
-                "0\t0\t1\t2\t20.985950\t52.268850\t20.986950\t52.268850\t68.300\t102\n"
+                "0\t0\t1\t1\t20.985950\t52.268850\t20.985950\t52.268850\t0.000\t0\n"
+                "0\t1\t1\t2\t20.985950\t52.268850\t20.986950\t52.268850\t68.300\t102\n"
                 "1\t0\t2\t1\t20.986950\t52.268850\t20.985950\t52.268850\t68.300\t102\n",
                 encoding="utf-8",
             )
@@ -91,6 +92,7 @@ class GraphMetadataExportTests(unittest.TestCase):
             )
             self.assertEqual(summary["legal_directed_motorcar_edges"], 2)
             self.assertEqual(summary["edge_based_turn_states"], 2)
+            self.assertEqual(summary["skipped_zero_cost_duplicate_osrm_segments"], 1)
             self.assertEqual(summary["rejected_private_nonmotorcar_edges"], 2)
             self.assertEqual(summary["forbidden_ferry_edges"], 2)
             snap = json.loads(
