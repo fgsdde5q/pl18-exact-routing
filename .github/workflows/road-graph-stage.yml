@@ -37,20 +37,26 @@ jobs:
     env:
       PBF_SHA256: 2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28
       OSRM_COMMIT: 3c32a51bf58d12bf30efd0808d0b6ad51d334122
-      PBF_CACHE_DIR: ${{ runner.temp }}/pl18-pbf
-      OSRM_SOURCE: ${{ runner.temp }}/osrm-backend
-      OSRM_BUILD: ${{ runner.temp }}/osrm-build
-      GRAPH_WORK: ${{ runner.temp }}/pl18-graph-work
-      GRAPH_CACHE: ${{ runner.temp }}/pl18-graph-cache
-      VCPKG_ROOT: ${{ runner.temp }}/vcpkg
       VCPKG_COMMIT: c3867e714dd3a51c272826eea77267876517ed99
-      VCPKG_DEFAULT_BINARY_CACHE: ${{ runner.temp }}/vcpkg-bincache
 
     steps:
       - name: Check out repository
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
           fetch-depth: 0
+
+      - name: Set runner paths
+        shell: bash
+        run: |
+          {
+            echo "PBF_CACHE_DIR=${RUNNER_TEMP}/pl18-pbf"
+            echo "OSRM_SOURCE=${RUNNER_TEMP}/osrm-backend"
+            echo "OSRM_BUILD=${RUNNER_TEMP}/osrm-build"
+            echo "GRAPH_WORK=${RUNNER_TEMP}/pl18-graph-work"
+            echo "GRAPH_CACHE=${RUNNER_TEMP}/pl18-graph-cache"
+            echo "VCPKG_ROOT=${RUNNER_TEMP}/vcpkg"
+            echo "VCPKG_DEFAULT_BINARY_CACHE=${RUNNER_TEMP}/vcpkg-bincache"
+          } >> "$GITHUB_ENV"
 
       - name: Restore frozen PBF cache
         id: pbf-cache
