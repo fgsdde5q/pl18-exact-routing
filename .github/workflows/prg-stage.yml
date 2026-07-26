@@ -8,8 +8,11 @@ on:
       - "input/prg/**"
       - "instance/pl_18_capitals_static_instance_v1.yaml"
       - "results/prg/**"
+      - "scripts/lock_prg_provenance.py"
       - "scripts/prg_stage.py"
       - "scripts/prg_stage.sh"
+      - "scripts/test_prg_manifest_contract.py"
+      - "scripts/test_prg_provenance_contract.py"
       - "scripts/validate_prg_stage.py"
   push:
     branches:
@@ -20,8 +23,11 @@ on:
       - "input/prg/**"
       - "instance/pl_18_capitals_static_instance_v1.yaml"
       - "results/prg/**"
+      - "scripts/lock_prg_provenance.py"
       - "scripts/prg_stage.py"
       - "scripts/prg_stage.sh"
+      - "scripts/test_prg_manifest_contract.py"
+      - "scripts/test_prg_provenance_contract.py"
       - "scripts/validate_prg_stage.py"
 
 permissions:
@@ -45,10 +51,10 @@ jobs:
         shell: bash
         run: |
           sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends gdal-bin python3-gdal
+          sudo apt-get install --yes --no-install-recommends gdal-bin python3-gdal zstd
           /usr/bin/python3 -c 'from osgeo import gdal, ogr; print("GDAL " + gdal.VersionInfo("RELEASE_NAME") + "; GEOS " + ".".join(str(value) for value in (ogr.GetGEOSVersionMajor(), ogr.GetGEOSVersionMinor(), ogr.GetGEOSVersionMicro())))'
 
-      - name: Extract official PRG boundaries
+      - name: Regenerate and validate frozen PRG artifacts
         shell: bash
         env:
           PYTHON_BIN: /usr/bin/python3
@@ -71,7 +77,11 @@ jobs:
           compression-level: 9
           path: |
             input/prg/DescribeFeatureType.xml
+            input/prg/source-manifest.json
+            input/prg/prg-18-raw.gml.zst
+            input/prg/history/*.gml.zst
             results/prg/SHA256SUMS
+            results/prg/derived-artifacts.json
             results/prg/prg-18-raw.gml
             results/prg/prg-18-original.gpkg
             results/prg/prg-18-computational.gpkg

@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "provenance_status": "PRG_PROVENANCE_LOCKED",
+  "solver_status": "SOLVER_NOT_STARTED",
+  "selected_raw_gml_sha256": "adf261aae31257dd24843b6f6c0e694efb40041aae3913b1c27aa4801866974c",
+  "source_manifest": {
+    "path": "input/prg/source-manifest.json",
+    "sha256": "2d084b7fdc9c0048d83e7153ad5abff32f9184efa42a0bfbff29731ddabcc092"
+  },
+  "artifacts": {
+    "results/prg/prg-18-original.gpkg": {
+      "artifact_sha256": "de6d9431bfbb5da36bf2cfe61108f5c62d694a4d48d9b12d9322d9d3d4cb1263",
+      "raw_gml_sha256": "adf261aae31257dd24843b6f6c0e694efb40041aae3913b1c27aa4801866974c",
+      "manifest_sha256": "2d084b7fdc9c0048d83e7153ad5abff32f9184efa42a0bfbff29731ddabcc092",
+      "source_manifest_sha256": "2d084b7fdc9c0048d83e7153ad5abff32f9184efa42a0bfbff29731ddabcc092",
+      "instance_manifest_sha256": "9b3508725f5e19a843235b931d8e37d7bd4fcba976bf6a71a905b6cb0630a3b4",
+      "gdal_version": "3.13.0",
+      "geos_version": "3.14.1",
+      "generator": {
+        "script": "scripts/prg_stage.py",
+        "script_sha256": "4862ddd79239f7d7c9f9381e58994338707b7a963ea9c90937af3b1158064f2e"
+      }
+    },
+    "results/prg/prg-18-computational.gpkg": {
+      "artifact_sha256": "ae8c1a6ac592434e48f0d1ae1db261da5c89ac82b482605bd9387eee36134a4c",
+      "raw_gml_sha256": "adf261aae31257dd24843b6f6c0e694efb40041aae3913b1c27aa4801866974c",
+      "manifest_sha256": "2d084b7fdc9c0048d83e7153ad5abff32f9184efa42a0bfbff29731ddabcc092",
+      "source_manifest_sha256": "2d084b7fdc9c0048d83e7153ad5abff32f9184efa42a0bfbff29731ddabcc092",
+      "instance_manifest_sha256": "9b3508725f5e19a843235b931d8e37d7bd4fcba976bf6a71a905b6cb0630a3b4",
+      "gdal_version": "3.13.0",
+      "geos_version": "3.14.1",
+      "generator": {
+        "script": "scripts/prg_stage.py",
+        "script_sha256": "4862ddd79239f7d7c9f9381e58994338707b7a963ea9c90937af3b1158064f2e"
+      }
+    },
+    "results/prg/prg-18.geojson": {
+      "artifact_sha256": "67f1b0ba044faa40b0bc22f2f4b08d61d1ad1982aca2e6615e6ab12a9334ed6d",
+      "raw_gml_sha256": "adf261aae31257dd24843b6f6c0e694efb40041aae3913b1c27aa4801866974c",
+      "manifest_sha256": "2d084b7fdc9c0048d83e7153ad5abff32f9184efa42a0bfbff29731ddabcc092",
+      "source_manifest_sha256": "2d084b7fdc9c0048d83e7153ad5abff32f9184efa42a0bfbff29731ddabcc092",
+      "instance_manifest_sha256": "9b3508725f5e19a843235b931d8e37d7bd4fcba976bf6a71a905b6cb0630a3b4",
+      "gdal_version": "3.13.0",
+      "geos_version": "3.14.1",
+      "generator": {
+        "script": "scripts/prg_stage.py",
+        "script_sha256": "4862ddd79239f7d7c9f9381e58994338707b7a963ea9c90937af3b1158064f2e"
+      }
+    },
+    "results/prg/prg-city-inventory.csv": {
+      "artifact_sha256": "20a249ce9b92faaf4f3db5b261d505965f25cfc4bf51e4a497a45f3af76b0af5",
+      "raw_gml_sha256": "adf261aae31257dd24843b6f6c0e694efb40041aae3913b1c27aa4801866974c",
+      "manifest_sha256": "2d084b7fdc9c0048d83e7153ad5abff32f9184efa42a0bfbff29731ddabcc092",
+      "source_manifest_sha256": "2d084b7fdc9c0048d83e7153ad5abff32f9184efa42a0bfbff29731ddabcc092",
+      "instance_manifest_sha256": "9b3508725f5e19a843235b931d8e37d7bd4fcba976bf6a71a905b6cb0630a3b4",
+      "gdal_version": "3.13.0",
+      "geos_version": "3.14.1",
+      "generator": {
+        "script": "scripts/prg_stage.py",
+        "script_sha256": "4862ddd79239f7d7c9f9381e58994338707b7a963ea9c90937af3b1158064f2e"
+      }
+    },
+    "results/prg/prg-city-inventory.json": {
+      "artifact_sha256": "3a62fd84d8019bcb668d45e9a28aed708a51ca8d4fe318b89361b774aff059cb",
+      "raw_gml_sha256": "adf261aae31257dd24843b6f6c0e694efb40041aae3913b1c27aa4801866974c",
+      "manifest_sha256": "2d084b7fdc9c0048d83e7153ad5abff32f9184efa42a0bfbff29731ddabcc092",
+      "source_manifest_sha256": "2d084b7fdc9c0048d83e7153ad5abff32f9184efa42a0bfbff29731ddabcc092",
+      "instance_manifest_sha256": "9b3508725f5e19a843235b931d8e37d7bd4fcba976bf6a71a905b6cb0630a3b4",
+      "gdal_version": "3.13.0",
+      "geos_version": "3.14.1",
+      "generator": {
+        "script": "scripts/prg_stage.py",
+        "script_sha256": "4862ddd79239f7d7c9f9381e58994338707b7a963ea9c90937af3b1158064f2e"
+      }
+    }
+  }
+}
