@@ -14,6 +14,7 @@ import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 from osgeo import gdal, ogr, osr
@@ -27,7 +28,6 @@ STAGE0_RUN_URL = (
     "https://github.com/fgsdde5q/pl18-exact-routing/actions/runs/30208746751"
 )
 WFS_VERSION = "2.0.0"
-SOURCE_SRS_NAME = "urn:ogc:def:crs:EPSG::2180"
 EXPECTED_TARGET_COUNT = 18
 EXPECTED_PRG_UNIT_TYPE = "GMI"
 EXPECTED_TERYT_TYPE = "1"
@@ -41,17 +41,8 @@ SCHEMA_FIELDS = {
     "name": "JPT_NAZWA_",
     "object_id": "JPT_ID",
 }
-START_POINTS = [
-    {
-        "id": "plac_wilsona",
-        "name": "Plac Wilsona",
-        "longitude": 20.9849,
-        "latitude": 52.2692,
-        "crs": "EPSG:4326",
-    }
-]
 INVENTORY_COLUMNS = [
-    "report_order",
+    "bit_index",
     "city_id",
     "name",
     "teryt",
@@ -93,13 +84,32 @@ def scalar(value: str) -> str:
     return value.strip().strip('"').strip("'")
 
 
-def load_targets(path: Path) -> list[dict[str, str]]:
+def canonical_city_name(value: str) -> str:
+    return unicodedata.normalize("NFC", value).casefold()
+
+
+def load_instance(path: Path) -> dict[str, object]:
     targets: list[dict[str, str]] = []
     current: dict[str, str] | None = None
+    canonical_start: dict[str, str] = {}
+    target_count: int | None = None
     in_targets = False
     in_voivodeship = False
+    in_canonical_start = False
 
     for line in path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("target_count:"):
+            target_count = int(scalar(line.split(":", 1)[1]))
+            continue
+        if line.startswith("    canonical_start:"):
+            in_canonical_start = True
+            continue
+        if in_canonical_start:
+            if line.startswith("      ") and ":" in line:
+                key, value = line.strip().split(":", 1)
+                canonical_start[key] = scalar(value)
+                continue
+            in_canonical_start = False
         if line == "targets:":
             in_targets = True
             continue
@@ -115,8 +125,14 @@ def load_targets(path: Path) -> list[dict[str, str]]:
             continue
         if current is None:
             continue
+        if line.startswith("    bit_index:"):
+            current["bit_index"] = scalar(line.split(":", 1)[1])
+            continue
         if line.startswith("    name_pl:"):
             current["name"] = scalar(line.split(":", 1)[1])
+            continue
+        if line.startswith("    municipality_teryt:"):
+            current["teryt"] = scalar(line.split(":", 1)[1])
             continue
         if line.startswith("    voivodeship:"):
             in_voivodeship = True
@@ -127,18 +143,65 @@ def load_targets(path: Path) -> list[dict[str, str]]:
     if current is not None:
         targets.append(current)
 
-    required = {"id", "name", "voivodeship_teryt"}
+    required = {"id", "bit_index", "name", "teryt", "voivodeship_teryt"}
     for target in targets:
         missing = sorted(required - target.keys())
         if missing:
             raise ValueError(f"target is missing fields {missing}: {target}")
-    if len(targets) != EXPECTED_TARGET_COUNT:
+        target["bit_index"] = int(target["bit_index"])
+    if target_count != EXPECTED_TARGET_COUNT or len(targets) != target_count:
         raise ValueError(
-            f"expected {EXPECTED_TARGET_COUNT} targets, found {len(targets)}"
+            f"manifest target_count={target_count}, parsed targets={len(targets)}"
         )
     if len({target["id"] for target in targets}) != len(targets):
         raise ValueError("target IDs are not unique")
-    return targets
+    if [target["bit_index"] for target in targets] != list(
+        range(EXPECTED_TARGET_COUNT)
+    ):
+        raise ValueError("manifest order and bit_index values must be exactly 0..17")
+    if len({target["teryt"] for target in targets}) != EXPECTED_TARGET_COUNT:
+        raise ValueError("manifest municipality TERYT codes are not unique")
+    normalized_names = [canonical_city_name(target["name"]) for target in targets]
+    if len(set(normalized_names)) != EXPECTED_TARGET_COUNT:
+        raise ValueError("manifest city names collide after Unicode normalization")
+    for target in targets:
+        if not re.fullmatch(r"\d{7}", target["teryt"]):
+            raise ValueError(f"invalid municipality TERYT for {target['name']}")
+        if not target["teryt"].startswith(target["voivodeship_teryt"]):
+            raise ValueError(f"TERYT voivodeship mismatch for {target['name']}")
+        if target["teryt"][-1] != EXPECTED_TERYT_TYPE:
+            raise ValueError(f"{target['name']} is not a gmina miejska TERYT")
+
+    start_required = {"id", "name_pl", "crs", "longitude", "latitude"}
+    start_missing = sorted(start_required - canonical_start.keys())
+    if start_missing:
+        raise ValueError(f"canonical_start is missing fields: {start_missing}")
+    if canonical_start["crs"] != "EPSG:4326":
+        raise ValueError("canonical_start CRS must be EPSG:4326")
+    try:
+        longitude_decimal = Decimal(canonical_start["longitude"])
+        latitude_decimal = Decimal(canonical_start["latitude"])
+    except InvalidOperation as error:
+        raise ValueError("canonical_start coordinates are not decimal numbers") from error
+    if not Decimal("-180") <= longitude_decimal <= Decimal("180"):
+        raise ValueError("canonical_start longitude is outside EPSG:4326")
+    if not Decimal("-90") <= latitude_decimal <= Decimal("90"):
+        raise ValueError("canonical_start latitude is outside EPSG:4326")
+
+    return {
+        "target_count": target_count,
+        "targets": targets,
+        "canonical_start": {
+            "id": canonical_start["id"],
+            "name": canonical_start["name_pl"],
+            "crs": canonical_start["crs"],
+            "longitude": float(longitude_decimal),
+            "latitude": float(latitude_decimal),
+            "longitude_text": canonical_start["longitude"],
+            "latitude_text": canonical_start["latitude"],
+        },
+        "manifest_sha256": sha256_file(path),
+    }
 
 
 def normalized_layer_label(value: str) -> str:
@@ -332,21 +395,17 @@ def discover_targets(
         )
 
     selected: list[dict[str, str]] = []
-    for order, target in enumerate(targets, start=1):
+    for target in targets:
         candidates: list[dict[str, str]] = []
         for row in rows:
             name = row.get(SCHEMA_FIELDS["name"], "")
             teryt = row.get(SCHEMA_FIELDS["teryt"], "")
             unit_type = row.get(SCHEMA_FIELDS["unit_type"], "")
-            if unicodedata.normalize("NFC", name) != unicodedata.normalize(
-                "NFC", target["name"]
-            ):
+            if name != target["name"]:
                 continue
-            if not re.fullmatch(r"\d{7}", teryt):
+            if canonical_city_name(name) != canonical_city_name(target["name"]):
                 continue
-            if not teryt.startswith(target["voivodeship_teryt"]):
-                continue
-            if teryt[-1] != EXPECTED_TERYT_TYPE:
+            if teryt != target["teryt"]:
                 continue
             if unit_type != EXPECTED_PRG_UNIT_TYPE:
                 continue
@@ -373,8 +432,6 @@ def discover_targets(
         selected.append(
             {
                 **target,
-                "report_order": order,
-                "teryt": candidate[SCHEMA_FIELDS["teryt"]],
                 "prg_object_id": object_id,
                 "prg_unit_type": candidate[SCHEMA_FIELDS["unit_type"]],
             }
@@ -383,6 +440,53 @@ def discover_targets(
     teryt_codes = [target["teryt"] for target in selected]
     if len(set(teryt_codes)) != EXPECTED_TARGET_COUNT:
         raise ValueError("discovery did not produce 18 unique TERYT codes")
+    return selected
+
+
+def select_targets_from_raw(
+    raw_path: Path,
+    feature_type_local_name: str,
+    targets: list[dict[str, str]],
+) -> list[dict[str, str]]:
+    _, rows = feature_rows_from_gml(raw_path, feature_type_local_name)
+    rows_by_teryt: dict[str, dict[str, str]] = {}
+    for row in rows:
+        teryt = row.get(SCHEMA_FIELDS["teryt"], "")
+        if teryt in rows_by_teryt:
+            raise ValueError(f"saved raw GML contains duplicate TERYT {teryt}")
+        rows_by_teryt[teryt] = row
+    expected_teryt = {target["teryt"] for target in targets}
+    if set(rows_by_teryt) != expected_teryt:
+        raise ValueError("saved raw GML city set differs from the frozen manifest")
+
+    selected: list[dict[str, str]] = []
+    for target in targets:
+        row = rows_by_teryt[target["teryt"]]
+        name = row.get(SCHEMA_FIELDS["name"], "")
+        if name != target["name"]:
+            raise ValueError(
+                f"TERYT {target['teryt']} name differs from manifest: "
+                f"{name!r} != {target['name']!r}"
+            )
+        if canonical_city_name(name) != canonical_city_name(target["name"]):
+            raise ValueError(
+                f"TERYT {target['teryt']} normalizes to a different city"
+            )
+        unit_type = row.get(SCHEMA_FIELDS["unit_type"], "")
+        if unit_type != EXPECTED_PRG_UNIT_TYPE:
+            raise ValueError(
+                f"TERYT {target['teryt']} has unexpected unit type {unit_type}"
+            )
+        object_id = row.get(SCHEMA_FIELDS["object_id"], "")
+        if not object_id:
+            raise ValueError(f"{target['name']} has an empty PRG object ID")
+        selected.append(
+            {
+                **target,
+                "prg_object_id": object_id,
+                "prg_unit_type": unit_type,
+            }
+        )
     return selected
 
 
@@ -508,9 +612,9 @@ def create_vector_output(
         raise RuntimeError(f"cannot create layer {layer_name} in {path}")
 
     for column in INVENTORY_COLUMNS:
-        if column in {"report_order", "multipart", "geos_is_valid", "make_valid_applied"}:
+        if column in {"bit_index", "multipart", "geos_is_valid", "make_valid_applied"}:
             field = ogr.FieldDefn(column, ogr.OFTInteger)
-            field.SetSubType(ogr.OFSTBoolean if column != "report_order" else ogr.OFSTNone)
+            field.SetSubType(ogr.OFSTBoolean if column != "bit_index" else ogr.OFSTNone)
         elif column == "area_epsg2180_m2":
             field = ogr.FieldDefn(column, ogr.OFTReal)
             field.SetWidth(20)
@@ -537,30 +641,40 @@ def create_vector_output(
     dataset = None
 
 
-def validate_start_points(
-    computational_geometries: dict[str, ogr.Geometry]
-) -> list[dict[str, object]]:
-    warsaw = computational_geometries.get("1465011")
+def validate_start_point(
+    computational_geometries: dict[str, ogr.Geometry],
+    canonical_start: dict[str, object],
+    warsaw_teryt: str,
+) -> dict[str, object]:
+    warsaw = computational_geometries.get(warsaw_teryt)
     if warsaw is None:
-        raise ValueError("Warszawa TERYT 1465011 is missing")
+        raise ValueError("Warszawa geometry from the frozen manifest is missing")
     source = srs_for_epsg(int(GEOJSON_EPSG))
     target = srs_for_epsg(int(COMPUTATIONAL_EPSG))
     transform = osr.CoordinateTransformation(source, target)
-    results: list[dict[str, object]] = []
-
-    for start_point in START_POINTS:
-        point = ogr.Geometry(ogr.wkbPoint)
-        point.AddPoint_2D(start_point["longitude"], start_point["latitude"])
-        point.AssignSpatialReference(source)
-        point.Transform(transform)
-        inside = bool(warsaw.Contains(point))
-        if not inside:
-            raise ValueError(
-                f"{start_point['name']} ({start_point['longitude']}, "
-                f"{start_point['latitude']}) is not inside Warszawa"
-            )
-        results.append({**start_point, "inside_warszawa": inside})
-    return results
+    point = ogr.Geometry(ogr.wkbPoint)
+    point.AddPoint_2D(
+        float(canonical_start["longitude"]),
+        float(canonical_start["latitude"]),
+    )
+    point.AssignSpatialReference(source)
+    point.Transform(transform)
+    inside = bool(warsaw.Contains(point))
+    if not inside:
+        raise ValueError(
+            f"{canonical_start['name']} ({canonical_start['longitude_text']}, "
+            f"{canonical_start['latitude_text']}) is not inside Warszawa"
+        )
+    return {
+        "id": canonical_start["id"],
+        "name": canonical_start["name"],
+        "longitude": canonical_start["longitude"],
+        "latitude": canonical_start["latitude"],
+        "longitude_text": canonical_start["longitude_text"],
+        "latitude_text": canonical_start["latitude_text"],
+        "crs": canonical_start["crs"],
+        "inside_warszawa": inside,
+    }
 
 
 def build_outputs(
@@ -569,6 +683,10 @@ def build_outputs(
     describe_sha256: str,
     selected_targets: list[dict[str, str]],
     extracted_at_utc: str,
+    canonical_start: dict[str, object],
+    manifest_sha256: str,
+    official_response_mode: str,
+    hash_history: dict[str, object] | None,
 ) -> tuple[list[dict[str, object]], dict[str, object]]:
     results_dir = repository_root / "results/prg"
     raw_path = results_dir / "prg-18-raw.gml"
@@ -629,7 +747,7 @@ def build_outputs(
             raise ValueError(f"{target['name']} has non-positive area {area}")
 
         record: dict[str, object] = {
-            "report_order": target["report_order"],
+            "bit_index": target["bit_index"],
             "city_id": target["id"],
             "name": target["name"],
             "teryt": target["teryt"],
@@ -655,7 +773,16 @@ def build_outputs(
         geojson_geometry.Transform(to_geojson)
         geojson_geometries.append(geojson_geometry)
 
-    start_point_results = validate_start_points(computational_by_teryt)
+    warsaw_targets = [
+        target for target in selected_targets if target["id"] == "warszawa"
+    ]
+    if len(warsaw_targets) != 1:
+        raise ValueError("frozen manifest must contain exactly one Warszawa target")
+    start_point_result = validate_start_point(
+        computational_by_teryt,
+        canonical_start,
+        warsaw_targets[0]["teryt"],
+    )
 
     create_vector_output(
         results_dir / "prg-18-original.gpkg",
@@ -717,10 +844,18 @@ def build_outputs(
             "gdal_version": gdal.VersionInfo("RELEASE_NAME"),
             "original_geometry_policy": "copied without MakeValid",
             "computational_geometry_policy": "MakeValid only when original is invalid",
+            "official_response_mode": official_response_mode,
         },
-        "start_point_checks": start_point_results,
+        "manifest": {
+            "path": "instance/pl_18_capitals_static_instance_v1.yaml",
+            "sha256": manifest_sha256,
+            "source_of_truth": True,
+        },
+        "canonical_start_check": start_point_result,
         "cities": records,
     }
+    if hash_history is not None:
+        metadata["official_response_hash_history"] = hash_history
     return records, metadata
 
 
@@ -760,19 +895,24 @@ def write_validation_report(
     records: list[dict[str, object]],
 ) -> None:
     source = metadata["source"]
-    start_points = metadata["start_point_checks"]
+    start_point = metadata["canonical_start_check"]
     valid_count = sum(bool(record["geos_is_valid"]) for record in records)
     repaired_count = sum(bool(record["make_valid_applied"]) for record in records)
+    manifest_city_set = {
+        (str(record["city_id"]), str(record["name"]), str(record["teryt"]))
+        for record in records
+    }
     checks = [
         ("Exactly 18 PRG objects", len(records) == EXPECTED_TARGET_COUNT),
+        ("City set matches the frozen manifest", len(manifest_city_set) == 18),
         (
             "18 unique TERYT codes",
             len({str(record["teryt"]) for record in records}) == EXPECTED_TARGET_COUNT,
         ),
         ("No empty geometries", True),
         (
-            "Every Plac Wilsona/start point is inside Warszawa",
-            all(bool(point["inside_warszawa"]) for point in start_points),
+            "Exact manifest start coordinate is inside Warszawa",
+            bool(start_point["inside_warszawa"]),
         ),
         ("Computational CRS is EPSG:2180", True),
         ("GeoJSON is published in EPSG:4326", True),
@@ -781,9 +921,9 @@ def write_validation_report(
             all(float(record["area_epsg2180_m2"]) > 0 for record in records),
         ),
         (
-            "Report order follows the target instance",
-            [int(record["report_order"]) for record in records]
-            == list(range(1, EXPECTED_TARGET_COUNT + 1)),
+            "Canonical order and bit indexes follow the frozen manifest",
+            [int(record["bit_index"]) for record in records]
+            == list(range(EXPECTED_TARGET_COUNT)),
         ),
     ]
     if not all(passed for _, passed in checks):
@@ -800,6 +940,10 @@ def write_validation_report(
         f"- City name field: `{SCHEMA_FIELDS['name']}`",
         f"- Unit type field: `{SCHEMA_FIELDS['unit_type']}`",
         f"- Geometry field: `{SCHEMA_FIELDS['geometry']}`",
+        (
+            "- Frozen manifest SHA-256: "
+            f"`{metadata['manifest']['sha256']}`"
+        ),
         f"- Source CRS: `{source['source_crs']}`",
         f"- Extraction time: `{source['extracted_at_utc']}`",
         (
@@ -807,6 +951,10 @@ def write_validation_report(
             f"`{source['describe_feature_type_sha256']}`"
         ),
         f"- Raw GML SHA-256: `{source['raw_gml_sha256']}`",
+        (
+            "- Official response mode: "
+            f"`{metadata['processing']['official_response_mode']}`"
+        ),
         f"- Original geometries valid in GEOS: `{valid_count}/18`",
         f"- Computational MakeValid copies created: `{repaired_count}`",
         "",
@@ -822,27 +970,47 @@ def write_validation_report(
     lines.extend(
         [
             "",
-            "## Plac Wilsona/start points",
+            "## Canonical start coordinate",
             "",
             "| Point | EPSG:4326 longitude | EPSG:4326 latitude | Inside Warszawa |",
             "|---|---:|---:|---|",
+            (
+                f"| {start_point['name']} | {start_point['longitude_text']} | "
+                f"{start_point['latitude_text']} | "
+                f"`{'PASS' if start_point['inside_warszawa'] else 'FAIL'}` |"
+            ),
         ]
     )
-    lines.extend(
-        (
-            f"| {point['name']} | {point['longitude']:.4f} | "
-            f"{point['latitude']:.4f} | "
-            f"`{'PASS' if point['inside_warszawa'] else 'FAIL'}` |"
+    if "official_response_hash_history" in metadata:
+        history = metadata["official_response_hash_history"]
+        lines.extend(
+            [
+                "",
+                "## Official response hash history",
+                "",
+                "| Response | Previous SHA-256 | Current SHA-256 |",
+                "|---|---|---|",
+                (
+                    "| DescribeFeatureType | "
+                    f"`{history['describe_feature_type']['previous']}` | "
+                    f"`{history['describe_feature_type']['current']}` |"
+                ),
+                (
+                    "| Raw GML | "
+                    f"`{history['raw_gml']['previous']}` | "
+                    f"`{history['raw_gml']['current']}` |"
+                ),
+                "",
+                str(history["explanation"]),
+            ]
         )
-        for point in start_points
-    )
     lines.extend(
         [
             "",
-            "## City inventory",
+            "## Canonical city and bitmask order",
             "",
             (
-                "| Order | City | TERYT | PRG object ID | Unit | Geometry | "
+                "| Bit index | City | TERYT | PRG object ID | Unit | Geometry | "
                 "Multipart | GEOS valid | Area EPSG:2180 (m²) |"
             ),
             "|---:|---|---|---|---|---|---|---|---:|",
@@ -850,7 +1018,7 @@ def write_validation_report(
     )
     for record in records:
         lines.append(
-            f"| {record['report_order']} | {record['name']} | "
+            f"| {record['bit_index']} | {record['name']} | "
             f"`{record['teryt']}` | `{record['prg_object_id']}` | "
             f"`{record['prg_unit_type']}/{record['teryt_type']}` | "
             f"`{record['geometry_type']}` | "
@@ -893,13 +1061,33 @@ def write_sha256sums(repository_root: Path) -> None:
     )
 
 
-def run(repository_root: Path) -> None:
+def preserved_extraction_time(
+    inventory_path: Path,
+    raw_sha256: str,
+    raw_path: Path,
+) -> str:
+    if inventory_path.exists():
+        inventory = json.loads(inventory_path.read_text(encoding="utf-8"))
+        source = inventory.get("source", {})
+        if source.get("raw_gml_sha256") == raw_sha256:
+            value = source.get("extracted_at_utc", "")
+            if value:
+                return str(value)
+    raw_root = ET.parse(raw_path).getroot()
+    timestamp = raw_root.attrib.get("timeStamp", "")
+    if timestamp:
+        return f"{timestamp}+00:00"
+    raise ValueError("cannot preserve extraction time for saved raw GML")
+
+
+def run(repository_root: Path, refresh_official_responses: bool) -> None:
     capabilities_path = repository_root / "input/prg/GetCapabilities.xml"
     describe_path = repository_root / "input/prg/DescribeFeatureType.xml"
     instance_path = (
         repository_root / "instance/pl_18_capitals_static_instance_v1.yaml"
     )
     results_dir = repository_root / "results/prg"
+    raw_path = results_dir / "prg-18-raw.gml"
     work_dir = Path(
         os.environ.get(
             "RUNNER_TEMP",
@@ -909,21 +1097,26 @@ def run(repository_root: Path) -> None:
     work_dir.mkdir(parents=True, exist_ok=True)
     results_dir.mkdir(parents=True, exist_ok=True)
 
-    targets = load_targets(instance_path)
+    instance = load_instance(instance_path)
+    targets = instance["targets"]
     feature_type = select_gmina_feature_type(capabilities_path)
     feature_type_local = feature_type["name"].rsplit(":", 1)[-1]
     print(f"Selected PRG WFS FeatureType: {feature_type['name']}")
 
-    fetch_wfs(
-        {
-            "SERVICE": "WFS",
-            "VERSION": WFS_VERSION,
-            "REQUEST": "DescribeFeatureType",
-            "TYPENAMES": feature_type["name"],
-        },
-        describe_path,
-        "DescribeFeatureType",
-    )
+    old_describe_sha256 = sha256_file(describe_path)
+    old_raw_sha256 = sha256_file(raw_path)
+    hash_history: dict[str, object] | None = None
+    if refresh_official_responses:
+        fetch_wfs(
+            {
+                "SERVICE": "WFS",
+                "VERSION": WFS_VERSION,
+                "REQUEST": "DescribeFeatureType",
+                "TYPENAMES": feature_type["name"],
+            },
+            describe_path,
+            "DescribeFeatureType",
+        )
     schema = parse_describe_feature_type(describe_path, feature_type_local)
     describe_sha256 = sha256_file(describe_path)
     print(f"DescribeFeatureType SHA-256: {describe_sha256}")
@@ -935,55 +1128,89 @@ def run(repository_root: Path) -> None:
         )
     )
 
-    discovery_path = work_dir / "prg-18-name-discovery.gml"
-    fetch_wfs(
-        {
-            "SERVICE": "WFS",
-            "VERSION": WFS_VERSION,
-            "REQUEST": "GetFeature",
-            "TYPENAMES": feature_type["name"],
-            "SRSNAME": SOURCE_SRS_NAME,
-            "FILTER": build_or_filter(
-                SCHEMA_FIELDS["name"], [target["name"] for target in targets]
+    if refresh_official_responses:
+        discovery_path = work_dir / "prg-18-name-discovery.gml"
+        fetch_wfs(
+            {
+                "SERVICE": "WFS",
+                "VERSION": WFS_VERSION,
+                "REQUEST": "GetFeature",
+                "TYPENAMES": feature_type["name"],
+                "SRSNAME": feature_type["default_crs"],
+                "FILTER": build_or_filter(
+                    SCHEMA_FIELDS["name"], [target["name"] for target in targets]
+                ),
+            },
+            discovery_path,
+            "GetFeature name discovery",
+        )
+        selected_targets = discover_targets(
+            discovery_path, feature_type_local, targets
+        )
+        fetch_wfs(
+            {
+                "SERVICE": "WFS",
+                "VERSION": WFS_VERSION,
+                "REQUEST": "GetFeature",
+                "TYPENAMES": feature_type["name"],
+                "SRSNAME": feature_type["default_crs"],
+                "SORTBY": SCHEMA_FIELDS["teryt"],
+                "FILTER": build_or_filter(
+                    SCHEMA_FIELDS["teryt"],
+                    [target["teryt"] for target in selected_targets],
+                ),
+            },
+            raw_path,
+            "GetFeature TERYT export",
+        )
+        extracted_at_utc = (
+            datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+        )
+        new_raw_sha256 = sha256_file(raw_path)
+        hash_history = {
+            "describe_feature_type": {
+                "previous": old_describe_sha256,
+                "current": describe_sha256,
+            },
+            "raw_gml": {
+                "previous": old_raw_sha256,
+                "current": new_raw_sha256,
+            },
+            "explanation": (
+                "Official WFS responses were downloaded again. Raw GML hashes "
+                "may differ because the service embeds a response timeStamp; "
+                "the response bytes were not normalized."
             ),
-        },
-        discovery_path,
-        "GetFeature name discovery",
-    )
-    selected_targets = discover_targets(
-        discovery_path, feature_type_local, targets
-    )
-    print("Discovered official TERYT codes:")
+        }
+        official_response_mode = "downloaded_again"
+    else:
+        selected_targets = select_targets_from_raw(
+            raw_path, feature_type_local, targets
+        )
+        extracted_at_utc = preserved_extraction_time(
+            results_dir / "prg-city-inventory.json",
+            old_raw_sha256,
+            raw_path,
+        )
+        official_response_mode = "reused_saved_responses"
+
+    print("Manifest-verified official TERYT codes:")
     for target in selected_targets:
         print(
-            f"  {target['name']}: {target['teryt']} "
+            f"  bit {target['bit_index']} {target['name']}: {target['teryt']} "
             f"(PRG object ID {target['prg_object_id']})"
         )
 
-    raw_path = results_dir / "prg-18-raw.gml"
-    fetch_wfs(
-        {
-            "SERVICE": "WFS",
-            "VERSION": WFS_VERSION,
-            "REQUEST": "GetFeature",
-            "TYPENAMES": feature_type["name"],
-            "SRSNAME": SOURCE_SRS_NAME,
-            "SORTBY": SCHEMA_FIELDS["teryt"],
-            "FILTER": build_or_filter(
-                SCHEMA_FIELDS["teryt"],
-                [target["teryt"] for target in selected_targets],
-            ),
-        },
-        raw_path,
-        "GetFeature TERYT export",
-    )
-    extracted_at_utc = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     records, metadata = build_outputs(
         repository_root,
         feature_type,
         describe_sha256,
         selected_targets,
         extracted_at_utc,
+        instance["canonical_start"],
+        instance["manifest_sha256"],
+        official_response_mode,
+        hash_history,
     )
     write_inventory(results_dir, records, metadata)
     write_validation_report(results_dir, feature_type, metadata, records)
@@ -1002,6 +1229,11 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=Path(__file__).resolve().parent.parent,
     )
+    parser.add_argument(
+        "--refresh-official-responses",
+        action="store_true",
+        help="Download fresh DescribeFeatureType and raw GML responses.",
+    )
     return parser.parse_args()
 
 
@@ -1009,7 +1241,10 @@ def main() -> int:
     args = parse_args()
     gdal.UseExceptions()
     try:
-        run(args.repository_root.resolve())
+        run(
+            args.repository_root.resolve(),
+            refresh_official_responses=args.refresh_official_responses,
+        )
     except Exception as error:
         print(f"error: {error}", file=sys.stderr)
         return 1
