@@ -1,6 +1,7 @@
 # PRG Stage 1 validation report
 
 - Stage status: `PRG_STAGE_OK`
+- Provenance status: `PRG_PROVENANCE_LOCKED`
 - Solver status: `SOLVER_NOT_STARTED`
 - Official WFS FeatureType: `ms:A03_Granice_gmin`
 - TERYT field: `JPT_KOD_JE`
@@ -12,8 +13,10 @@
 - Source CRS: `EPSG:2180`
 - Extraction time: `2026-07-26T16:04:26+00:00`
 - DescribeFeatureType SHA-256: `cc81f378de423ad27c91e21ecfeab4e6765b4765140ca27953d6b8d69dfa884b`
-- Raw GML SHA-256: `adf261aae31257dd24843b6f6c0e694efb40041aae3913b1c27aa4801866974c`
-- Official response mode: `reused_saved_responses`
+- Selected raw GML SHA-256: `adf261aae31257dd24843b6f6c0e694efb40041aae3913b1c27aa4801866974c`
+- Selected compressed GML SHA-256: `91bdab09b9fe77ea02add8cfdf88a41c03ae84587ff8fdfc1808fb340fa41684`
+- Source manifest SHA-256: `2d084b7fdc9c0048d83e7153ad5abff32f9184efa42a0bfbff29731ddabcc092`
+- Official response mode: `reused_pinned_response`
 - Original geometries valid in GEOS: `18/18`
 - Computational MakeValid copies created: `0`
 
@@ -30,12 +33,42 @@
 | GeoJSON is published in EPSG:4326 | `PASS` |
 | All EPSG:2180 areas are positive | `PASS` |
 | Canonical order and bit indexes follow the frozen manifest | `PASS` |
+| Materialized raw GML matches the pinned source manifest | `PASS` |
+| Every mapped derived product uses the selected raw GML | `PASS` |
+| The two saved responses contain identical canonical PRG objects | `PASS` |
 
 ## Canonical start coordinate
 
 | Point | EPSG:4326 longitude | EPSG:4326 latitude | Inside Warszawa |
 |---|---:|---:|---|
 | Plac Wilsona | 20.986450 | 52.268850 | `PASS` |
+
+## Raw input provenance
+
+| Role | WFS timestamp | Bytes | Raw SHA-256 | Compressed SHA-256 |
+|---|---|---:|---|---|
+| Selected pinned input | `2026-07-26T16:04:25` | 1695301 | `adf261aae31257dd24843b6f6c0e694efb40041aae3913b1c27aa4801866974c` | `91bdab09b9fe77ea02add8cfdf88a41c03ae84587ff8fdfc1808fb340fa41684` |
+| Old saved report response | `2026-07-26T16:11:05` | 1695301 | `0e3f113673620334867151f8845853680d31ff4b511fdbf2124eb2d1d64f4838` | `07a1f4912264e1a1fae7686e334cfc3e1aae41c90119c1b46646d9563b6cd394` |
+
+The old and selected raw GML files are both retained. Their only byte-level difference is `wfs:FeatureCollection/@timeStamp`: `2026-07-26T16:11:05` in the old response and `2026-07-26T16:04:25` in the selected response. After replacing only that attribute with a fixed marker, both responses have SHA-256 `057fcd8be1965d32dcdd1f8ead62bee926086da2d090e5d130f0a33f30c5a374`.
+
+The earlier report mode `reused_saved_responses` meant only that no new response was downloaded; it did not identify the reused file. The committed raw GML, embedded vector and inventory source hashes, and 18/18 raw-to-original geometry comparison identify the selected response unambiguously.
+
+The 18 canonical objects were joined by `JPT_KOD_JE` and compared using `JPT_NAZWA_`, `JPT_ID`, and ISO WKB. Result: `18/18 identical`. No geometry or PRG identity difference was found.
+
+The selected input is permanently pinned at `input/prg/prg-18-raw.gml.zst`. The old response is retained at `input/prg/history/prg-18-raw-0e3f113673620334867151f8845853680d31ff4b511fdbf2124eb2d1d64f4838.gml.zst`. Neither depends on a temporary Actions artifact.
+
+## Derived artifact lineage
+
+| Derived file | Exact raw GML SHA-256 | Artifact SHA-256 |
+|---|---|---|
+| `results/prg/prg-18-original.gpkg` | `adf261aae31257dd24843b6f6c0e694efb40041aae3913b1c27aa4801866974c` | `de6d9431bfbb5da36bf2cfe61108f5c62d694a4d48d9b12d9322d9d3d4cb1263` |
+| `results/prg/prg-18-computational.gpkg` | `adf261aae31257dd24843b6f6c0e694efb40041aae3913b1c27aa4801866974c` | `ae8c1a6ac592434e48f0d1ae1db261da5c89ac82b482605bd9387eee36134a4c` |
+| `results/prg/prg-18.geojson` | `adf261aae31257dd24843b6f6c0e694efb40041aae3913b1c27aa4801866974c` | `67f1b0ba044faa40b0bc22f2f4b08d61d1ad1982aca2e6615e6ab12a9334ed6d` |
+| `results/prg/prg-city-inventory.csv` | `adf261aae31257dd24843b6f6c0e694efb40041aae3913b1c27aa4801866974c` | `20a249ce9b92faaf4f3db5b261d505965f25cfc4bf51e4a497a45f3af76b0af5` |
+| `results/prg/prg-city-inventory.json` | `adf261aae31257dd24843b6f6c0e694efb40041aae3913b1c27aa4801866974c` | `3a62fd84d8019bcb668d45e9a28aed708a51ca8d4fe318b89361b774aff059cb` |
+
+All five products above were generated from selected raw GML `adf261aae31257dd24843b6f6c0e694efb40041aae3913b1c27aa4801866974c`. Their machine-readable mapping is `results/prg/derived-artifacts.json`.
 
 ## Canonical city and bitmask order
 
@@ -63,3 +96,7 @@
 Original geometries are retained without MakeValid. If an original geometry is invalid, only the separate computational copy is repaired.
 
 No route optimizer or solver was started in this stage.
+
+`PRG_PROVENANCE_LOCKED`
+
+`SOLVER_NOT_STARTED`

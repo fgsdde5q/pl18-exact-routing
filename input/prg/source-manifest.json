@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "provenance_status": "PRG_PROVENANCE_LOCKED",
+  "selected_raw_input": {
+    "wfs_url": "https://mapy.geoportal.gov.pl/wss/service/PZGIK/PRG/WFS/AdministrativeBoundaries",
+    "get_feature_query": {
+      "parameters": {
+        "SERVICE": "WFS",
+        "VERSION": "2.0.0",
+        "REQUEST": "GetFeature",
+        "TYPENAMES": "ms:A03_Granice_gmin",
+        "SRSNAME": "urn:ogc:def:crs:EPSG::2180",
+        "SORTBY": "JPT_KOD_JE",
+        "FILTER": "<fes:Filter xmlns:fes=\"http://www.opengis.net/fes/2.0\"><fes:Or><fes:PropertyIsEqualTo><fes:ValueReference>JPT_KOD_JE</fes:ValueReference><fes:Literal>2061011</fes:Literal></fes:PropertyIsEqualTo><fes:PropertyIsEqualTo><fes:ValueReference>JPT_KOD_JE</fes:ValueReference><fes:Literal>0461011</fes:Literal></fes:PropertyIsEqualTo><fes:PropertyIsEqualTo><fes:ValueReference>JPT_KOD_JE</fes:ValueReference><fes:Literal>2261011</fes:Literal></fes:PropertyIsEqualTo><fes:PropertyIsEqualTo><fes:ValueReference>JPT_KOD_JE</fes:ValueReference><fes:Literal>0861011</fes:Literal></fes:PropertyIsEqualTo><fes:PropertyIsEqualTo><fes:ValueReference>JPT_KOD_JE</fes:ValueReference><fes:Literal>2469011</fes:Literal></fes:PropertyIsEqualTo><fes:PropertyIsEqualTo><fes:ValueReference>JPT_KOD_JE</fes:ValueReference><fes:Literal>2661011</fes:Literal></fes:PropertyIsEqualTo><fes:PropertyIsEqualTo><fes:ValueReference>JPT_KOD_JE</fes:ValueReference><fes:Literal>1261011</fes:Literal></fes:PropertyIsEqualTo><fes:PropertyIsEqualTo><fes:ValueReference>JPT_KOD_JE</fes:ValueReference><fes:Literal>0663011</fes:Literal></fes:PropertyIsEqualTo><fes:PropertyIsEqualTo><fes:ValueReference>JPT_KOD_JE</fes:ValueReference><fes:Literal>1061011</fes:Literal></fes:PropertyIsEqualTo><fes:PropertyIsEqualTo><fes:ValueReference>JPT_KOD_JE</fes:ValueReference><fes:Literal>2862011</fes:Literal></fes:PropertyIsEqualTo><fes:PropertyIsEqualTo><fes:ValueReference>JPT_KOD_JE</fes:ValueReference><fes:Literal>1661011</fes:Literal></fes:PropertyIsEqualTo><fes:PropertyIsEqualTo><fes:ValueReference>JPT_KOD_JE</fes:ValueReference><fes:Literal>3064011</fes:Literal></fes:PropertyIsEqualTo><fes:PropertyIsEqualTo><fes:ValueReference>JPT_KOD_JE</fes:ValueReference><fes:Literal>1863011</fes:Literal></fes:PropertyIsEqualTo><fes:PropertyIsEqualTo><fes:ValueReference>JPT_KOD_JE</fes:ValueReference><fes:Literal>3262011</fes:Literal></fes:PropertyIsEqualTo><fes:PropertyIsEqualTo><fes:ValueReference>JPT_KOD_JE</fes:ValueReference><fes:Literal>0463011</fes:Literal></fes:PropertyIsEqualTo><fes:PropertyIsEqualTo><fes:ValueReference>JPT_KOD_JE</fes:ValueReference><fes:Literal>1465011</fes:Literal></fes:PropertyIsEqualTo><fes:PropertyIsEqualTo><fes:ValueReference>JPT_KOD_JE</fes:ValueReference><fes:Literal>0264011</fes:Literal></fes:PropertyIsEqualTo><fes:PropertyIsEqualTo><fes:ValueReference>JPT_KOD_JE</fes:ValueReference><fes:Literal>0862011</fes:Literal></fes:PropertyIsEqualTo></fes:Or></fes:Filter>"
+      },
+      "encoded_query": "SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=ms%3AA03_Granice_gmin&SRSNAME=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A2180&SORTBY=JPT_KOD_JE&FILTER=%3Cfes%3AFilter+xmlns%3Afes%3D%22http%3A%2F%2Fwww.opengis.net%2Ffes%2F2.0%22%3E%3Cfes%3AOr%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E2061011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E0461011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E2261011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E0861011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E2469011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E2661011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E1261011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E0663011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E1061011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E2862011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E1661011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E3064011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E1863011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E3262011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E0463011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E1465011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E0264011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E0862011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3C%2Ffes%3AOr%3E%3C%2Ffes%3AFilter%3E",
+      "request_url": "https://mapy.geoportal.gov.pl/wss/service/PZGIK/PRG/WFS/AdministrativeBoundaries?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=ms%3AA03_Granice_gmin&SRSNAME=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A2180&SORTBY=JPT_KOD_JE&FILTER=%3Cfes%3AFilter+xmlns%3Afes%3D%22http%3A%2F%2Fwww.opengis.net%2Ffes%2F2.0%22%3E%3Cfes%3AOr%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E2061011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E0461011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E2261011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E0861011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E2469011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E2661011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E1261011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E0663011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E1061011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E2862011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E1661011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E3064011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E1863011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E3262011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E0463011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E1465011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E0264011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3Cfes%3APropertyIsEqualTo%3E%3Cfes%3AValueReference%3EJPT_KOD_JE%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E0862011%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsEqualTo%3E%3C%2Ffes%3AOr%3E%3C%2Ffes%3AFilter%3E"
+    },
+    "feature_type": "ms:A03_Granice_gmin",
+    "crs": "urn:ogc:def:crs:EPSG::2180",
+    "retrieval_timestamp": "2026-07-26T16:04:25",
+    "retrieval_timestamp_source": "wfs:FeatureCollection/@timeStamp",
+    "http_metadata": {
+      "request_method": "GET",
+      "request_headers": {
+        "Accept": "application/gml+xml; version=3.2, application/xml",
+        "User-Agent": "pl18-exact-routing-prg-stage/1"
+      },
+      "response_status": null,
+      "response_headers": {},
+      "availability": "The initial Stage 1 fetch kept HTTP response headers only in memory. The committed response body, WFS timeStamp, and request metadata are available; status and response headers were not persisted."
+    },
+    "byte_size": 1695301,
+    "raw_sha256": "adf261aae31257dd24843b6f6c0e694efb40041aae3913b1c27aa4801866974c",
+    "compressed_path": "input/prg/prg-18-raw.gml.zst",
+    "compressed_byte_size": 526932,
+    "compressed_sha256": "91bdab09b9fe77ea02add8cfdf88a41c03ae84587ff8fdfc1808fb340fa41684",
+    "materialized_path": "results/prg/prg-18-raw.gml",
+    "describe_feature_type_path": "input/prg/DescribeFeatureType.xml",
+    "describe_feature_type_sha256": "cc81f378de423ad27c91e21ecfeab4e6765b4765140ca27953d6b8d69dfa884b",
+    "permanent_evidence": {
+      "first_git_commit": "f5fc0ef45d381a1c00ffcdce2f681b10f44cd210",
+      "inventory_extracted_at_utc": "2026-07-26T16:04:26+00:00"
+    }
+  },
+  "historical_raw_inputs": [
+    {
+      "role": "old_report_response",
+      "wfs_collection_timestamp": "2026-07-26T16:11:05",
+      "byte_size": 1695301,
+      "raw_sha256": "0e3f113673620334867151f8845853680d31ff4b511fdbf2124eb2d1d64f4838",
+      "compressed_path": "input/prg/history/prg-18-raw-0e3f113673620334867151f8845853680d31ff4b511fdbf2124eb2d1d64f4838.gml.zst",
+      "compressed_byte_size": 527094,
+      "compressed_sha256": "07a1f4912264e1a1fae7686e334cfc3e1aae41c90119c1b46646d9563b6cd394",
+      "saved_run": {
+        "url": "https://github.com/fgsdde5q/pl18-exact-routing/actions/runs/30209806566",
+        "job_id": 89814017936,
+        "artifact_id": 8634127615,
+        "artifact_name": "prg-stage-30209806566",
+        "artifact_archive_sha256": "1dcca03a67f5496664c9437036319bd950951c0d620a69141df7ab5d57bb6444"
+      }
+    }
+  ],
+  "hash_difference_resolution": {
+    "prior_report_mode": "reused_saved_responses",
+    "selected_raw_sha256": "adf261aae31257dd24843b6f6c0e694efb40041aae3913b1c27aa4801866974c",
+    "historical_raw_sha256": "0e3f113673620334867151f8845853680d31ff4b511fdbf2124eb2d1d64f4838",
+    "byte_sizes_equal": true,
+    "only_byte_difference": "wfs:FeatureCollection/@timeStamp",
+    "selected_timestamp": "2026-07-26T16:04:25",
+    "historical_timestamp": "2026-07-26T16:11:05",
+    "timestamp_normalized_sha256": "057fcd8be1965d32dcdd1f8ead62bee926086da2d090e5d130f0a33f30c5a374",
+    "canonical_object_comparison": {
+      "join_key": "JPT_KOD_JE",
+      "compared_fields": [
+        "JPT_NAZWA_",
+        "JPT_ID",
+        "ISO_WKB"
+      ],
+      "feature_count": 18,
+      "identical": true
+    },
+    "used_for_current_derived_artifacts": "adf261aae31257dd24843b6f6c0e694efb40041aae3913b1c27aa4801866974c",
+    "resolution": "The committed raw GML, embedded vector and inventory source hashes, and 18/18 raw-to-original geometry comparison identify the selected response unambiguously."
+  }
+}

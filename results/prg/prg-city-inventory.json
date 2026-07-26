@@ -1,5 +1,6 @@
 {
   "stage_status": "PRG_STAGE_OK",
+  "provenance_status": "PRG_PROVENANCE_LOCKED",
   "solver_status": "SOLVER_NOT_STARTED",
   "source": {
     "provider": "Główny Urząd Geodezji i Kartografii",
@@ -19,6 +20,9 @@
     "get_capabilities_sha256": "2d0db6096925a90bce42258a42bdb1ad679025d640e1050ad282750a0fdc4220",
     "describe_feature_type_sha256": "cc81f378de423ad27c91e21ecfeab4e6765b4765140ca27953d6b8d69dfa884b",
     "raw_gml_sha256": "adf261aae31257dd24843b6f6c0e694efb40041aae3913b1c27aa4801866974c",
+    "raw_gml_compressed_sha256": "91bdab09b9fe77ea02add8cfdf88a41c03ae84587ff8fdfc1808fb340fa41684",
+    "source_manifest_path": "input/prg/source-manifest.json",
+    "source_manifest_sha256": "2d084b7fdc9c0048d83e7153ad5abff32f9184efa42a0bfbff29731ddabcc092",
     "wfs_collection_timestamp": "2026-07-26T16:04:25",
     "extracted_at_utc": "2026-07-26T16:04:26+00:00",
     "source_crs": "EPSG:2180"
@@ -30,7 +34,7 @@
     "gdal_version": "3.13.0",
     "original_geometry_policy": "copied without MakeValid",
     "computational_geometry_policy": "MakeValid only when original is invalid",
-    "official_response_mode": "reused_saved_responses"
+    "official_response_mode": "reused_pinned_response"
   },
   "manifest": {
     "path": "instance/pl_18_capitals_static_instance_v1.yaml",

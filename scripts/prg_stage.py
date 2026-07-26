@@ -4,8 +4,9 @@ import argparse
 import csv
 import hashlib
 import json
-import os
 import re
+import sqlite3
+import subprocess
 import sys
 import time
 import unicodedata
@@ -13,7 +14,6 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
@@ -34,6 +34,16 @@ EXPECTED_TERYT_TYPE = "1"
 EXPECTED_SOURCE_EPSG = "2180"
 COMPUTATIONAL_EPSG = "2180"
 GEOJSON_EPSG = "4326"
+PROVENANCE_STATUS = "PRG_PROVENANCE_LOCKED"
+SOURCE_MANIFEST_PATH = Path("input/prg/source-manifest.json")
+DERIVED_ARTIFACTS_PATH = Path("results/prg/derived-artifacts.json")
+DERIVED_PRODUCT_PATHS = [
+    Path("results/prg/prg-18-original.gpkg"),
+    Path("results/prg/prg-18-computational.gpkg"),
+    Path("results/prg/prg-18.geojson"),
+    Path("results/prg/prg-city-inventory.csv"),
+    Path("results/prg/prg-city-inventory.json"),
+]
 SCHEMA_FIELDS = {
     "geometry": "msGeometry",
     "teryt": "JPT_KOD_JE",
@@ -259,6 +269,50 @@ def sha256_file(path: Path) -> str:
         for block in iter(lambda: source.read(1024 * 1024), b""):
             digest.update(block)
     return digest.hexdigest()
+
+
+def load_source_manifest(repository_root: Path) -> dict[str, object]:
+    path = repository_root / SOURCE_MANIFEST_PATH
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    if manifest.get("provenance_status") != PROVENANCE_STATUS:
+        raise ValueError("PRG source manifest is not provenance-locked")
+    selected = manifest.get("selected_raw_input", {})
+    if selected.get("wfs_url") != PRG_WFS_URL:
+        raise ValueError("source manifest WFS URL differs from the PRG endpoint")
+    if selected.get("feature_type") != "ms:A03_Granice_gmin":
+        raise ValueError("source manifest FeatureType differs from the saved response")
+    if selected.get("crs") != "urn:ogc:def:crs:EPSG::2180":
+        raise ValueError("source manifest CRS differs from the saved response")
+    return manifest
+
+
+def materialize_pinned_raw(
+    repository_root: Path, source_manifest: dict[str, object]
+) -> Path:
+    selected = source_manifest["selected_raw_input"]
+    compressed_path = repository_root / str(selected["compressed_path"])
+    if compressed_path.stat().st_size != int(selected["compressed_byte_size"]):
+        raise ValueError("pinned PRG compressed byte size changed")
+    if sha256_file(compressed_path) != selected["compressed_sha256"]:
+        raise ValueError("pinned PRG compressed SHA-256 changed")
+
+    raw_path = repository_root / str(selected["materialized_path"])
+    temporary_path = raw_path.with_suffix(raw_path.suffix + ".part")
+    raw_path.parent.mkdir(parents=True, exist_ok=True)
+    with temporary_path.open("wb") as output:
+        subprocess.run(
+            ["zstd", "--decompress", "--stdout", str(compressed_path)],
+            check=True,
+            stdout=output,
+        )
+    if temporary_path.stat().st_size != int(selected["byte_size"]):
+        temporary_path.unlink(missing_ok=True)
+        raise ValueError("pinned PRG uncompressed byte size changed")
+    if sha256_file(temporary_path) != selected["raw_sha256"]:
+        temporary_path.unlink(missing_ok=True)
+        raise ValueError("pinned PRG uncompressed SHA-256 changed")
+    temporary_path.replace(raw_path)
+    return raw_path
 
 
 def ensure_wfs_document(data: bytes, request_name: str) -> None:
@@ -641,6 +695,17 @@ def create_vector_output(
     dataset = None
 
 
+def pin_geopackage_timestamp(path: Path, retrieval_timestamp: str) -> None:
+    timestamp = retrieval_timestamp.removesuffix("Z")
+    if not timestamp.endswith(".000"):
+        timestamp = f"{timestamp}.000"
+    with sqlite3.connect(path) as connection:
+        connection.execute(
+            "UPDATE gpkg_contents SET last_change = ?",
+            (f"{timestamp}Z",),
+        )
+
+
 def validate_start_point(
     computational_geometries: dict[str, ogr.Geometry],
     canonical_start: dict[str, object],
@@ -686,11 +751,15 @@ def build_outputs(
     canonical_start: dict[str, object],
     manifest_sha256: str,
     official_response_mode: str,
-    hash_history: dict[str, object] | None,
+    source_manifest: dict[str, object],
+    source_manifest_sha256: str,
 ) -> tuple[list[dict[str, object]], dict[str, object]]:
     results_dir = repository_root / "results/prg"
     raw_path = results_dir / "prg-18-raw.gml"
     raw_sha256 = sha256_file(raw_path)
+    selected_raw = source_manifest["selected_raw_input"]
+    if raw_sha256 != selected_raw["raw_sha256"]:
+        raise ValueError("materialized raw GML differs from the source manifest")
     raw_root, raw_rows = feature_rows_from_gml(
         raw_path, feature_type["name"].rsplit(":", 1)[-1]
     )
@@ -802,6 +871,14 @@ def build_outputs(
         computational_geometries_list,
         ["SPATIAL_INDEX=YES"],
     )
+    pin_geopackage_timestamp(
+        results_dir / "prg-18-original.gpkg",
+        str(selected_raw["retrieval_timestamp"]),
+    )
+    pin_geopackage_timestamp(
+        results_dir / "prg-18-computational.gpkg",
+        str(selected_raw["retrieval_timestamp"]),
+    )
     create_vector_output(
         results_dir / "prg-18.geojson",
         "GeoJSON",
@@ -814,6 +891,7 @@ def build_outputs(
 
     metadata: dict[str, object] = {
         "stage_status": "PRG_STAGE_OK",
+        "provenance_status": PROVENANCE_STATUS,
         "solver_status": "SOLVER_NOT_STARTED",
         "source": {
             "provider": "Główny Urząd Geodezji i Kartografii",
@@ -829,6 +907,9 @@ def build_outputs(
             ),
             "describe_feature_type_sha256": describe_sha256,
             "raw_gml_sha256": raw_sha256,
+            "raw_gml_compressed_sha256": selected_raw["compressed_sha256"],
+            "source_manifest_path": SOURCE_MANIFEST_PATH.as_posix(),
+            "source_manifest_sha256": source_manifest_sha256,
             "wfs_collection_timestamp": raw_root.attrib.get("timeStamp", ""),
             "extracted_at_utc": extracted_at_utc,
             "source_crs": f"EPSG:{source_epsg}",
@@ -854,8 +935,6 @@ def build_outputs(
         "canonical_start_check": start_point_result,
         "cities": records,
     }
-    if hash_history is not None:
-        metadata["official_response_hash_history"] = hash_history
     return records, metadata
 
 
@@ -888,14 +967,60 @@ def write_inventory(
     )
 
 
+def write_derived_artifacts(
+    repository_root: Path, metadata: dict[str, object]
+) -> dict[str, object]:
+    source_manifest_sha256 = str(metadata["source"]["source_manifest_sha256"])
+    raw_gml_sha256 = str(metadata["source"]["raw_gml_sha256"])
+    generator_path = Path("scripts/prg_stage.py")
+    artifacts = {
+        path.as_posix(): {
+            "artifact_sha256": sha256_file(repository_root / path),
+            "raw_gml_sha256": raw_gml_sha256,
+            "manifest_sha256": source_manifest_sha256,
+            "source_manifest_sha256": source_manifest_sha256,
+            "instance_manifest_sha256": metadata["manifest"]["sha256"],
+            "gdal_version": metadata["processing"]["gdal_version"],
+            "geos_version": metadata["processing"]["geos_version"],
+            "generator": {
+                "script": generator_path.as_posix(),
+                "script_sha256": sha256_file(repository_root / generator_path),
+            },
+        }
+        for path in DERIVED_PRODUCT_PATHS
+    }
+    document = {
+        "schema_version": 1,
+        "provenance_status": PROVENANCE_STATUS,
+        "solver_status": "SOLVER_NOT_STARTED",
+        "selected_raw_gml_sha256": raw_gml_sha256,
+        "source_manifest": {
+            "path": SOURCE_MANIFEST_PATH.as_posix(),
+            "sha256": source_manifest_sha256,
+        },
+        "artifacts": artifacts,
+    }
+    output_path = repository_root / DERIVED_ARTIFACTS_PATH
+    output_path.write_text(
+        json.dumps(document, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    return document
+
+
 def write_validation_report(
     results_dir: Path,
     feature_type: dict[str, str],
     metadata: dict[str, object],
     records: list[dict[str, object]],
+    source_manifest: dict[str, object],
+    derived_artifacts: dict[str, object],
 ) -> None:
     source = metadata["source"]
     start_point = metadata["canonical_start_check"]
+    selected_raw = source_manifest["selected_raw_input"]
+    historical_raw = source_manifest["historical_raw_inputs"][0]
+    resolution = source_manifest["hash_difference_resolution"]
     valid_count = sum(bool(record["geos_is_valid"]) for record in records)
     repaired_count = sum(bool(record["make_valid_applied"]) for record in records)
     manifest_city_set = {
@@ -925,6 +1050,23 @@ def write_validation_report(
             [int(record["bit_index"]) for record in records]
             == list(range(EXPECTED_TARGET_COUNT)),
         ),
+        (
+            "Materialized raw GML matches the pinned source manifest",
+            source["raw_gml_sha256"] == selected_raw["raw_sha256"],
+        ),
+        (
+            "Every mapped derived product uses the selected raw GML",
+            all(
+                artifact["raw_gml_sha256"] == selected_raw["raw_sha256"]
+                for artifact in derived_artifacts["artifacts"].values()
+            ),
+        ),
+        (
+            "The two saved responses contain identical canonical PRG objects",
+            bool(resolution["canonical_object_comparison"]["identical"])
+            and int(resolution["canonical_object_comparison"]["feature_count"])
+            == EXPECTED_TARGET_COUNT,
+        ),
     ]
     if not all(passed for _, passed in checks):
         raise ValueError("one or more validation report checks failed")
@@ -933,6 +1075,7 @@ def write_validation_report(
         "# PRG Stage 1 validation report",
         "",
         "- Stage status: `PRG_STAGE_OK`",
+        f"- Provenance status: `{PROVENANCE_STATUS}`",
         "- Solver status: `SOLVER_NOT_STARTED`",
         f"- Official WFS FeatureType: `{feature_type['name']}`",
         f"- TERYT field: `{SCHEMA_FIELDS['teryt']}`",
@@ -950,7 +1093,15 @@ def write_validation_report(
             "- DescribeFeatureType SHA-256: "
             f"`{source['describe_feature_type_sha256']}`"
         ),
-        f"- Raw GML SHA-256: `{source['raw_gml_sha256']}`",
+        f"- Selected raw GML SHA-256: `{source['raw_gml_sha256']}`",
+        (
+            "- Selected compressed GML SHA-256: "
+            f"`{selected_raw['compressed_sha256']}`"
+        ),
+        (
+            "- Source manifest SHA-256: "
+            f"`{source['source_manifest_sha256']}`"
+        ),
         (
             "- Official response mode: "
             f"`{metadata['processing']['official_response_mode']}`"
@@ -979,33 +1130,76 @@ def write_validation_report(
                 f"{start_point['latitude_text']} | "
                 f"`{'PASS' if start_point['inside_warszawa'] else 'FAIL'}` |"
             ),
+            "",
+            "## Raw input provenance",
+            "",
+            "| Role | WFS timestamp | Bytes | Raw SHA-256 | Compressed SHA-256 |",
+            "|---|---|---:|---|---|",
+            (
+                f"| Selected pinned input | `{selected_raw['retrieval_timestamp']}` | "
+                f"{selected_raw['byte_size']} | `{selected_raw['raw_sha256']}` | "
+                f"`{selected_raw['compressed_sha256']}` |"
+            ),
+            (
+                f"| Old saved report response | "
+                f"`{historical_raw['wfs_collection_timestamp']}` | "
+                f"{historical_raw['byte_size']} | `{historical_raw['raw_sha256']}` | "
+                f"`{historical_raw['compressed_sha256']}` |"
+            ),
+            "",
+            (
+                "The old and selected raw GML files are both retained. Their only "
+                "byte-level difference is "
+                f"`{resolution['only_byte_difference']}`: "
+                f"`{resolution['historical_timestamp']}` in the old response and "
+                f"`{resolution['selected_timestamp']}` in the selected response. "
+                "After replacing only that attribute with a fixed marker, both "
+                "responses have SHA-256 "
+                f"`{resolution['timestamp_normalized_sha256']}`."
+            ),
+            "",
+            (
+                "The earlier report mode "
+                f"`{resolution['prior_report_mode']}` meant only that no new "
+                "response was downloaded; it did not identify the reused file. "
+                f"{resolution['resolution']}"
+            ),
+            "",
+            (
+                "The 18 canonical objects were joined by "
+                f"`{resolution['canonical_object_comparison']['join_key']}` and "
+                "compared using `JPT_NAZWA_`, `JPT_ID`, and ISO WKB. Result: "
+                f"`{resolution['canonical_object_comparison']['feature_count']}/18 "
+                "identical`. No geometry or PRG identity difference was found."
+            ),
+            "",
+            (
+                "The selected input is permanently pinned at "
+                f"`{selected_raw['compressed_path']}`. The old response is retained at "
+                f"`{historical_raw['compressed_path']}`. Neither depends on a "
+                "temporary Actions artifact."
+            ),
+            "",
+            "## Derived artifact lineage",
+            "",
+            "| Derived file | Exact raw GML SHA-256 | Artifact SHA-256 |",
+            "|---|---|---|",
         ]
     )
-    if "official_response_hash_history" in metadata:
-        history = metadata["official_response_hash_history"]
-        lines.extend(
-            [
-                "",
-                "## Official response hash history",
-                "",
-                "| Response | Previous SHA-256 | Current SHA-256 |",
-                "|---|---|---|",
-                (
-                    "| DescribeFeatureType | "
-                    f"`{history['describe_feature_type']['previous']}` | "
-                    f"`{history['describe_feature_type']['current']}` |"
-                ),
-                (
-                    "| Raw GML | "
-                    f"`{history['raw_gml']['previous']}` | "
-                    f"`{history['raw_gml']['current']}` |"
-                ),
-                "",
-                str(history["explanation"]),
-            ]
+    for path in DERIVED_PRODUCT_PATHS:
+        artifact = derived_artifacts["artifacts"][path.as_posix()]
+        lines.append(
+            f"| `{path.as_posix()}` | `{artifact['raw_gml_sha256']}` | "
+            f"`{artifact['artifact_sha256']}` |"
         )
     lines.extend(
         [
+            "",
+            (
+                "All five products above were generated from selected raw GML "
+                f"`{selected_raw['raw_sha256']}`. Their machine-readable mapping is "
+                f"`{DERIVED_ARTIFACTS_PATH.as_posix()}`."
+            ),
             "",
             "## Canonical city and bitmask order",
             "",
@@ -1034,6 +1228,10 @@ def write_validation_report(
             "",
             "No route optimizer or solver was started in this stage.",
             "",
+            f"`{PROVENANCE_STATUS}`",
+            "",
+            "`SOLVER_NOT_STARTED`",
+            "",
         ]
     )
     (results_dir / "validation-report.md").write_text(
@@ -1045,12 +1243,20 @@ def write_sha256sums(repository_root: Path) -> None:
     paths = [
         Path("input/prg/GetCapabilities.xml"),
         Path("input/prg/DescribeFeatureType.xml"),
+        Path("input/prg/source-manifest.json"),
+        Path("input/prg/prg-18-raw.gml.zst"),
+        Path(
+            "input/prg/history/"
+            "prg-18-raw-0e3f113673620334867151f8845853680d31ff4b511fdbf2124eb2d1d64f4838"
+            ".gml.zst"
+        ),
         Path("results/prg/prg-18-raw.gml"),
         Path("results/prg/prg-18-original.gpkg"),
         Path("results/prg/prg-18-computational.gpkg"),
         Path("results/prg/prg-18.geojson"),
         Path("results/prg/prg-city-inventory.csv"),
         Path("results/prg/prg-city-inventory.json"),
+        Path("results/prg/derived-artifacts.json"),
         Path("results/prg/validation-report.md"),
     ]
     lines = [
@@ -1081,44 +1287,39 @@ def preserved_extraction_time(
 
 
 def run(repository_root: Path, refresh_official_responses: bool) -> None:
+    if refresh_official_responses:
+        raise ValueError(
+            "the provenance lock forbids overwriting the selected PRG responses; "
+            "capture any future response under a new immutable path and audit it "
+            "before changing input/prg/source-manifest.json"
+        )
+
     capabilities_path = repository_root / "input/prg/GetCapabilities.xml"
     describe_path = repository_root / "input/prg/DescribeFeatureType.xml"
     instance_path = (
         repository_root / "instance/pl_18_capitals_static_instance_v1.yaml"
     )
     results_dir = repository_root / "results/prg"
-    raw_path = results_dir / "prg-18-raw.gml"
-    work_dir = Path(
-        os.environ.get(
-            "RUNNER_TEMP",
-            os.environ.get("TMPDIR", "/tmp"),
-        )
-    ) / f"pl18-prg-stage-{os.getpid()}"
-    work_dir.mkdir(parents=True, exist_ok=True)
     results_dir.mkdir(parents=True, exist_ok=True)
 
+    source_manifest = load_source_manifest(repository_root)
+    source_manifest_sha256 = sha256_file(repository_root / SOURCE_MANIFEST_PATH)
+    selected_raw = source_manifest["selected_raw_input"]
+    raw_path = materialize_pinned_raw(repository_root, source_manifest)
     instance = load_instance(instance_path)
     targets = instance["targets"]
     feature_type = select_gmina_feature_type(capabilities_path)
     feature_type_local = feature_type["name"].rsplit(":", 1)[-1]
     print(f"Selected PRG WFS FeatureType: {feature_type['name']}")
+    if feature_type["name"] != selected_raw["feature_type"]:
+        raise ValueError("GetCapabilities FeatureType differs from source manifest")
+    if feature_type["default_crs"] != selected_raw["crs"]:
+        raise ValueError("GetCapabilities CRS differs from source manifest")
 
-    old_describe_sha256 = sha256_file(describe_path)
-    old_raw_sha256 = sha256_file(raw_path)
-    hash_history: dict[str, object] | None = None
-    if refresh_official_responses:
-        fetch_wfs(
-            {
-                "SERVICE": "WFS",
-                "VERSION": WFS_VERSION,
-                "REQUEST": "DescribeFeatureType",
-                "TYPENAMES": feature_type["name"],
-            },
-            describe_path,
-            "DescribeFeatureType",
-        )
     schema = parse_describe_feature_type(describe_path, feature_type_local)
     describe_sha256 = sha256_file(describe_path)
+    if describe_sha256 != selected_raw["describe_feature_type_sha256"]:
+        raise ValueError("DescribeFeatureType differs from source manifest")
     print(f"DescribeFeatureType SHA-256: {describe_sha256}")
     print(
         "Confirmed schema fields: "
@@ -1128,71 +1329,11 @@ def run(repository_root: Path, refresh_official_responses: bool) -> None:
         )
     )
 
-    if refresh_official_responses:
-        discovery_path = work_dir / "prg-18-name-discovery.gml"
-        fetch_wfs(
-            {
-                "SERVICE": "WFS",
-                "VERSION": WFS_VERSION,
-                "REQUEST": "GetFeature",
-                "TYPENAMES": feature_type["name"],
-                "SRSNAME": feature_type["default_crs"],
-                "FILTER": build_or_filter(
-                    SCHEMA_FIELDS["name"], [target["name"] for target in targets]
-                ),
-            },
-            discovery_path,
-            "GetFeature name discovery",
-        )
-        selected_targets = discover_targets(
-            discovery_path, feature_type_local, targets
-        )
-        fetch_wfs(
-            {
-                "SERVICE": "WFS",
-                "VERSION": WFS_VERSION,
-                "REQUEST": "GetFeature",
-                "TYPENAMES": feature_type["name"],
-                "SRSNAME": feature_type["default_crs"],
-                "SORTBY": SCHEMA_FIELDS["teryt"],
-                "FILTER": build_or_filter(
-                    SCHEMA_FIELDS["teryt"],
-                    [target["teryt"] for target in selected_targets],
-                ),
-            },
-            raw_path,
-            "GetFeature TERYT export",
-        )
-        extracted_at_utc = (
-            datetime.now(timezone.utc).replace(microsecond=0).isoformat()
-        )
-        new_raw_sha256 = sha256_file(raw_path)
-        hash_history = {
-            "describe_feature_type": {
-                "previous": old_describe_sha256,
-                "current": describe_sha256,
-            },
-            "raw_gml": {
-                "previous": old_raw_sha256,
-                "current": new_raw_sha256,
-            },
-            "explanation": (
-                "Official WFS responses were downloaded again. Raw GML hashes "
-                "may differ because the service embeds a response timeStamp; "
-                "the response bytes were not normalized."
-            ),
-        }
-        official_response_mode = "downloaded_again"
-    else:
-        selected_targets = select_targets_from_raw(
-            raw_path, feature_type_local, targets
-        )
-        extracted_at_utc = preserved_extraction_time(
-            results_dir / "prg-city-inventory.json",
-            old_raw_sha256,
-            raw_path,
-        )
-        official_response_mode = "reused_saved_responses"
+    selected_targets = select_targets_from_raw(raw_path, feature_type_local, targets)
+    extracted_at_utc = str(
+        selected_raw["permanent_evidence"]["inventory_extracted_at_utc"]
+    )
+    official_response_mode = "reused_pinned_response"
 
     print("Manifest-verified official TERYT codes:")
     for target in selected_targets:
@@ -1210,13 +1351,22 @@ def run(repository_root: Path, refresh_official_responses: bool) -> None:
         instance["canonical_start"],
         instance["manifest_sha256"],
         official_response_mode,
-        hash_history,
+        source_manifest,
+        source_manifest_sha256,
     )
     write_inventory(results_dir, records, metadata)
-    write_validation_report(results_dir, feature_type, metadata, records)
+    derived_artifacts = write_derived_artifacts(repository_root, metadata)
+    write_validation_report(
+        results_dir,
+        feature_type,
+        metadata,
+        records,
+        source_manifest,
+        derived_artifacts,
+    )
     write_sha256sums(repository_root)
     print(f"Raw GML SHA-256: {metadata['source']['raw_gml_sha256']}")
-    print("PRG_STAGE_OK")
+    print(PROVENANCE_STATUS)
     print("SOLVER_NOT_STARTED")
 
 
@@ -1232,7 +1382,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--refresh-official-responses",
         action="store_true",
-        help="Download fresh DescribeFeatureType and raw GML responses.",
+        help="Rejected by the provenance lock; retained to fail old callers safely.",
     )
     return parser.parse_args()
 

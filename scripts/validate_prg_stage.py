@@ -4,6 +4,7 @@ import csv
 import hashlib
 import json
 import re
+import subprocess
 import sys
 import xml.etree.ElementTree as ET
 from decimal import Decimal
@@ -12,9 +13,13 @@ from pathlib import Path
 from osgeo import gdal, ogr, osr
 
 from prg_stage import (
+    DERIVED_ARTIFACTS_PATH,
+    DERIVED_PRODUCT_PATHS,
     EXPECTED_TARGET_COUNT,
     GEOJSON_EPSG,
     INVENTORY_COLUMNS,
+    PROVENANCE_STATUS,
+    SOURCE_MANIFEST_PATH,
     authority_code,
     canonical_city_name,
     geometry_is_multipart,
@@ -54,25 +59,119 @@ def features_by_teryt(layer: object) -> dict[str, object]:
 
 def verify_checksums(repository_root: Path) -> None:
     sums_path = repository_root / "results/prg/SHA256SUMS"
+    listed_paths: set[str] = set()
     for line in sums_path.read_text(encoding="utf-8").splitlines():
         expected, relative_path = line.split("  ", 1)
+        listed_paths.add(relative_path)
         actual = sha256_file(repository_root / relative_path)
         if actual != expected:
             raise ValueError(
                 f"SHA-256 mismatch for {relative_path}: expected {expected}, got {actual}"
             )
+    required_paths = {
+        SOURCE_MANIFEST_PATH.as_posix(),
+        "input/prg/prg-18-raw.gml.zst",
+        "results/prg/prg-18-raw.gml",
+        DERIVED_ARTIFACTS_PATH.as_posix(),
+        *(path.as_posix() for path in DERIVED_PRODUCT_PATHS),
+    }
+    if not required_paths.issubset(listed_paths):
+        missing = sorted(required_paths - listed_paths)
+        raise ValueError(f"SHA256SUMS is missing provenance files: {missing}")
+
+
+def decompress_zstd(path: Path) -> bytes:
+    result = subprocess.run(
+        ["zstd", "--decompress", "--stdout", str(path)],
+        check=True,
+        capture_output=True,
+    )
+    return result.stdout
+
+
+def verify_source_provenance(
+    repository_root: Path,
+) -> tuple[dict[str, object], str]:
+    source_manifest_path = repository_root / SOURCE_MANIFEST_PATH
+    source_manifest_sha256 = sha256_file(source_manifest_path)
+    source_manifest = json.loads(source_manifest_path.read_text(encoding="utf-8"))
+    if source_manifest["provenance_status"] != PROVENANCE_STATUS:
+        raise ValueError("source manifest is not provenance-locked")
+
+    selected = source_manifest["selected_raw_input"]
+    compressed_path = repository_root / selected["compressed_path"]
+    if compressed_path.stat().st_size != selected["compressed_byte_size"]:
+        raise ValueError("selected compressed PRG byte size changed")
+    if sha256_file(compressed_path) != selected["compressed_sha256"]:
+        raise ValueError("selected compressed PRG SHA-256 changed")
+    selected_bytes = decompress_zstd(compressed_path)
+    if len(selected_bytes) != selected["byte_size"]:
+        raise ValueError("selected raw PRG byte size changed")
+    if hashlib.sha256(selected_bytes).hexdigest() != selected["raw_sha256"]:
+        raise ValueError("selected raw PRG SHA-256 changed")
+
+    materialized_path = repository_root / selected["materialized_path"]
+    if materialized_path.read_bytes() != selected_bytes:
+        raise ValueError("materialized raw GML differs from selected pinned bytes")
+    describe_path = repository_root / selected["describe_feature_type_path"]
+    if sha256_file(describe_path) != selected["describe_feature_type_sha256"]:
+        raise ValueError("DescribeFeatureType differs from source manifest")
+
+    historical_inputs = source_manifest["historical_raw_inputs"]
+    if len(historical_inputs) != 1:
+        raise ValueError("expected exactly one retained historical raw response")
+    historical = historical_inputs[0]
+    historical_path = repository_root / historical["compressed_path"]
+    if historical_path.stat().st_size != historical["compressed_byte_size"]:
+        raise ValueError("historical compressed PRG byte size changed")
+    if sha256_file(historical_path) != historical["compressed_sha256"]:
+        raise ValueError("historical compressed PRG SHA-256 changed")
+    historical_bytes = decompress_zstd(historical_path)
+    if len(historical_bytes) != historical["byte_size"]:
+        raise ValueError("historical raw PRG byte size changed")
+    if hashlib.sha256(historical_bytes).hexdigest() != historical["raw_sha256"]:
+        raise ValueError("historical raw PRG SHA-256 changed")
+
+    resolution = source_manifest["hash_difference_resolution"]
+    if resolution["selected_raw_sha256"] != selected["raw_sha256"]:
+        raise ValueError("hash resolution does not identify the selected raw input")
+    if resolution["historical_raw_sha256"] != historical["raw_sha256"]:
+        raise ValueError("hash resolution does not identify the historical raw input")
+    comparison = resolution["canonical_object_comparison"]
+    if not comparison["identical"] or comparison["feature_count"] != 18:
+        raise ValueError("saved PRG responses are not documented as 18/18 identical")
+    if resolution["only_byte_difference"] != "wfs:FeatureCollection/@timeStamp":
+        raise ValueError("raw hash difference is not pinned to the WFS timestamp")
+    return source_manifest, source_manifest_sha256
 
 
 def verify_inventory(
-    repository_root: Path, instance: dict[str, object]
+    repository_root: Path,
+    instance: dict[str, object],
+    source_manifest: dict[str, object],
+    source_manifest_sha256: str,
 ) -> dict[str, object]:
     targets = instance["targets"]
     json_path = repository_root / "results/prg/prg-city-inventory.json"
     inventory = json.loads(json_path.read_text(encoding="utf-8"))
     if inventory["stage_status"] != "PRG_STAGE_OK":
         raise ValueError("stage status is not PRG_STAGE_OK")
+    if inventory["provenance_status"] != PROVENANCE_STATUS:
+        raise ValueError("inventory provenance status is not locked")
     if inventory["solver_status"] != "SOLVER_NOT_STARTED":
         raise ValueError("solver status is not SOLVER_NOT_STARTED")
+    selected_raw = source_manifest["selected_raw_input"]
+    if inventory["source"]["raw_gml_sha256"] != selected_raw["raw_sha256"]:
+        raise ValueError("inventory refers to a different raw GML")
+    if (
+        inventory["source"]["raw_gml_compressed_sha256"]
+        != selected_raw["compressed_sha256"]
+    ):
+        raise ValueError("inventory refers to a different compressed raw GML")
+    if inventory["source"]["source_manifest_sha256"] != source_manifest_sha256:
+        raise ValueError("inventory refers to a different source manifest")
+    if inventory["processing"]["official_response_mode"] != "reused_pinned_response":
+        raise ValueError("inventory did not use the pinned official response")
     cities = inventory["cities"]
     if len(cities) != EXPECTED_TARGET_COUNT:
         raise ValueError(f"inventory contains {len(cities)} cities")
@@ -146,6 +245,64 @@ def verify_inventory(
     ):
         raise ValueError("CSV bit indexes differ from manifest")
     return inventory
+
+
+def verify_derived_artifacts(
+    repository_root: Path,
+    inventory: dict[str, object],
+    instance: dict[str, object],
+    source_manifest: dict[str, object],
+    source_manifest_sha256: str,
+) -> None:
+    path = repository_root / DERIVED_ARTIFACTS_PATH
+    document = json.loads(path.read_text(encoding="utf-8"))
+    selected_raw_sha256 = source_manifest["selected_raw_input"]["raw_sha256"]
+    if document["provenance_status"] != PROVENANCE_STATUS:
+        raise ValueError("derived artifact map is not provenance-locked")
+    if document["solver_status"] != "SOLVER_NOT_STARTED":
+        raise ValueError("derived artifact map has the wrong solver status")
+    if document["selected_raw_gml_sha256"] != selected_raw_sha256:
+        raise ValueError("derived artifact map selects a different raw GML")
+    if document["source_manifest"]["sha256"] != source_manifest_sha256:
+        raise ValueError("derived artifact map selects a different source manifest")
+
+    expected_paths = {path.as_posix() for path in DERIVED_PRODUCT_PATHS}
+    artifacts = document["artifacts"]
+    if set(artifacts) != expected_paths:
+        raise ValueError("derived artifact map does not cover exactly five products")
+    for relative_path, artifact in artifacts.items():
+        if artifact["raw_gml_sha256"] != selected_raw_sha256:
+            raise ValueError(f"{relative_path} refers to a different raw GML")
+        if artifact["manifest_sha256"] != source_manifest_sha256:
+            raise ValueError(f"{relative_path} refers to a different manifest")
+        if artifact["source_manifest_sha256"] != source_manifest_sha256:
+            raise ValueError(f"{relative_path} source manifest SHA-256 differs")
+        if artifact["instance_manifest_sha256"] != instance["manifest_sha256"]:
+            raise ValueError(f"{relative_path} instance manifest SHA-256 differs")
+        if artifact["gdal_version"] != inventory["processing"]["gdal_version"]:
+            raise ValueError(f"{relative_path} GDAL version differs from inventory")
+        if artifact["geos_version"] != inventory["processing"]["geos_version"]:
+            raise ValueError(f"{relative_path} GEOS version differs from inventory")
+        generator = artifact["generator"]
+        generator_path = repository_root / generator["script"]
+        if generator["script_sha256"] != sha256_file(generator_path):
+            raise ValueError(f"{relative_path} generator script SHA-256 changed")
+        if artifact["artifact_sha256"] != sha256_file(
+            repository_root / relative_path
+        ):
+            raise ValueError(f"{relative_path} content SHA-256 changed")
+
+    for vector_path in DERIVED_PRODUCT_PATHS[:3]:
+        dataset, layer = read_layer(repository_root / vector_path)
+        if layer.GetFeatureCount() != EXPECTED_TARGET_COUNT:
+            raise ValueError(f"{vector_path} feature count is not 18")
+        for feature in layer:
+            if (
+                feature.GetFieldAsString("source_wfs_response_sha256")
+                != selected_raw_sha256
+            ):
+                raise ValueError(f"{vector_path} embeds a different raw GML hash")
+        dataset = None
 
 
 def verify_raw_and_original(
@@ -293,6 +450,7 @@ def verify_report_contract(
     repository_root: Path,
     inventory: dict[str, object],
     instance: dict[str, object],
+    source_manifest: dict[str, object],
 ) -> None:
     report = (
         repository_root / "results/prg/validation-report.md"
@@ -304,7 +462,11 @@ def verify_report_contract(
     ]
     if rows != expected:
         raise ValueError("validation report city order is not deterministic")
-    if "PRG_STAGE_OK" not in report or "SOLVER_NOT_STARTED" not in report:
+    if (
+        "PRG_STAGE_OK" not in report
+        or PROVENANCE_STATUS not in report
+        or "SOLVER_NOT_STARTED" not in report
+    ):
         raise ValueError("validation report is missing stage statuses")
     start = instance["canonical_start"]
     expected_coordinate_row = (
@@ -313,20 +475,55 @@ def verify_report_contract(
     )
     if expected_coordinate_row not in report:
         raise ValueError("validation report does not show exact manifest coordinate")
+    selected = source_manifest["selected_raw_input"]
+    historical = source_manifest["historical_raw_inputs"][0]
+    resolution = source_manifest["hash_difference_resolution"]
+    required_provenance_values = [
+        selected["raw_sha256"],
+        selected["compressed_sha256"],
+        historical["raw_sha256"],
+        historical["compressed_sha256"],
+        resolution["timestamp_normalized_sha256"],
+        "wfs:FeatureCollection/@timeStamp",
+        resolution["prior_report_mode"],
+        "18/18 identical",
+    ]
+    for value in required_provenance_values:
+        if str(value) not in report:
+            raise ValueError(f"validation report omits provenance value {value}")
+    for path in DERIVED_PRODUCT_PATHS:
+        expected_lineage = f"| `{path.as_posix()}` | `{selected['raw_sha256']}` |"
+        if expected_lineage not in report:
+            raise ValueError(f"validation report omits lineage for {path}")
 
 
 def run(repository_root: Path) -> None:
     instance = load_instance(
         repository_root / "instance/pl_18_capitals_static_instance_v1.yaml"
     )
-    inventory = verify_inventory(repository_root, instance)
+    source_manifest, source_manifest_sha256 = verify_source_provenance(
+        repository_root
+    )
+    inventory = verify_inventory(
+        repository_root,
+        instance,
+        source_manifest,
+        source_manifest_sha256,
+    )
+    verify_derived_artifacts(
+        repository_root,
+        inventory,
+        instance,
+        source_manifest,
+        source_manifest_sha256,
+    )
     verify_raw_and_original(repository_root, inventory, instance)
     verify_computational_and_start_points(repository_root, inventory, instance)
     verify_geojson(repository_root)
-    verify_report_contract(repository_root, inventory, instance)
+    verify_report_contract(repository_root, inventory, instance, source_manifest)
     verify_checksums(repository_root)
     print("All PRG Stage 1 checks passed.")
-    print("PRG_STAGE_OK")
+    print(PROVENANCE_STATUS)
     print("SOLVER_NOT_STARTED")
 
 
