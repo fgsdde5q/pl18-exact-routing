@@ -285,6 +285,7 @@ def main() -> int:
     restrictions_summary = {
         "enforced_turn_restrictions": export_summary["enforced_turn_restrictions"],
         "prohibited_turn_violations": 0,
+        "enforcement_source": "OSRM v26.5.0 accepted restriction graph and edge-based transitions",
         "conditional_restrictions": "ignored",
     }
     (args.output / "restrictions-summary.json").write_text(
@@ -340,6 +341,7 @@ def main() -> int:
 - Legal directed motorcar edges: `{edge_count}`
 - Edge-based turn states: `{turn_count}`
 - Enforced turn restrictions: `{export_summary["enforced_turn_restrictions"]}`
+- Restriction authority: OSRM's accepted restriction graph after invalid-restriction removal.
 - Forbidden ferry edges: `{export_summary["forbidden_ferry_edges"]}`
 - Rejected private/non-motorcar edges: `{export_summary["rejected_private_nonmotorcar_edges"]}`
 
@@ -376,7 +378,8 @@ def main() -> int:
 - Second clean metadata build: `PASS`
 - OSRM binary files {binary_note}.
 - Stable edge IDs unique, values non-negative, endpoints connected: `PASS`
-- Prohibited turn absence, ferry/private rejection and 150 m snap bound: `PASS`
+- Export contains only OSRM-allowed turn transitions; prohibited-status records: `0`.
+- Ferry/private rejection and 150 m snap bound: `PASS`
 """
     (args.output / "validation-report.md").write_text(report, encoding="utf-8")
 

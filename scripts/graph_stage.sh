@@ -101,7 +101,7 @@ build_graph() {
     --threads "$JOBS" \
     --profile "$PROFILE" \
     --output "${graph_root}/poland.osrm" \
-    "$PBF_PATH"
+    "$PBF_PATH" 2>&1 | tee "${build_root}/extract.log"
   /usr/bin/time -v -o "${build_root}/partition.time" \
     "${OSRM_BUILD}/osrm-partition" \
     --threads "$JOBS" \
@@ -119,6 +119,7 @@ build_graph() {
       --manifest "$MANIFEST" \
       --pbf "$PBF_PATH" \
       --osrm-dump "$dump_root" \
+      --osrm-extract-log "${build_root}/extract.log" \
       --output "$metadata_root" \
       --temp "$temp_root"
 

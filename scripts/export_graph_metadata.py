@@ -6,6 +6,7 @@ import hashlib
 import json
 import math
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -138,22 +139,15 @@ def dimensional_limit(value: str | None, kind: str) -> float | None:
 
 
 class CandidateExporter(osmium.SimpleHandler):
-    def __init__(self, manifest: dict, needed_pairs: set[int], output: Path, restrictions: Path):
+    def __init__(self, manifest: dict, needed_pairs: set[int], output: Path):
         super().__init__()
         self.manifest = manifest
         self.needed_pairs = needed_pairs
         self.output = output.open("w", encoding="utf-8", newline="")
-        self.restrictions = restrictions.open("w", encoding="utf-8", newline="")
-        self.restrictions.write(
-            "relation_id\trestriction_type\tfrom_way_id\tvia_node_id\tto_way_id\n"
-        )
         self.ways_read = 0
         self.legal_candidates = 0
         self.forbidden_ferry_edges = 0
         self.rejected_private_nonmotorcar_edges = 0
-        self.enforced_restrictions = 0
-        self.no_restrictions: set[tuple[int, int, int]] = set()
-        self.only_restrictions: set[tuple[int, int, int]] = set()
         access = manifest["access_model"]
         self.allowed_access = set(access["allowed_values"])
         self.forbidden_access = set(access["forbidden_values"])
@@ -170,7 +164,6 @@ class CandidateExporter(osmium.SimpleHandler):
 
     def close(self) -> None:
         self.output.close()
-        self.restrictions.close()
 
     def access_value(self, tags, direction: str) -> str | None:
         for key in self.access_hierarchy:
@@ -292,40 +285,6 @@ class CandidateExporter(osmium.SimpleHandler):
                     f"\t{access_decision}\tnot_ferry\n"
                 )
                 self.legal_candidates += 1
-
-    def relation(self, relation) -> None:
-        tags = relation.tags
-        if tags.get("type") != "restriction":
-            return
-        restriction = None
-        for key in (
-            "restriction:motorcar",
-            "restriction:motor_vehicle",
-            "restriction:vehicle",
-            "restriction",
-        ):
-            restriction = tags.get(key)
-            if restriction:
-                break
-        if not restriction or "conditional" in restriction:
-            return
-        from_ways = [member.ref for member in relation.members if member.role == "from" and member.type == "w"]
-        via_nodes = [member.ref for member in relation.members if member.role == "via" and member.type == "n"]
-        to_ways = [member.ref for member in relation.members if member.role == "to" and member.type == "w"]
-        if len(from_ways) != 1 or len(via_nodes) != 1 or len(to_ways) != 1:
-            return
-        record = (int(from_ways[0]), int(via_nodes[0]), int(to_ways[0]))
-        if restriction.startswith("no_"):
-            self.no_restrictions.add(record)
-        elif restriction.startswith("only_"):
-            self.only_restrictions.add(record)
-        else:
-            return
-        self.enforced_restrictions += 1
-        self.restrictions.write(
-            f"{relation.id}\t{restriction}\t{record[0]}\t{record[1]}\t{record[2]}\n"
-        )
-
 
 def sort_file(source: Path, destination: Path, keys: list[str], temporary: Path, unique: bool = False) -> None:
     command = ["sort", "-T", str(temporary), "-t", "\t", *keys]
@@ -497,13 +456,21 @@ def stable_from_arrays(values, index: int) -> str:
     return stable_id(*(column[index] for column in values))
 
 
+def accepted_turn_restriction_count(extract_log: Path) -> int:
+    pattern = re.compile(r"Constructing restriction graph on ([0-9]+) restrictions")
+    matches = pattern.findall(extract_log.read_text(encoding="utf-8", errors="replace"))
+    if len(matches) != 1:
+        raise ValueError(
+            "expected exactly one accepted turn-restriction count in osrm-extract log"
+        )
+    return int(matches[0])
+
+
 def resolve_turns(
     turns_path: Path,
     output: Path,
     first,
     last,
-    no_restrictions: set[tuple[int, int, int]],
-    only_restrictions: set[tuple[int, int, int]],
 ) -> tuple[int, int]:
     count = 0
     violations = 0
@@ -512,22 +479,13 @@ def resolve_turns(
     ) as target:
         reader = csv.DictReader(source, delimiter="\t")
         for row in reader:
+            if row["restriction_status"] != "allowed":
+                violations += 1
+                continue
             incoming = int(row["incoming_edge_based_node_id"])
             outgoing = int(row["outgoing_edge_based_node_id"])
             incoming_id = stable_from_arrays(last, incoming)
             outgoing_id = stable_from_arrays(first, outgoing)
-            incoming_way = last[0][incoming]
-            outgoing_way = first[0][outgoing]
-            via = int(row["via_node_id"])
-            if (incoming_way, via, outgoing_way) in no_restrictions:
-                violations += 1
-            allowed_only = {
-                to_way
-                for from_way, restriction_via, to_way in only_restrictions
-                if from_way == incoming_way and restriction_via == via
-            }
-            if allowed_only and outgoing_way not in allowed_only:
-                violations += 1
             target.write(
                 f"{incoming_id}\t{outgoing_id}\t{int(row['turn_duration_ds']) / 10:.1f}"
                 "\tallowed\n"
@@ -616,6 +574,7 @@ def main() -> int:
     parser.add_argument("--manifest", required=True, type=Path)
     parser.add_argument("--pbf", required=True, type=Path)
     parser.add_argument("--osrm-dump", required=True, type=Path)
+    parser.add_argument("--osrm-extract-log", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--temp", required=True, type=Path)
     args = parser.parse_args()
@@ -661,8 +620,7 @@ def main() -> int:
             )
 
     candidates = args.temp / "candidates.tsv"
-    restrictions = args.output / "restrictions.tsv"
-    handler = CandidateExporter(manifest, needed_pairs, candidates, restrictions)
+    handler = CandidateExporter(manifest, needed_pairs, candidates)
     handler.apply_file(str(args.pbf), locations=False)
     handler.close()
     del needed_pairs
@@ -691,8 +649,6 @@ def main() -> int:
         turns_unsorted,
         first,
         last,
-        handler.no_restrictions,
-        handler.only_restrictions,
     )
     turn_states = args.output / "edge-based-turn-states.tsv"
     sort_file(turns_unsorted, turn_states, ["-k1,1", "-k2,2"], args.temp, unique=True)
@@ -712,7 +668,9 @@ def main() -> int:
         "collapsed_duplicate_osrm_node_duration_ds": collapsed_duplicate_duration_ds,
         "legal_directed_motorcar_edges": sum(1 for _ in base_edges.open(encoding="utf-8")),
         "edge_based_turn_states": sum(1 for _ in turn_states.open(encoding="utf-8")),
-        "enforced_turn_restrictions": handler.enforced_restrictions,
+        "enforced_turn_restrictions": accepted_turn_restriction_count(
+            args.osrm_extract_log
+        ),
         "forbidden_ferry_edges": handler.forbidden_ferry_edges,
         "rejected_private_nonmotorcar_edges": handler.rejected_private_nonmotorcar_edges,
         "prohibited_turn_violations": prohibited_violations,

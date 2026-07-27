@@ -6,6 +6,7 @@ import os
 import subprocess
 import tempfile
 import unittest
+from array import array
 from pathlib import Path
 
 
@@ -30,6 +31,13 @@ OSM_FIXTURE = """<?xml version="1.0" encoding="UTF-8"?>
     <nd ref="3"/><nd ref="4"/>
     <tag k="route" v="ferry"/>
   </way>
+  <relation id="20">
+    <member type="way" ref="10" role="from"/>
+    <member type="node" ref="2" role="via"/>
+    <member type="way" ref="10" role="to"/>
+    <tag k="type" v="restriction"/>
+    <tag k="restriction" v="no_u_turn"/>
+  </relation>
 </osm>
 """
 
@@ -59,6 +67,11 @@ class GraphMetadataExportTests(unittest.TestCase):
                 "1\t0\t2\t1\t2\t200\tallowed\n",
                 encoding="utf-8",
             )
+            extract_log = root / "osrm-extract.log"
+            extract_log.write_text(
+                "[info] Constructing restriction graph on 1 restrictions...ok\n",
+                encoding="utf-8",
+            )
             output = root / "output"
             temporary = root / "temp"
             subprocess.run(
@@ -71,6 +84,8 @@ class GraphMetadataExportTests(unittest.TestCase):
                     str(osm),
                     "--osrm-dump",
                     str(dump),
+                    "--osrm-extract-log",
+                    str(extract_log),
                     "--output",
                     str(output),
                     "--temp",
@@ -95,6 +110,8 @@ class GraphMetadataExportTests(unittest.TestCase):
             )
             self.assertEqual(summary["legal_directed_motorcar_edges"], 2)
             self.assertEqual(summary["edge_based_turn_states"], 2)
+            self.assertEqual(summary["enforced_turn_restrictions"], 1)
+            self.assertEqual(summary["prohibited_turn_violations"], 0)
             self.assertEqual(summary["collapsed_duplicate_osrm_node_segments"], 1)
             self.assertEqual(summary["collapsed_duplicate_osrm_node_duration_ds"], 1)
             self.assertEqual(summary["rejected_private_nonmotorcar_edges"], 2)
@@ -159,6 +176,58 @@ class GraphMetadataExportTests(unittest.TestCase):
                     handler.direction_flags({"oneway": value}, "secondary"),
                     (True, True),
                 )
+
+    def test_accepted_restriction_count_requires_one_osrm_record(self) -> None:
+        repository_root = Path(__file__).resolve().parent.parent
+        spec = importlib.util.spec_from_file_location(
+            "export_graph_metadata_restrictions",
+            repository_root / "scripts/export_graph_metadata.py",
+        )
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with tempfile.TemporaryDirectory() as directory:
+            extract_log = Path(directory) / "extract.log"
+            extract_log.write_text(
+                "[info] Constructing restriction graph on 42 restrictions...ok\n",
+                encoding="utf-8",
+            )
+            self.assertEqual(module.accepted_turn_restriction_count(extract_log), 42)
+            extract_log.write_text("missing count\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "exactly one"):
+                module.accepted_turn_restriction_count(extract_log)
+
+    def test_prohibited_osrm_turn_record_is_rejected(self) -> None:
+        repository_root = Path(__file__).resolve().parent.parent
+        spec = importlib.util.spec_from_file_location(
+            "export_graph_metadata_prohibited",
+            repository_root / "scripts/export_graph_metadata.py",
+        )
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            turns = root / "turns.tsv"
+            turns.write_text(
+                "incoming_edge_based_node_id\toutgoing_edge_based_node_id\tfrom_node_id"
+                "\tvia_node_id\tto_node_id\tturn_duration_ds\trestriction_status\n"
+                "0\t0\t1\t2\t1\t0\tprohibited\n",
+                encoding="utf-8",
+            )
+            columns = [
+                array("Q", [10]),
+                array("Q", [0]),
+                array("Q", [0]),
+                array("Q", [1]),
+                array("Q", [2]),
+            ]
+            count, violations = module.resolve_turns(
+                turns,
+                root / "resolved.tsv",
+                columns,
+                columns,
+            )
+            self.assertEqual(count, 0)
+            self.assertEqual(violations, 1)
 
 
 if __name__ == "__main__":
