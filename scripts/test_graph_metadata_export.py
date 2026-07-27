@@ -100,7 +100,8 @@ class GraphMetadataExportTests(unittest.TestCase):
             self.assertEqual(len(edges), 2)
             self.assertTrue(edges[0].startswith("10/0/0/1/2\t"))
             self.assertTrue(edges[1].startswith("10/0/1/2/1\t"))
-            self.assertEqual(edges[0].split("\t")[10], "10.3")
+            self.assertEqual(len(edges[0].split("\t")), 13)
+            self.assertEqual(edges[0].split("\t")[8], "10.3")
             turns = (output / "edge-based-turn-states.tsv").read_text(
                 encoding="utf-8"
             ).splitlines()
@@ -228,6 +229,54 @@ class GraphMetadataExportTests(unittest.TestCase):
             )
             self.assertEqual(count, 0)
             self.assertEqual(violations, 1)
+
+    def test_canonical_edges_exclude_internal_osrm_identifiers(self) -> None:
+        repository_root = Path(__file__).resolve().parent.parent
+        spec = importlib.util.spec_from_file_location(
+            "export_graph_metadata_canonical",
+            repository_root / "scripts/export_graph_metadata.py",
+        )
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        semantic_fields = [
+            "10/0/0/1/2",
+            "1",
+            "2",
+            "20.0",
+            "52.0",
+            "20.1",
+            "52.1",
+            "10.0",
+            "1.0",
+            "residential",
+            "30.0",
+            "public_default",
+            "not_ferry",
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            projected_outputs = []
+            for index, internal_fields in enumerate((["17", "0"], ["991", "8"])):
+                resolved = root / f"resolved-{index}.tsv"
+                resolved.write_text(
+                    "\t".join(
+                        [
+                            semantic_fields[0],
+                            *internal_fields,
+                            *semantic_fields[1:],
+                        ]
+                    )
+                    + "\n",
+                    encoding="utf-8",
+                )
+                projected = root / f"projected-{index}.tsv"
+                module.project_canonical_base_edges(resolved, projected)
+                projected_outputs.append(projected.read_bytes())
+            self.assertEqual(projected_outputs[0], projected_outputs[1])
+            self.assertEqual(
+                projected_outputs[0].decode("utf-8").rstrip("\n").split("\t"),
+                semantic_fields,
+            )
 
 
 if __name__ == "__main__":

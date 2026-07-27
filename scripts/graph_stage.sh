@@ -43,6 +43,7 @@ verify_equal "PBF SHA-256" "$EXPECTED_PBF_SHA256" "$(sha256sum "$PBF_PATH" | awk
 
 python3 "${REPOSITORY_ROOT}/scripts/test_stage2a_manifest_contract.py"
 python3 "${REPOSITORY_ROOT}/scripts/test_stage2a_cache_contract.py"
+python3 "${REPOSITORY_ROOT}/scripts/test_canonical_build_comparison.py"
 python3 "${REPOSITORY_ROOT}/scripts/generate_pl18_profile.py" \
   --manifest "$MANIFEST" \
   --upstream-car "${OSRM_SOURCE}/profiles/car.lua" \
@@ -176,7 +177,10 @@ rm -rf -- "${WORK_ROOT}/first/graph" "${WORK_ROOT}/first/dump" "${WORK_ROOT}/fir
 
 build_graph second
 
-cmp -- "${WORK_ROOT}/first/canonical-hashes.json" "${WORK_ROOT}/second/canonical-hashes.json"
+python3 "${REPOSITORY_ROOT}/scripts/compare_canonical_builds.py" \
+  --first "${WORK_ROOT}/first/canonical-hashes.json" \
+  --second "${WORK_ROOT}/second/canonical-hashes.json" \
+  --diagnostics "${WORK_ROOT}/determinism-diff.json"
 
 cat "${WORK_ROOT}/first/resource-usage.txt" "${WORK_ROOT}/second/resource-usage.txt" \
   > "${WORK_ROOT}/resource-usage.txt"

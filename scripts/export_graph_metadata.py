@@ -452,6 +452,19 @@ def build_edge_arrays(ebn_sorted: Path):
     return first, last
 
 
+def project_canonical_base_edges(resolved: Path, projected: Path) -> int:
+    count = 0
+    with resolved.open(encoding="utf-8", newline="") as source, projected.open(
+        "w", encoding="utf-8", newline=""
+    ) as target:
+        for row in csv.reader(source, delimiter="\t"):
+            if len(row) != 15:
+                raise ValueError("resolved base edge has unexpected field count")
+            target.write("\t".join([row[0], *row[3:]]) + "\n")
+            count += 1
+    return count
+
+
 def stable_from_arrays(values, index: int) -> str:
     return stable_id(*(column[index] for column in values))
 
@@ -505,8 +518,8 @@ def snap_start(base_edges: Path, manifest: dict) -> dict:
         for row in csv.reader(source, delimiter="\t"):
             identifier = row[0]
             way, ordinal, direction, from_node, to_node = parse_stable(identifier)
-            from_x, from_y = transformer.transform(float(row[5]), float(row[6]))
-            to_x, to_y = transformer.transform(float(row[7]), float(row[8]))
+            from_x, from_y = transformer.transform(float(row[3]), float(row[4]))
+            to_x, to_y = transformer.transform(float(row[5]), float(row[6]))
             delta_x = to_x - from_x
             delta_y = to_y - from_y
             denominator = delta_x * delta_x + delta_y * delta_y
@@ -637,11 +650,13 @@ def main() -> int:
         args.output / "export-mismatches.tsv",
     )
 
-    base_edges = args.output / "directed-base-edges.tsv"
-    sort_file(resolved, base_edges, ["-k1,1"], args.temp, unique=True)
     ebn_sorted = args.temp / "ebn-segments.tsv"
     sort_file(resolved, ebn_sorted, ["-k2,2n", "-k3,3n"], args.temp)
     first, last = build_edge_arrays(ebn_sorted)
+    projected_base_edges = args.temp / "projected-base-edges.tsv"
+    project_canonical_base_edges(resolved, projected_base_edges)
+    base_edges = args.output / "directed-base-edges.tsv"
+    sort_file(projected_base_edges, base_edges, ["-k1,1"], args.temp, unique=True)
 
     turns_unsorted = args.temp / "turn-states.tsv"
     turn_count, prohibited_violations = resolve_turns(

@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import math
 import os
 import subprocess
 from pathlib import Path
@@ -54,18 +55,28 @@ def validate_edges(path: Path) -> tuple[int, str]:
     with path.open(encoding="utf-8") as source:
         for line in source:
             fields = line.rstrip("\n").split("\t")
-            if len(fields) != 15:
+            if len(fields) != 13:
                 raise ValueError("directed base edge record has unexpected field count")
             identifier = fields[0]
-            parse_stable(identifier)
+            parsed = parse_stable(identifier)
             if previous is not None and identifier <= previous:
                 raise ValueError("stable edge IDs are duplicated or not canonical sorted")
             previous = identifier
-            if float(fields[9]) < 0 or float(fields[10]) < 0:
+            if int(fields[1]) != parsed[3] or int(fields[2]) != parsed[4]:
+                raise ValueError("stable edge ID endpoints do not match edge fields")
+            coordinates = [float(value) for value in fields[3:7]]
+            length = float(fields[7])
+            duration = float(fields[8])
+            speed = float(fields[10])
+            if not all(math.isfinite(value) for value in coordinates):
+                raise ValueError("non-finite edge coordinate")
+            if not math.isfinite(length) or not math.isfinite(duration):
+                raise ValueError("non-finite edge length or duration")
+            if length < 0 or duration < 0:
                 raise ValueError("negative edge length or duration")
-            if float(fields[12]) <= 0:
+            if not math.isfinite(speed) or speed <= 0:
                 raise ValueError("non-positive effective edge speed")
-            if fields[13].startswith("forbidden:") or fields[14] != "not_ferry":
+            if fields[11].startswith("forbidden:") or fields[12] != "not_ferry":
                 raise ValueError("forbidden access or ferry edge is routable")
             count += 1
     return count, sha256.hexdigest()
@@ -91,7 +102,10 @@ def validate_turns(path: Path) -> tuple[int, str]:
             previous = key
             if incoming[4] != outgoing[3]:
                 raise ValueError("directed edge endpoints are disconnected")
-            if float(fields[2]) < 0:
+            duration = float(fields[2])
+            if not math.isfinite(duration):
+                raise ValueError("non-finite turn duration")
+            if duration < 0:
                 raise ValueError("negative turn duration")
             if fields[3] != "allowed":
                 raise ValueError("unexpected turn restriction status")

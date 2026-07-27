@@ -10,6 +10,7 @@ on:
       - "instance/pl_18_capitals_static_instance_v2.yaml"
       - "profiles/pl18-car.lua"
       - "scripts/certify_graph_stage.py"
+      - "scripts/compare_canonical_builds.py"
       - "scripts/build_osrm_stage2a.sh"
       - "scripts/export_graph_metadata.py"
       - "scripts/generate_pl18_profile.py"
@@ -17,6 +18,7 @@ on:
       - "scripts/manifest_json.rb"
       - "scripts/prepare_osrm_source.sh"
       - "scripts/test_graph_metadata_export.py"
+      - "scripts/test_canonical_build_comparison.py"
       - "scripts/test_pl18_profile.py"
       - "scripts/test_stage2a_cache_contract.py"
       - "scripts/test_stage2a_manifest_contract.py"
@@ -91,7 +93,7 @@ jobs:
         uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
         with:
           path: ${{ env.GRAPH_ARCHIVE }}
-          key: pl18-graph-v2-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ hashFiles('instance/pl_18_capitals_static_instance_v2.yaml') }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp', 'scripts/export_graph_metadata.py', 'scripts/graph_stage.sh') }}
+          key: pl18-graph-v2-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ hashFiles('instance/pl_18_capitals_static_instance_v2.yaml') }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp', 'scripts/export_graph_metadata.py', 'scripts/compare_canonical_builds.py', 'scripts/graph_stage.sh') }}
 
       - name: Free hosted-runner disk space
         if: steps.graph-cache.outputs.cache-hit != 'true'
@@ -274,7 +276,7 @@ jobs:
         uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25
         with:
           path: ${{ env.GRAPH_ARCHIVE }}
-          key: pl18-graph-v2-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ hashFiles('instance/pl_18_capitals_static_instance_v2.yaml') }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp', 'scripts/export_graph_metadata.py', 'scripts/graph_stage.sh') }}
+          key: pl18-graph-v2-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ hashFiles('instance/pl_18_capitals_static_instance_v2.yaml') }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp', 'scripts/export_graph_metadata.py', 'scripts/compare_canonical_builds.py', 'scripts/graph_stage.sh') }}
 
       - name: Publish validation summary
         if: always()
@@ -284,12 +286,19 @@ jobs:
             cat results/graph/validation-report.md >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      - name: Upload exporter mismatch diagnostics
+      - name: Upload graph build diagnostics
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: stage2a-export-mismatches-${{ github.run_attempt }}
-          path: ${{ env.GRAPH_WORK }}/first/metadata/export-mismatches.tsv
+          name: stage2a-graph-diagnostics-${{ github.run_attempt }}
+          path: |
+            ${{ env.GRAPH_WORK }}/determinism-diff.json
+            ${{ env.GRAPH_WORK }}/first/canonical-hashes.json
+            ${{ env.GRAPH_WORK }}/second/canonical-hashes.json
+            ${{ env.GRAPH_WORK }}/first/metadata/export-summary.json
+            ${{ env.GRAPH_WORK }}/second/metadata/export-summary.json
+            ${{ env.GRAPH_WORK }}/first/metadata/export-mismatches.tsv
+            ${{ env.GRAPH_WORK }}/second/metadata/export-mismatches.tsv
           if-no-files-found: ignore
           retention-days: 3
 
