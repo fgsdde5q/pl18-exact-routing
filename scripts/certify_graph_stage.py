@@ -171,8 +171,7 @@ def main() -> int:
     parser.add_argument("--second-hashes", required=True, type=Path)
     parser.add_argument("--toolchain", required=True, type=Path)
     parser.add_argument("--resource-usage", required=True, type=Path)
-    parser.add_argument("--graph-binary-hashes-first", required=True, type=Path)
-    parser.add_argument("--graph-binary-hashes-second", required=True, type=Path)
+    parser.add_argument("--graph-binary-hashes", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
     repository_root = Path(__file__).resolve().parent.parent
@@ -223,9 +222,6 @@ def main() -> int:
     ):
         raise ValueError("start is outside Warszawa PRG polygon")
 
-    first_binary_hashes = args.graph_binary_hashes_first.read_text(encoding="utf-8")
-    second_binary_hashes = args.graph_binary_hashes_second.read_text(encoding="utf-8")
-    binary_deterministic = first_binary_hashes == second_binary_hashes
     graph_manifest = {
         "schema_version": 1,
         "statuses": [
@@ -250,7 +246,10 @@ def main() -> int:
             "version": manifest["routing_engine"]["version"],
             "commit": EXPECTED_OSRM_COMMIT,
             "pipeline": ["osrm-extract", "osrm-partition", "osrm-customize"],
-            "binary_files_byte_deterministic": binary_deterministic,
+            "build_count": 1,
+            "binary_files_byte_deterministic": None,
+            "binary_determinism_status": "not_asserted_single_frozen_build",
+            "binary_hashes_file": "graph-binary-hashes.txt",
         },
         "graph_exporter": {
             "source": "tools/osrm_graph_dump.cpp",
@@ -260,7 +259,8 @@ def main() -> int:
         "canonical_exports": {
             "directed_base_edges_sha256": edge_hash,
             "edge_based_turn_states_sha256": turn_hash,
-            "second_clean_build_match": True,
+            "clean_metadata_build_count": 2,
+            "second_clean_metadata_build_match": True,
         },
         "counts": export_summary,
         "start_snap": start_snap,
@@ -337,11 +337,8 @@ def main() -> int:
     )
     (args.output / "toolchain.txt").write_bytes(args.toolchain.read_bytes())
     (args.output / "resource-usage.txt").write_bytes(args.resource_usage.read_bytes())
-
-    binary_note = (
-        "were byte-for-byte identical"
-        if binary_deterministic
-        else "were not byte-for-byte identical; canonical sorted exports were compared instead"
+    (args.output / "graph-binary-hashes.txt").write_bytes(
+        args.graph_binary_hashes.read_bytes()
     )
     initial_directions = ", ".join(
         item["stable_edge_id"]
@@ -407,7 +404,8 @@ def main() -> int:
 - Directed base-edge canonical SHA-256: `{edge_hash}`
 - Edge-based turn-state canonical SHA-256: `{turn_hash}`
 - Second clean metadata build: `PASS`
-- OSRM binary files {binary_note}.
+- One frozen OSRM graph build was used for both clean metadata exports.
+- OSRM binary byte determinism across independent builds is not asserted.
 - Stable edge IDs unique, values non-negative, endpoints connected: `PASS`
 - Export contains only OSRM-allowed turn transitions; prohibited-status records: `0`.
 - Ferry/private rejection and 150 m snap bound: `PASS`

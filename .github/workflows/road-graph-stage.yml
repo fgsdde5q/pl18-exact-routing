@@ -47,7 +47,9 @@ jobs:
       PYOSMIUM_VERSION: 4.1.1
       CCACHE_MAXSIZE: 750M
       VCPKG_CACHE_MAX_BYTES: 1610612736
-      GRAPH_CACHE_MAX_BYTES: 4831838208
+      OSRM_CHECKPOINT_MAX_BYTES: 3800000000
+      METADATA_CHECKPOINT_MAX_BYTES: 900000000
+      CERTIFIED_CACHE_MAX_BYTES: 100000000
 
     steps:
       - name: Check out repository
@@ -62,9 +64,13 @@ jobs:
             echo "PBF_CACHE_DIR=${RUNNER_TEMP}/pl18-pbf"
             echo "OSRM_SOURCE=${RUNNER_TEMP}/osrm-backend"
             echo "OSRM_BUILD=${RUNNER_TEMP}/osrm-build"
+            echo "OSRM_CHECKPOINT_ROOT=${RUNNER_TEMP}/pl18-osrm-checkpoint"
+            echo "OSRM_CHECKPOINT_ARCHIVE=${RUNNER_TEMP}/pl18-osrm-checkpoint.tar.zst"
+            echo "METADATA_CHECKPOINT_ROOT=${RUNNER_TEMP}/pl18-metadata-checkpoint"
+            echo "METADATA_CHECKPOINT_ARCHIVE=${RUNNER_TEMP}/pl18-metadata-checkpoint.tar.zst"
             echo "GRAPH_WORK=${RUNNER_TEMP}/pl18-graph-work"
-            echo "GRAPH_CACHE=${RUNNER_TEMP}/pl18-graph-cache"
-            echo "GRAPH_ARCHIVE=${RUNNER_TEMP}/pl18-graph-cache.tar.zst"
+            echo "CERTIFIED_CACHE=${RUNNER_TEMP}/pl18-certified-cache"
+            echo "CERTIFIED_ARCHIVE=${RUNNER_TEMP}/pl18-certified-cache.tar.zst"
             echo "VCPKG_ROOT=${RUNNER_TEMP}/vcpkg"
             echo "VCPKG_DEFAULT_BINARY_CACHE=${RUNNER_TEMP}/vcpkg-bincache"
             echo "CCACHE_DIR=${RUNNER_TEMP}/ccache"
@@ -89,23 +95,62 @@ jobs:
           test "$(md5sum "$pbf" | awk '{print $1}')" = "eb188df5acafd002244ed84bb7b650ab"
           test "$(sha256sum "$pbf" | awk '{print $1}')" = "$PBF_SHA256"
 
-      - name: Restore certified graph cache
-        id: graph-cache
-        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
-        with:
-          path: ${{ env.GRAPH_ARCHIVE }}
-          key: pl18-graph-v2-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ hashFiles('instance/pl_18_capitals_static_instance_v2.yaml') }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp', 'scripts/export_graph_metadata.py', 'scripts/compare_canonical_builds.py', 'scripts/certify_graph_stage.py', 'scripts/graph_stage.sh') }}
-
       - name: Free hosted-runner disk space
-        if: steps.graph-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
           set -Eeuo pipefail
           sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup
           df -h /
 
+      - name: Restore certified products cache
+        id: certified-cache
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ env.CERTIFIED_ARCHIVE }}
+          key: pl18-certified-v2-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ hashFiles('instance/pl_18_capitals_static_instance_v2.yaml', 'results/prg/prg-18-computational.gpkg') }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ env.VCPKG_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp', 'scripts/build_osrm_stage2a.sh', 'scripts/export_graph_metadata.py', 'scripts/compare_canonical_builds.py', 'scripts/validate_graph_metadata.py', 'scripts/certify_graph_stage.py', 'scripts/graph_stage.sh') }}
+
+      - name: Restore frozen OSRM checkpoint
+        id: osrm-checkpoint
+        if: steps.certified-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ env.OSRM_CHECKPOINT_ARCHIVE }}
+          key: pl18-osrm-checkpoint-v1-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ env.VCPKG_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp', 'scripts/build_osrm_stage2a.sh') }}
+
+      - name: Unpack frozen OSRM checkpoint
+        if: steps.certified-cache.outputs.cache-hit != 'true' && steps.osrm-checkpoint.outputs.cache-hit == 'true'
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$OSRM_CHECKPOINT_ROOT"
+          tar --extract --use-compress-program=unzstd \
+            --file="$OSRM_CHECKPOINT_ARCHIVE" \
+            --directory="$OSRM_CHECKPOINT_ROOT"
+          test -f "${OSRM_CHECKPOINT_ROOT}/.complete"
+          rm -f "$OSRM_CHECKPOINT_ARCHIVE"
+
+      - name: Restore canonical metadata checkpoint
+        id: metadata-checkpoint
+        if: steps.certified-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ env.METADATA_CHECKPOINT_ARCHIVE }}
+          key: pl18-metadata-checkpoint-v1-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ hashFiles('instance/pl_18_capitals_static_instance_v2.yaml') }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ env.VCPKG_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp', 'scripts/build_osrm_stage2a.sh', 'scripts/export_graph_metadata.py', 'scripts/compare_canonical_builds.py', 'scripts/validate_graph_metadata.py') }}
+
+      - name: Unpack canonical metadata checkpoint
+        if: steps.certified-cache.outputs.cache-hit != 'true' && steps.metadata-checkpoint.outputs.cache-hit == 'true'
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$METADATA_CHECKPOINT_ROOT"
+          tar --extract --use-compress-program=unzstd \
+            --file="$METADATA_CHECKPOINT_ARCHIVE" \
+            --directory="$METADATA_CHECKPOINT_ROOT"
+          test -f "${METADATA_CHECKPOINT_ROOT}/.complete"
+          rm -f "$METADATA_CHECKPOINT_ARCHIVE"
+
       - name: Install pinned-build dependencies
-        if: steps.graph-cache.outputs.cache-hit != 'true'
+        if: steps.certified-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -123,7 +168,7 @@ jobs:
 
       - name: Restore vcpkg binary cache
         id: vcpkg-cache
-        if: steps.graph-cache.outputs.cache-hit != 'true'
+        if: steps.certified-cache.outputs.cache-hit != 'true' && steps.osrm-checkpoint.outputs.cache-hit != 'true'
         uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
         with:
           path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
@@ -133,7 +178,7 @@ jobs:
 
       - name: Restore compiler cache
         id: ccache
-        if: steps.graph-cache.outputs.cache-hit != 'true'
+        if: steps.certified-cache.outputs.cache-hit != 'true' && steps.osrm-checkpoint.outputs.cache-hit != 'true'
         uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
         with:
           path: ${{ env.CCACHE_DIR }}
@@ -142,7 +187,7 @@ jobs:
             ccache-stage2a-v1-${{ runner.os }}-${{ runner.arch }}-${{ env.OSRM_COMMIT }}-
 
       - name: Check out pinned OSRM source
-        if: steps.graph-cache.outputs.cache-hit != 'true'
+        if: steps.certified-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -151,7 +196,7 @@ jobs:
           test "$(git -C "$OSRM_SOURCE" rev-parse HEAD)" = "$OSRM_COMMIT"
 
       - name: Set up pinned vcpkg
-        if: steps.graph-cache.outputs.cache-hit != 'true'
+        if: steps.certified-cache.outputs.cache-hit != 'true' && steps.osrm-checkpoint.outputs.cache-hit != 'true'
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -162,7 +207,7 @@ jobs:
           mkdir -p "$VCPKG_DEFAULT_BINARY_CACHE" "$CCACHE_DIR"
 
       - name: Configure compiler cache
-        if: steps.graph-cache.outputs.cache-hit != 'true'
+        if: steps.certified-cache.outputs.cache-hit != 'true' && steps.osrm-checkpoint.outputs.cache-hit != 'true'
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -172,7 +217,7 @@ jobs:
           ccache --zero-stats
 
       - name: Build pinned OSRM tools
-        if: steps.graph-cache.outputs.cache-hit != 'true'
+        if: steps.certified-cache.outputs.cache-hit != 'true' && steps.osrm-checkpoint.outputs.cache-hit != 'true'
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -180,7 +225,7 @@ jobs:
 
       - name: Check dependency cache budgets
         id: dependency-cache-budget
-        if: always() && steps.graph-cache.outputs.cache-hit != 'true'
+        if: always() && steps.certified-cache.outputs.cache-hit != 'true' && steps.osrm-checkpoint.outputs.cache-hit != 'true'
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -222,62 +267,133 @@ jobs:
           path: ${{ env.CCACHE_DIR }}
           key: ccache-stage2a-v1-${{ runner.os }}-${{ runner.arch }}-${{ env.OSRM_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp') }}
 
-      - name: Build twice and certify graph
-        if: steps.graph-cache.outputs.cache-hit != 'true'
+      - name: Build once, export metadata twice, and certify
+        if: steps.certified-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
           set -Eeuo pipefail
-          mkdir -p "$GRAPH_WORK" "$GRAPH_CACHE" results/graph
+          mkdir -p "$GRAPH_WORK" "$CERTIFIED_CACHE" results/graph
           bash scripts/graph_stage.sh \
             "${PBF_CACHE_DIR}/poland-260725.osm.pbf" \
             "$OSRM_SOURCE" \
             "$OSRM_BUILD" \
             "$GRAPH_WORK" \
-            "$GRAPH_CACHE" \
+            "$CERTIFIED_CACHE" \
             "${GITHUB_WORKSPACE}/results/graph"
 
-      - name: Restore compact certificates from graph cache
-        if: steps.graph-cache.outputs.cache-hit == 'true'
+      - name: Pack OSRM checkpoint within cache budget
+        id: osrm-checkpoint-budget
+        if: always() && steps.certified-cache.outputs.cache-hit != 'true' && steps.osrm-checkpoint.outputs.cache-hit != 'true'
         shell: bash
         run: |
           set -Eeuo pipefail
-          mkdir -p "$GRAPH_CACHE"
-          tar --extract --use-compress-program=unzstd --file="$GRAPH_ARCHIVE" --directory="$GRAPH_CACHE"
+          if [[ ! -f "${OSRM_CHECKPOINT_ROOT}/.complete" ]]; then
+            echo "eligible=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          tar --create --use-compress-program="zstd -T0 -6" \
+            --file="$OSRM_CHECKPOINT_ARCHIVE" \
+            --directory="$OSRM_CHECKPOINT_ROOT" .
+          checkpoint_bytes="$(stat --format='%s' "$OSRM_CHECKPOINT_ARCHIVE")"
+          echo "checkpoint_bytes=${checkpoint_bytes}" >> "$GITHUB_OUTPUT"
+          if (( checkpoint_bytes <= OSRM_CHECKPOINT_MAX_BYTES )); then
+            echo "eligible=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "eligible=false" >> "$GITHUB_OUTPUT"
+            rm -f "$OSRM_CHECKPOINT_ARCHIVE"
+          fi
+          {
+            echo "### OSRM checkpoint cache budget"
+            echo "- archive: ${checkpoint_bytes} / ${OSRM_CHECKPOINT_MAX_BYTES} bytes"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Save frozen OSRM checkpoint
+        if: always() && steps.osrm-checkpoint.outputs.cache-hit != 'true' && steps.osrm-checkpoint-budget.outputs.eligible == 'true'
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ env.OSRM_CHECKPOINT_ARCHIVE }}
+          key: pl18-osrm-checkpoint-v1-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ env.VCPKG_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp', 'scripts/build_osrm_stage2a.sh') }}
+
+      - name: Release packed OSRM checkpoint
+        if: always()
+        shell: bash
+        run: rm -f "$OSRM_CHECKPOINT_ARCHIVE"
+
+      - name: Pack canonical metadata checkpoint within cache budget
+        id: metadata-checkpoint-budget
+        if: always() && steps.certified-cache.outputs.cache-hit != 'true' && steps.metadata-checkpoint.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if [[ ! -f "${METADATA_CHECKPOINT_ROOT}/.complete" ]]; then
+            echo "eligible=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          tar --create --use-compress-program="zstd -T0 -6" \
+            --file="$METADATA_CHECKPOINT_ARCHIVE" \
+            --directory="$METADATA_CHECKPOINT_ROOT" .
+          metadata_bytes="$(stat --format='%s' "$METADATA_CHECKPOINT_ARCHIVE")"
+          echo "metadata_bytes=${metadata_bytes}" >> "$GITHUB_OUTPUT"
+          if (( metadata_bytes <= METADATA_CHECKPOINT_MAX_BYTES )); then
+            echo "eligible=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "eligible=false" >> "$GITHUB_OUTPUT"
+            rm -f "$METADATA_CHECKPOINT_ARCHIVE"
+          fi
+          {
+            echo "### Canonical metadata checkpoint cache budget"
+            echo "- archive: ${metadata_bytes} / ${METADATA_CHECKPOINT_MAX_BYTES} bytes"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Save canonical metadata checkpoint
+        if: always() && steps.metadata-checkpoint.outputs.cache-hit != 'true' && steps.metadata-checkpoint-budget.outputs.eligible == 'true'
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ env.METADATA_CHECKPOINT_ARCHIVE }}
+          key: pl18-metadata-checkpoint-v1-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ hashFiles('instance/pl_18_capitals_static_instance_v2.yaml') }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ env.VCPKG_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp', 'scripts/build_osrm_stage2a.sh', 'scripts/export_graph_metadata.py', 'scripts/compare_canonical_builds.py', 'scripts/validate_graph_metadata.py') }}
+
+      - name: Restore compact certificates from certified cache
+        if: steps.certified-cache.outputs.cache-hit == 'true'
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$CERTIFIED_CACHE"
+          tar --extract --use-compress-program=unzstd --file="$CERTIFIED_ARCHIVE" --directory="$CERTIFIED_CACHE"
           rm -rf results/graph
           mkdir -p results/graph
-          cp -R "${GRAPH_CACHE}/results/." results/graph/
+          cp -R "${CERTIFIED_CACHE}/results/." results/graph/
           (
             cd results/graph
             sha256sum --check SHA256SUMS
           )
 
-      - name: Pack certified graph within cache budget
-        id: graph-cache-budget
-        if: steps.graph-cache.outputs.cache-hit != 'true'
+      - name: Pack certified products within cache budget
+        id: certified-cache-budget
+        if: steps.certified-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
           set -Eeuo pipefail
           tar --create --use-compress-program="zstd -T0 -6" \
-            --file="$GRAPH_ARCHIVE" --directory="$GRAPH_CACHE" .
-          graph_bytes="$(stat --format='%s' "$GRAPH_ARCHIVE")"
-          echo "graph_bytes=${graph_bytes}" >> "$GITHUB_OUTPUT"
-          if (( graph_bytes <= GRAPH_CACHE_MAX_BYTES )); then
+            --file="$CERTIFIED_ARCHIVE" --directory="$CERTIFIED_CACHE" .
+          certified_bytes="$(stat --format='%s' "$CERTIFIED_ARCHIVE")"
+          echo "certified_bytes=${certified_bytes}" >> "$GITHUB_OUTPUT"
+          if (( certified_bytes <= CERTIFIED_CACHE_MAX_BYTES )); then
             echo "eligible=true" >> "$GITHUB_OUTPUT"
           else
             echo "eligible=false" >> "$GITHUB_OUTPUT"
-            rm -f "$GRAPH_ARCHIVE"
+            rm -f "$CERTIFIED_ARCHIVE"
           fi
           {
-            echo "### Graph cache budget"
-            echo "- archive: ${graph_bytes} / ${GRAPH_CACHE_MAX_BYTES} bytes"
+            echo "### Certified cache budget"
+            echo "- archive: ${certified_bytes} / ${CERTIFIED_CACHE_MAX_BYTES} bytes"
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Save certified graph products
-        if: steps.graph-cache.outputs.cache-hit != 'true' && steps.graph-cache-budget.outputs.eligible == 'true'
+      - name: Save certified products
+        if: steps.certified-cache.outputs.cache-hit != 'true' && steps.certified-cache-budget.outputs.eligible == 'true'
         uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25
         with:
-          path: ${{ env.GRAPH_ARCHIVE }}
-          key: pl18-graph-v2-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ hashFiles('instance/pl_18_capitals_static_instance_v2.yaml') }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp', 'scripts/export_graph_metadata.py', 'scripts/compare_canonical_builds.py', 'scripts/certify_graph_stage.py', 'scripts/graph_stage.sh') }}
+          path: ${{ env.CERTIFIED_ARCHIVE }}
+          key: pl18-certified-v2-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ hashFiles('instance/pl_18_capitals_static_instance_v2.yaml', 'results/prg/prg-18-computational.gpkg') }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ env.VCPKG_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp', 'scripts/build_osrm_stage2a.sh', 'scripts/export_graph_metadata.py', 'scripts/compare_canonical_builds.py', 'scripts/validate_graph_metadata.py', 'scripts/certify_graph_stage.py', 'scripts/graph_stage.sh') }}
 
       - name: Publish validation summary
         if: always()
@@ -300,6 +416,9 @@ jobs:
             ${{ env.GRAPH_WORK }}/second/metadata/export-summary.json
             ${{ env.GRAPH_WORK }}/first/metadata/export-mismatches.tsv
             ${{ env.GRAPH_WORK }}/second/metadata/export-mismatches.tsv
+            ${{ env.METADATA_CHECKPOINT_ROOT }}/first-canonical-hashes.json
+            ${{ env.METADATA_CHECKPOINT_ROOT }}/second-canonical-hashes.json
+            ${{ env.METADATA_CHECKPOINT_ROOT }}/export-summary.json
           if-no-files-found: ignore
           retention-days: 3
 
@@ -313,7 +432,7 @@ jobs:
           path: results/graph/
 
       - name: Commit compact certificates to branch
-        if: github.event_name == 'push' && steps.graph-cache.outputs.cache-hit != 'true'
+        if: github.event_name == 'push' && steps.certified-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
           set -Eeuo pipefail
