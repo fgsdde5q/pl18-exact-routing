@@ -1,0 +1,17 @@
+osrm_version=v26.5.0
+osrm_commit=3c32a51bf58d12bf30efd0808d0b6ad51d334122
+compiler=c++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+cmake=cmake version 3.31.6
+python=Python 3.12.3
+pyosmium=4.1.1
+pyproj=3.6.1
+boost=
+lua=5.5.0#1
+vcpkg_commit=c3867e714dd3a51c272826eea77267876517ed99
+os=Ubuntu 24.04
+architecture=x86_64
+kernel=Linux 6.17.0-1020-azure #20~24.04.1-Ubuntu SMP Fri Jun 19 20:09:14 UTC 2026 x86_64 GNU/Linux
+docker_image_digest=not_used
+graph_exporter_sha256=d9e7249cc1bf75c22f82c31c33b76c53354c57b8e15689cca1c593d2690f32cd
+graph_exporter_commit=3e0ad2aba5b074fe6dd35cf8383d9f2b5ced8469
+profile_sha256=0caa3c72a43df86fc5f5df8fa039b1dce9e9584aed120857a4df8624c23f2839

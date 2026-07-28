@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "statuses": [
+    "ROAD_GRAPH_STAGE_OK",
+    "PRG_PROVENANCE_LOCKED",
+    "SOLVER_NOT_STARTED"
+  ],
+  "semantic_manifest": {
+    "path": "instance/pl_18_capitals_static_instance_v2.yaml",
+    "sha256": "f47d9a805defdb7e28005048d7ad9a7a76f666e75d508422a7edd239ce60f7ce"
+  },
+  "inputs": {
+    "osm": {
+      "file": "poland-260725.osm.pbf",
+      "size_bytes": 2078786520,
+      "md5": "eb188df5acafd002244ed84bb7b650ab",
+      "sha256": "2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28"
+    },
+    "prg": {
+      "authority": "GUGiK",
+      "feature_type": "ms:A03_Granice_gmin",
+      "source_crs": "EPSG:2180",
+      "pinned_file": "input/prg/prg-18-raw.gml.zst",
+      "raw_gml_sha256": "adf261aae31257dd24843b6f6c0e694efb40041aae3913b1c27aa4801866974c",
+      "compressed_gml_sha256": "91bdab09b9fe77ea02add8cfdf88a41c03ae84587ff8fdfc1808fb340fa41684",
+      "source_manifest_sha256": "2d084b7fdc9c0048d83e7153ad5abff32f9184efa42a0bfbff29731ddabcc092",
+      "describe_feature_type_sha256": "cc81f378de423ad27c91e21ecfeab4e6765b4765140ca27953d6b8d69dfa884b"
+    }
+  },
+  "osrm": {
+    "version": "v26.5.0",
+    "commit": "3c32a51bf58d12bf30efd0808d0b6ad51d334122",
+    "pipeline": [
+      "osrm-extract",
+      "osrm-partition",
+      "osrm-customize"
+    ],
+    "build_count": 1,
+    "binary_files_byte_deterministic": null,
+    "binary_determinism_status": "not_asserted_single_frozen_build",
+    "binary_hashes_file": "graph-binary-hashes.txt"
+  },
+  "graph_exporter": {
+    "source": "tools/osrm_graph_dump.cpp",
+    "sha256": "d9e7249cc1bf75c22f82c31c33b76c53354c57b8e15689cca1c593d2690f32cd",
+    "repository_commit": "3e0ad2aba5b074fe6dd35cf8383d9f2b5ced8469"
+  },
+  "canonical_exports": {
+    "directed_base_edges_sha256": "f27449dfa026193831458712bcb97c1c8b07fdf9fe4f9d33c6c2f2f613a4406a",
+    "edge_based_turn_states_sha256": "6a6a0c8e63380242569548bff93b74931fb5f2d54ca1320c33afceadb5364061",
+    "clean_metadata_build_count": 2,
+    "second_clean_metadata_build_match": true
+  },
+  "counts": {
+    "osm_ways_read": 33321336,
+    "legal_candidate_segments": 33474113,
+    "resolved_osrm_geometry_segments": 33477318,
+    "collapsed_duplicate_osrm_node_segments": 24837491,
+    "collapsed_duplicate_osrm_node_duration_ds": 101168400,
+    "legal_directed_motorcar_edges": 33473569,
+    "edge_based_turn_states": 15654639,
+    "enforced_turn_restrictions": 42627,
+    "forbidden_ferry_edges": 6612,
+    "rejected_private_nonmotorcar_edges": 2401005,
+    "prohibited_turn_violations": 0,
+    "osrm_turn_records_before_deduplication": 15657298
+  },
+  "start_snap": {
+    "distance_m": 10.111,
+    "snapped_epsg2180": {
+      "x": 635498.142,
+      "y": 491053.819
+    },
+    "snapped_wgs84": {
+      "longitude": 20.98634735,
+      "latitude": 52.268784436
+    },
+    "osm_way_id": 25857664,
+    "segment_ordinal": 4,
+    "selected_stable_edge_id": "25857664/4/0/3069840595/611255856",
+    "fraction": 0.922313075358,
+    "input_wgs84": {
+      "longitude": 20.98645,
+      "latitude": 52.26885
+    },
+    "snap_crs": "EPSG:2180",
+    "max_distance_m": 150.0,
+    "available_legal_initial_directions": [
+      {
+        "stable_edge_id": "25857664/4/0/3069840595/611255856",
+        "direction_bit": 0
+      }
+    ],
+    "zero_cost_initial_states": [
+      {
+        "stable_edge_id": "25857664/4/0/3069840595/611255856",
+        "direction_bit": 0,
+        "initial_cost_s": 0.0
+      }
+    ]
+  },
+  "resource_usage_file": "resource-usage.txt"
+}

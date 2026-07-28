@@ -1,0 +1,34 @@
+{
+  "distance_m": 10.111,
+  "snapped_epsg2180": {
+    "x": 635498.142,
+    "y": 491053.819
+  },
+  "snapped_wgs84": {
+    "longitude": 20.98634735,
+    "latitude": 52.268784436
+  },
+  "osm_way_id": 25857664,
+  "segment_ordinal": 4,
+  "selected_stable_edge_id": "25857664/4/0/3069840595/611255856",
+  "fraction": 0.922313075358,
+  "input_wgs84": {
+    "longitude": 20.98645,
+    "latitude": 52.26885
+  },
+  "snap_crs": "EPSG:2180",
+  "max_distance_m": 150.0,
+  "available_legal_initial_directions": [
+    {
+      "stable_edge_id": "25857664/4/0/3069840595/611255856",
+      "direction_bit": 0
+    }
+  ],
+  "zero_cost_initial_states": [
+    {
+      "stable_edge_id": "25857664/4/0/3069840595/611255856",
+      "direction_bit": 0,
+      "initial_cost_s": 0.0
+    }
+  ]
+}

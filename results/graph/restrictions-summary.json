@@ -1,0 +1,6 @@
+{
+  "enforced_turn_restrictions": 42627,
+  "prohibited_turn_violations": 0,
+  "enforcement_source": "OSRM v26.5.0 accepted restriction graph and edge-based transitions",
+  "conditional_restrictions": "ignored"
+}

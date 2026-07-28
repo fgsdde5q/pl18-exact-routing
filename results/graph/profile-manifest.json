@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "profile": "profiles/pl18-car.lua",
+  "sha256": "0caa3c72a43df86fc5f5df8fa039b1dce9e9584aed120857a4df8624c23f2839",
+  "generated_from": {
+    "manifest_sha256": "f47d9a805defdb7e28005048d7ad9a7a76f666e75d508422a7edd239ce60f7ce",
+    "osrm_commit": "3c32a51bf58d12bf30efd0808d0b6ad51d334122",
+    "upstream_profile": "profiles/car.lua",
+    "generator": "scripts/generate_pl18_profile.py",
+    "generator_sha256": "3f0f443ca7629580cff389012c6c95837aa24a3e41f0f7631a330a642657c296"
+  },
+  "inherited_from_OSRM_v26.5.0": [
+    "directed oneway handling",
+    "static vehicle dimension and weight parsing",
+    "unconditional turn restriction expansion",
+    "edge-based graph construction",
+    "sigmoid angle penalty formula"
+  ],
+  "explicit_project_overrides": [
+    "duration weight",
+    "manifest v2 class speeds and static caps",
+    "private and non-motorcar access forbidden",
+    "ferries and shuttle trains forbidden",
+    "conditional restrictions ignored",
+    "toll allowed without extra penalty",
+    "traffic, stop, ramp and interchange extras disabled",
+    "gate and lift-gate penalties fixed at 60 seconds"
+  ]
+}
