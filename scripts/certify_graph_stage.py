@@ -118,14 +118,24 @@ def point_inside_warszawa(repository_root: Path, longitude: float, latitude: flo
 from osgeo import ogr, osr
 import sys
 dataset = ogr.Open(sys.argv[1])
+if dataset is None:
+    raise SystemExit(2)
 layer = dataset.GetLayer(0)
+if layer is None:
+    raise SystemExit(2)
 source = osr.SpatialReference()
 source.ImportFromEPSG(4326)
+source.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
 target = layer.GetSpatialRef()
+if target is None:
+    raise SystemExit(2)
+target = target.Clone()
+target.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
 transform = osr.CoordinateTransformation(source, target)
 point = ogr.Geometry(ogr.wkbPoint)
 point.AddPoint(float(sys.argv[2]), float(sys.argv[3]))
-point.Transform(transform)
+if point.Transform(transform) != 0:
+    raise SystemExit(2)
 for feature in layer:
     if str(feature.GetField("teryt")) == "1465011":
         raise SystemExit(0 if feature.GetGeometryRef().Contains(point) else 1)
@@ -139,8 +149,15 @@ raise SystemExit(2)
             str(repository_root / "results/prg/prg-18-computational.gpkg"),
             str(longitude),
             str(latitude),
-        ]
+        ],
+        capture_output=True,
+        text=True,
     )
+    if result.returncode not in {0, 1}:
+        raise RuntimeError(
+            "Warszawa PRG containment check failed: "
+            f"{result.stderr.strip() or f'exit code {result.returncode}'}"
+        )
     return result.returncode == 0
 
 

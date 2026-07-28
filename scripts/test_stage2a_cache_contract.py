@@ -49,6 +49,7 @@ class Stage2ACacheContractTests(unittest.TestCase):
             "tools/osrm_graph_dump.cpp",
             "scripts/export_graph_metadata.py",
             "scripts/compare_canonical_builds.py",
+            "scripts/certify_graph_stage.py",
             "scripts/graph_stage.sh",
         ):
             self.assertIn(semantic_input, key)

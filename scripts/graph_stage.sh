@@ -44,6 +44,7 @@ verify_equal "PBF SHA-256" "$EXPECTED_PBF_SHA256" "$(sha256sum "$PBF_PATH" | awk
 python3 "${REPOSITORY_ROOT}/scripts/test_stage2a_manifest_contract.py"
 python3 "${REPOSITORY_ROOT}/scripts/test_stage2a_cache_contract.py"
 python3 "${REPOSITORY_ROOT}/scripts/test_canonical_build_comparison.py"
+python3 "${REPOSITORY_ROOT}/scripts/test_graph_spatial_contract.py"
 python3 "${REPOSITORY_ROOT}/scripts/generate_pl18_profile.py" \
   --manifest "$MANIFEST" \
   --upstream-car "${OSRM_SOURCE}/profiles/car.lua" \
