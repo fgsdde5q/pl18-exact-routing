@@ -63,12 +63,13 @@ class GraphMetadataExportTests(unittest.TestCase):
             (dump / "osrm-turn-states.tsv").write_text(
                 "incoming_edge_based_node_id\toutgoing_edge_based_node_id\tfrom_node_id"
                 "\tvia_node_id\tto_node_id\tturn_duration_ds\trestriction_status\n"
-                "0\t1\t1\t2\t1\t200\tallowed\n"
                 "1\t0\t2\t1\t2\t200\tallowed\n",
                 encoding="utf-8",
             )
             extract_log = root / "osrm-extract.log"
             extract_log.write_text(
+                "[info] Collecting node information on 1 restrictions...ok\n"
+                "[info] Removing invalid turn restrictions...removed 0 invalid turn restrictions, after 0s\n"
                 "[info] Constructing restriction graph on 1 restrictions...ok\n",
                 encoding="utf-8",
             )
@@ -105,13 +106,15 @@ class GraphMetadataExportTests(unittest.TestCase):
             turns = (output / "edge-based-turn-states.tsv").read_text(
                 encoding="utf-8"
             ).splitlines()
-            self.assertEqual(len(turns), 2)
+            self.assertEqual(len(turns), 1)
             summary = json.loads(
                 (output / "export-summary.json").read_text(encoding="utf-8")
             )
             self.assertEqual(summary["legal_directed_motorcar_edges"], 2)
-            self.assertEqual(summary["edge_based_turn_states"], 2)
+            self.assertEqual(summary["edge_based_turn_states"], 1)
             self.assertEqual(summary["enforced_turn_restrictions"], 1)
+            self.assertEqual(summary["invalid_turn_restrictions"], 0)
+            self.assertEqual(summary["expected_prohibited_turn_transitions"], 1)
             self.assertEqual(summary["prohibited_turn_violations"], 0)
             self.assertEqual(summary["collapsed_duplicate_osrm_node_segments"], 1)
             self.assertEqual(summary["collapsed_duplicate_osrm_node_duration_ds"], 1)
@@ -122,6 +125,24 @@ class GraphMetadataExportTests(unittest.TestCase):
             )
             self.assertLess(snap["distance_m"], 1)
             self.assertEqual(len(snap["available_legal_initial_directions"]), 2)
+            self.assertEqual(
+                len(snap["geometrically_possible_initial_directions"]), 2
+            )
+            restriction_certificate = json.loads(
+                (output / "turn-restriction-certificate.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            self.assertEqual(
+                restriction_certificate["expected_prohibited_transitions"]["count"],
+                1,
+            )
+            self.assertEqual(
+                restriction_certificate["expected_prohibited_transitions"][
+                    "observed_in_exported_turn_states"
+                ],
+                0,
+            )
 
             subprocess.run(
                 [
@@ -189,10 +210,21 @@ class GraphMetadataExportTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             extract_log = Path(directory) / "extract.log"
             extract_log.write_text(
+                "[info] Collecting node information on 45 restrictions...ok\n"
+                "[info] Removing invalid turn restrictions...removed 3 invalid turn restrictions, after 0s\n"
                 "[info] Constructing restriction graph on 42 restrictions...ok\n",
                 encoding="utf-8",
             )
             self.assertEqual(module.accepted_turn_restriction_count(extract_log), 42)
+            self.assertEqual(
+                module.osrm_restriction_summary(extract_log),
+                {
+                    "parsed_restrictions": 45,
+                    "invalid_restrictions": 3,
+                    "accepted_restrictions": 42,
+                    "unresolved_before_graph_validation": 0,
+                },
+            )
             extract_log.write_text("missing count\n", encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "exactly one"):
                 module.accepted_turn_restriction_count(extract_log)
@@ -277,6 +309,52 @@ class GraphMetadataExportTests(unittest.TestCase):
                 projected_outputs[0].decode("utf-8").rstrip("\n").split("\t"),
                 semantic_fields,
             )
+
+    def test_single_start_direction_has_tag_rule_explanation(self) -> None:
+        repository_root = Path(__file__).resolve().parent.parent
+        spec = importlib.util.spec_from_file_location(
+            "export_graph_metadata_start",
+            repository_root / "scripts/export_graph_metadata.py",
+        )
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        handler = module.CandidateExporter.__new__(module.CandidateExporter)
+        handler.access_hierarchy = ["motorcar", "motor_vehicle", "vehicle", "access"]
+        handler.allowed_access = {"yes", "permissive", "destination"}
+        handler.forbidden_access = {"no", "private"}
+        handler.class_speeds = {"residential": 50}
+        handler.surface_caps = {}
+        handler.tracktype_caps = {}
+        handler.smoothness_caps = {}
+        handler.bridge_caps = {}
+        handler.symbolic_speeds = {}
+        handler.speed_reduction = 0.9
+        handler.vehicle = {
+            "height_m": 2.0,
+            "width_m": 1.9,
+            "length_m": 4.8,
+            "weight_kg": 2000,
+        }
+        start_snap = {
+            "segment_ordinal": 0,
+            "available_legal_initial_directions": [
+                {"stable_edge_id": "10/0/0/1/2", "direction_bit": 0}
+            ],
+        }
+        selected_way = {
+            "id": 10,
+            "node_ids": [1, 2],
+            "tags": {"highway": "residential", "oneway": "yes"},
+        }
+        result = module.enrich_start_direction_certificate(
+            start_snap, selected_way, handler
+        )
+        self.assertEqual(
+            result["single_direction_explanation"]["status"],
+            "START_DIRECTIONS_CERTIFIED",
+        )
+        backward = result["geometrically_possible_initial_directions"][1]
+        self.assertIn("forbidden_by_oneway_tag", backward["rejection_reasons"])
 
 
 if __name__ == "__main__":

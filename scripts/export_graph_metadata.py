@@ -16,6 +16,9 @@ from pathlib import Path
 import osmium
 from pyproj import Transformer
 
+RESTRICTION_NAMESPACES = ("motorcar", "motor_vehicle", "vehicle")
+RESTRICTION_SAMPLE_SIZE = 32
+
 
 def pair_key(from_node: int, to_node: int) -> str:
     return f"{from_node:020d}/{to_node:020d}"
@@ -285,6 +288,280 @@ class CandidateExporter(osmium.SimpleHandler):
                     f"\t{access_decision}\tnot_ferry\n"
                 )
                 self.legal_candidates += 1
+
+
+class CertificateInputCollector(osmium.SimpleHandler):
+    def __init__(self, selected_way_id: int):
+        super().__init__()
+        self.selected_way_id = selected_way_id
+        self.selected_way = None
+        self.restriction_relations = []
+        self.conditional_relation_ids = []
+
+    def way(self, way) -> None:
+        if way.id == self.selected_way_id:
+            self.selected_way = {
+                "id": int(way.id),
+                "node_ids": [int(node.ref) for node in way.nodes],
+                "tags": dict(sorted((tag.k, tag.v) for tag in way.tags)),
+            }
+
+    def relation(self, relation) -> None:
+        tags = dict((tag.k, tag.v) for tag in relation.tags)
+        restriction_keys = [
+            key for key in tags if key == "restriction" or key.startswith("restriction:")
+        ]
+        if not restriction_keys and tags.get("type") != "restriction":
+            return
+        conditional_keys = [key for key in restriction_keys if key.endswith(":conditional")]
+        if conditional_keys:
+            self.conditional_relation_ids.append(int(relation.id))
+        unconditional_values = [
+            tags[key]
+            for key in ("restriction", *(
+                f"restriction:{namespace}" for namespace in RESTRICTION_NAMESPACES
+            ))
+            if key in tags
+        ]
+        recognized = [
+            value
+            for value in unconditional_values
+            if value.startswith("only_")
+            or (value.startswith("no_") and not value.endswith("_on_red"))
+        ]
+        members = [
+            {"type": member.type, "ref": int(member.ref), "role": member.role}
+            for member in relation.members
+            if member.role in {"from", "via", "to"}
+        ]
+        self.restriction_relations.append(
+            {
+                "relation_id": int(relation.id),
+                "tags": dict(sorted(tags.items())),
+                "members": members,
+                "recognized_values": recognized,
+                "conditional": bool(conditional_keys),
+                "ignored_by_except": bool(
+                    set(
+                        item.strip()
+                        for item in tags.get("except", "").split(";")
+                        if item.strip()
+                    )
+                    & set(RESTRICTION_NAMESPACES)
+                ),
+            }
+        )
+
+
+def osrm_restriction_summary(extract_log: Path) -> dict:
+    text = extract_log.read_text(encoding="utf-8", errors="replace")
+    patterns = {
+        "parsed_restrictions": r"Collecting node information on ([0-9]+) restrictions",
+        "invalid_restrictions": (
+            r"Removing invalid turn restrictions\.\.\.removed ([0-9]+) invalid turn restrictions"
+        ),
+        "accepted_restrictions": r"Constructing restriction graph on ([0-9]+) restrictions",
+    }
+    result = {}
+    for key, pattern in patterns.items():
+        matches = re.findall(pattern, text)
+        if len(matches) != 1:
+            raise ValueError(f"expected exactly one OSRM {key} counter")
+        result[key] = int(matches[0])
+    accounted = (
+        result["invalid_restrictions"] + result["accepted_restrictions"]
+    )
+    if accounted > result["parsed_restrictions"]:
+        raise ValueError("OSRM restriction counters are internally inconsistent")
+    result["unresolved_before_graph_validation"] = (
+        result["parsed_restrictions"] - accounted
+    )
+    return result
+
+
+def relation_shape(relation: dict) -> dict:
+    from_ways = [
+        member["ref"]
+        for member in relation["members"]
+        if member["type"] == "w" and member["role"] == "from"
+    ]
+    to_ways = [
+        member["ref"]
+        for member in relation["members"]
+        if member["type"] == "w" and member["role"] == "to"
+    ]
+    via_nodes = [
+        member["ref"]
+        for member in relation["members"]
+        if member["type"] == "n" and member["role"] == "via"
+    ]
+    via_ways = [
+        member["ref"]
+        for member in relation["members"]
+        if member["type"] == "w" and member["role"] == "via"
+    ]
+    restriction_type = None
+    if relation["recognized_values"]:
+        kinds = {
+            "only" if value.startswith("only_") else "no"
+            for value in relation["recognized_values"]
+        }
+        if len(kinds) == 1:
+            restriction_type = kinds.pop()
+    return {
+        "from_way_ids": from_ways,
+        "to_way_ids": to_ways,
+        "via_node_ids": via_nodes,
+        "via_way_ids": via_ways,
+        "restriction_type": restriction_type,
+        "restriction_values": relation["recognized_values"],
+        "ignored_by_except": relation["ignored_by_except"],
+        "member_shape_valid": (
+            (len(from_ways) <= 1 or any(
+                value.startswith("no_entry")
+                for value in relation["recognized_values"]
+            ))
+            and (len(to_ways) <= 1 or any(
+                value.startswith("no_exit")
+                for value in relation["recognized_values"]
+            ))
+        ),
+    }
+
+
+def build_restriction_certificate(
+    relations: list[dict],
+    conditional_relation_ids: list[int],
+    base_edges: Path,
+    turn_states: Path,
+    extract_log: Path,
+) -> dict:
+    shaped = [(relation, relation_shape(relation)) for relation in relations]
+    direct_relations = [
+        (relation, shape)
+        for relation, shape in shaped
+        if shape["restriction_type"] is not None
+        and not shape["ignored_by_except"]
+        and shape["member_shape_valid"]
+        and len(shape["via_node_ids"]) == 1
+        and not shape["via_way_ids"]
+        and shape["from_way_ids"]
+        and shape["to_way_ids"]
+    ]
+    via_nodes = {shape["via_node_ids"][0] for _, shape in direct_relations}
+    incoming = {}
+    outgoing = {}
+    outgoing_all = {}
+    with base_edges.open(encoding="utf-8", newline="") as source:
+        for row in csv.reader(source, delimiter="\t"):
+            identifier = row[0]
+            way, _, _, from_node, to_node = parse_stable(identifier)
+            if to_node in via_nodes:
+                incoming.setdefault((to_node, way), []).append(identifier)
+            if from_node in via_nodes:
+                outgoing.setdefault((from_node, way), []).append(identifier)
+                outgoing_all.setdefault(from_node, []).append(identifier)
+    expected = set()
+    resolved_relations = []
+    for relation, shape in sorted(
+        direct_relations, key=lambda item: item[0]["relation_id"]
+    ):
+        via_node = shape["via_node_ids"][0]
+        incoming_edges = sorted(
+            {
+                edge
+                for way in shape["from_way_ids"]
+                for edge in incoming.get((via_node, way), [])
+            }
+        )
+        designated_outgoing = sorted(
+            {
+                edge
+                for way in shape["to_way_ids"]
+                for edge in outgoing.get((via_node, way), [])
+            }
+        )
+        if shape["restriction_type"] == "no":
+            prohibited_outgoing = designated_outgoing
+        else:
+            designated = set(designated_outgoing)
+            prohibited_outgoing = sorted(
+                edge for edge in outgoing_all.get(via_node, []) if edge not in designated
+            )
+        relation_pairs = sorted(
+            (incoming_edge, outgoing_edge)
+            for incoming_edge in incoming_edges
+            for outgoing_edge in prohibited_outgoing
+        )
+        expected.update(relation_pairs)
+        if incoming_edges and designated_outgoing:
+            resolved_relations.append(
+                {
+                    "relation_id": relation["relation_id"],
+                    "restriction_type": shape["restriction_type"],
+                    "restriction_values": shape["restriction_values"],
+                    "from_way_ids": shape["from_way_ids"],
+                    "via": {"type": "node", "node_id": via_node},
+                    "to_way_ids": shape["to_way_ids"],
+                    "incoming_edges": incoming_edges,
+                    "outgoing_edges": designated_outgoing,
+                    "expected_prohibited_transition_count": len(relation_pairs),
+                    "expected_prohibited_transition_sample": [
+                        {"incoming_edge": pair[0], "outgoing_edge": pair[1]}
+                        for pair in relation_pairs[:8]
+                    ],
+                }
+            )
+    observed = []
+    with turn_states.open(encoding="utf-8", newline="") as source:
+        for row in csv.reader(source, delimiter="\t"):
+            pair = (row[0], row[1])
+            if pair in expected:
+                observed.append(pair)
+    if observed:
+        raise ValueError(
+            f"{len(observed)} relation-derived prohibited transitions appear in graph"
+        )
+    expected_digest = hashlib.sha256()
+    for incoming_edge, outgoing_edge in sorted(expected):
+        expected_digest.update(f"{incoming_edge}\t{outgoing_edge}\n".encode())
+    osrm_summary = osrm_restriction_summary(extract_log)
+    no_relations = sum(
+        shape["restriction_type"] == "no" for _, shape in shaped
+    )
+    only_relations = sum(
+        shape["restriction_type"] == "only" for _, shape in shaped
+    )
+    return {
+        "schema_version": 1,
+        "status": "TURN_RESTRICTIONS_CERTIFIED",
+        "source_relations": {
+            "restriction_relation_count": len(relations),
+            "no_turn_relation_count": no_relations,
+            "only_turn_relation_count": only_relations,
+            "conditional_relation_count": len(set(conditional_relation_ids)),
+            "conditional_policy": "ignored_by_project_and_osrm_extract",
+        },
+        "osrm_summary": osrm_summary,
+        "direct_relation_coverage": {
+            "via_node_candidate_relations": len(direct_relations),
+            "via_node_resolved_relations": len(resolved_relations),
+            "via_way_relation_count": sum(
+                bool(shape["via_way_ids"]) for _, shape in shaped
+            ),
+        },
+        "expected_prohibited_transitions": {
+            "count": len(expected),
+            "canonical_sha256": expected_digest.hexdigest(),
+            "observed_in_exported_turn_states": 0,
+            "proof": "all relation-derived expected pairs were matched against every exported canonical turn state",
+        },
+        "sample": {
+            "selection": "lowest relation_id among resolved via-node restrictions",
+            "limit": RESTRICTION_SAMPLE_SIZE,
+            "relations": resolved_relations[:RESTRICTION_SAMPLE_SIZE],
+        },
+    }
 
 def sort_file(source: Path, destination: Path, keys: list[str], temporary: Path, unique: bool = False) -> None:
     command = ["sort", "-T", str(temporary), "-t", "\t", *keys]
@@ -582,6 +859,131 @@ def snap_start(base_edges: Path, manifest: dict) -> dict:
     return result
 
 
+def enrich_start_direction_certificate(
+    start_snap: dict,
+    selected_way: dict,
+    candidate_exporter: CandidateExporter,
+) -> dict:
+    if selected_way is None:
+        raise ValueError("selected start way was not found in frozen OSM input")
+    ordinal = start_snap["segment_ordinal"]
+    nodes = selected_way["node_ids"]
+    if ordinal < 0 or ordinal + 1 >= len(nodes):
+        raise ValueError("start segment ordinal is outside selected OSM way")
+    tags = selected_way["tags"]
+    highway = tags.get("highway")
+    forward_enabled, backward_enabled = candidate_exporter.direction_flags(
+        tags, highway
+    )
+    graph_edges = {
+        item["stable_edge_id"]
+        for item in start_snap["available_legal_initial_directions"]
+    }
+    directions = []
+    for name, direction_bit, from_node, to_node, oneway_allowed in (
+        ("forward", 0, nodes[ordinal], nodes[ordinal + 1], forward_enabled),
+        ("backward", 1, nodes[ordinal + 1], nodes[ordinal], backward_enabled),
+    ):
+        identifier = stable_id(
+            selected_way["id"], ordinal, direction_bit, from_node, to_node
+        )
+        access_allowed, access_reason = candidate_exporter.direction_is_allowed(
+            tags, name
+        )
+        dimensions_allowed = candidate_exporter.dimensions_allow(tags, name)
+        routable_class = highway in candidate_exporter.class_speeds
+        ferry_allowed = tags.get("route") not in {"ferry", "shuttle_train"}
+        speed_positive = False
+        if routable_class:
+            speed_positive = (
+                candidate_exporter.effective_speed(tags, highway, name) > 0
+            )
+        graph_edge_present = identifier in graph_edges
+        rejection_reasons = []
+        if not oneway_allowed:
+            rejection_reasons.append("forbidden_by_oneway_tag")
+        if not access_allowed:
+            rejection_reasons.append(access_reason)
+        if not dimensions_allowed:
+            rejection_reasons.append("forbidden_by_vehicle_dimensions")
+        if not routable_class:
+            rejection_reasons.append("forbidden_highway_class")
+        if not ferry_allowed:
+            rejection_reasons.append("forbidden_ferry_or_shuttle_train")
+        if routable_class and not speed_positive:
+            rejection_reasons.append("nonpositive_effective_speed")
+        if not graph_edge_present:
+            rejection_reasons.append("directed_edge_absent_from_osrm_graph")
+        legal = not rejection_reasons
+        directions.append(
+            {
+                "name": name,
+                "direction_bit": direction_bit,
+                "stable_edge_id": identifier,
+                "from_node_id": from_node,
+                "to_node_id": to_node,
+                "geometry_possible": True,
+                "oneway_check": {
+                    "allowed": oneway_allowed,
+                    "tag_value": tags.get("oneway"),
+                },
+                "access_check": {
+                    "allowed": access_allowed,
+                    "decision": access_reason,
+                },
+                "vehicle_dimension_check": {"allowed": dimensions_allowed},
+                "graph_edge_present": graph_edge_present,
+                "turn_check": {
+                    "allowed": True,
+                    "decision": "not_applicable_at_route_start_without_incoming_edge",
+                },
+                "legal_initial_direction": legal,
+                "rejection_reasons": rejection_reasons,
+            }
+        )
+    certified = sorted(
+        item["stable_edge_id"]
+        for item in directions
+        if item["legal_initial_direction"]
+    )
+    if certified != sorted(graph_edges):
+        raise ValueError(
+            "start direction tag/access certificate disagrees with exported graph"
+        )
+    result = dict(start_snap)
+    result["selected_way_tags"] = tags
+    result["oneway_status"] = {
+        "raw": tags.get("oneway"),
+        "forward_allowed": forward_enabled,
+        "backward_allowed": backward_enabled,
+    }
+    result["geometrically_possible_initial_directions"] = directions
+    if len(certified) == 1:
+        rejected = [
+            {
+                "stable_edge_id": item["stable_edge_id"],
+                "reasons": item["rejection_reasons"],
+            }
+            for item in directions
+            if not item["legal_initial_direction"]
+        ]
+        if not rejected or not all(item["reasons"] for item in rejected):
+            raise ValueError("single initial direction lacks tag/access explanation")
+        result["single_direction_explanation"] = {
+            "status": "START_DIRECTIONS_CERTIFIED",
+            "available_stable_edge_id": certified[0],
+            "rejected_directions": rejected,
+            "evidence": "frozen OSM way tags plus project oneway/access/vehicle rules",
+        }
+    else:
+        result["single_direction_explanation"] = {
+            "status": "START_DIRECTIONS_CERTIFIED",
+            "available_direction_count": len(certified),
+            "evidence": "frozen OSM way tags plus project oneway/access/vehicle rules",
+        }
+    return result
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", required=True, type=Path)
@@ -671,10 +1073,27 @@ def main() -> int:
         raise ValueError(f"{prohibited_violations} prohibited turns appear in exported graph")
 
     start_snap = snap_start(base_edges, manifest)
+    certificate_inputs = CertificateInputCollector(start_snap["osm_way_id"])
+    certificate_inputs.apply_file(str(args.pbf), locations=False)
+    start_snap = enrich_start_direction_certificate(
+        start_snap, certificate_inputs.selected_way, handler
+    )
     (args.output / "start-snap.json").write_text(
         json.dumps(start_snap, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
+    restriction_certificate = build_restriction_certificate(
+        certificate_inputs.restriction_relations,
+        certificate_inputs.conditional_relation_ids,
+        base_edges,
+        turn_states,
+        args.osrm_extract_log,
+    )
+    (args.output / "turn-restriction-certificate.json").write_text(
+        json.dumps(restriction_certificate, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    restriction_summary = restriction_certificate["osrm_summary"]
     summary = {
         "osm_ways_read": handler.ways_read,
         "legal_candidate_segments": handler.legal_candidates,
@@ -683,9 +1102,27 @@ def main() -> int:
         "collapsed_duplicate_osrm_node_duration_ds": collapsed_duplicate_duration_ds,
         "legal_directed_motorcar_edges": sum(1 for _ in base_edges.open(encoding="utf-8")),
         "edge_based_turn_states": sum(1 for _ in turn_states.open(encoding="utf-8")),
-        "enforced_turn_restrictions": accepted_turn_restriction_count(
-            args.osrm_extract_log
-        ),
+        "source_restriction_relations": restriction_certificate[
+            "source_relations"
+        ]["restriction_relation_count"],
+        "parsed_turn_restrictions": restriction_summary["parsed_restrictions"],
+        "invalid_turn_restrictions": restriction_summary["invalid_restrictions"],
+        "unresolved_turn_restrictions": restriction_summary[
+            "unresolved_before_graph_validation"
+        ],
+        "enforced_turn_restrictions": restriction_summary["accepted_restrictions"],
+        "no_turn_relations": restriction_certificate["source_relations"][
+            "no_turn_relation_count"
+        ],
+        "only_turn_relations": restriction_certificate["source_relations"][
+            "only_turn_relation_count"
+        ],
+        "conditional_restriction_relations": restriction_certificate[
+            "source_relations"
+        ]["conditional_relation_count"],
+        "expected_prohibited_turn_transitions": restriction_certificate[
+            "expected_prohibited_transitions"
+        ]["count"],
         "forbidden_ferry_edges": handler.forbidden_ferry_edges,
         "rejected_private_nonmotorcar_edges": handler.rejected_private_nonmotorcar_edges,
         "prohibited_turn_violations": prohibited_violations,

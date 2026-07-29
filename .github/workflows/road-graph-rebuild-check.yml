@@ -1,0 +1,189 @@
+name: Stage 2A clean graph rebuild audit
+
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: write
+
+concurrency:
+  group: road-graph-rebuild-check-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  rebuild-audit:
+    name: Build frozen graph twice from scratch
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    env:
+      PBF_SHA256: 2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28
+      OSRM_COMMIT: 3c32a51bf58d12bf30efd0808d0b6ad51d334122
+      VCPKG_COMMIT: c3867e714dd3a51c272826eea77267876517ed99
+      PYOSMIUM_VERSION: 4.1.1
+      CCACHE_MAXSIZE: 750M
+      JOBS: 1
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+
+      - name: Set clean rebuild paths
+        shell: bash
+        run: |
+          {
+            echo "PBF_CACHE_DIR=${RUNNER_TEMP}/pl18-pbf"
+            echo "OSRM_SOURCE=${RUNNER_TEMP}/osrm-backend"
+            echo "OSRM_BUILD=${RUNNER_TEMP}/osrm-build"
+            echo "REBUILD_WORK=${RUNNER_TEMP}/pl18-clean-rebuild-audit"
+            echo "VCPKG_ROOT=${RUNNER_TEMP}/vcpkg"
+            echo "VCPKG_DEFAULT_BINARY_CACHE=${RUNNER_TEMP}/vcpkg-bincache"
+            echo "CCACHE_DIR=${RUNNER_TEMP}/ccache"
+          } >> "$GITHUB_ENV"
+
+      - name: Restore frozen PBF cache
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ env.PBF_CACHE_DIR }}/poland-260725.osm.pbf
+          key: pl18-pbf-v2-${{ runner.os }}-${{ runner.arch }}-${{ env.PBF_SHA256 }}
+          restore-keys: |
+            pl18-pbf-v1-${{ env.PBF_SHA256 }}
+
+      - name: Verify frozen PBF
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          pbf="${PBF_CACHE_DIR}/poland-260725.osm.pbf"
+          test -f "$pbf"
+          test "$(stat --format='%s' "$pbf")" = "2078786520"
+          test "$(md5sum "$pbf" | awk '{print $1}')" = "eb188df5acafd002244ed84bb7b650ab"
+          test "$(sha256sum "$pbf" | awk '{print $1}')" = "$PBF_SHA256"
+
+      - name: Free hosted-runner disk space
+        shell: bash
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup
+          df -h /
+
+      - name: Install pinned-build dependencies
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            autoconf automake build-essential ca-certificates ccache cmake \
+            curl git jq libtool ninja-build pkg-config ruby tar unzip zip zstd \
+            python3-gdal python3-pip python3-pyproj python3-venv
+          python3 -m venv --system-site-packages "${RUNNER_TEMP}/stage2a-python"
+          "${RUNNER_TEMP}/stage2a-python/bin/python" -m pip install \
+            --disable-pip-version-check \
+            --only-binary=:all: \
+            "osmium==${PYOSMIUM_VERSION}"
+          echo "${RUNNER_TEMP}/stage2a-python/bin" >> "$GITHUB_PATH"
+
+      - name: Restore vcpkg binary cache
+        id: vcpkg-cache
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
+          key: vcpkg-stage2a-v2-${{ runner.os }}-${{ runner.arch }}-${{ env.VCPKG_COMMIT }}-${{ env.OSRM_COMMIT }}
+          restore-keys: |
+            vcpkg-stage2a-v2-${{ runner.os }}-${{ runner.arch }}-${{ env.VCPKG_COMMIT }}-
+
+      - name: Restore compiler cache
+        id: ccache
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-stage2a-v1-${{ runner.os }}-${{ runner.arch }}-${{ env.OSRM_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp') }}
+          restore-keys: |
+            ccache-stage2a-v1-${{ runner.os }}-${{ runner.arch }}-${{ env.OSRM_COMMIT }}-
+
+      - name: Check out pinned OSRM source
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git clone --filter=blob:none https://github.com/Project-OSRM/osrm-backend.git "$OSRM_SOURCE"
+          git -C "$OSRM_SOURCE" checkout "$OSRM_COMMIT"
+          test "$(git -C "$OSRM_SOURCE" rev-parse HEAD)" = "$OSRM_COMMIT"
+
+      - name: Set up pinned vcpkg
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git clone --filter=blob:none https://github.com/microsoft/vcpkg.git "$VCPKG_ROOT"
+          git -C "$VCPKG_ROOT" checkout "$VCPKG_COMMIT"
+          test "$(git -C "$VCPKG_ROOT" rev-parse HEAD)" = "$VCPKG_COMMIT"
+          "$VCPKG_ROOT/bootstrap-vcpkg.sh" -disableMetrics
+          mkdir -p "$VCPKG_DEFAULT_BINARY_CACHE" "$CCACHE_DIR"
+
+      - name: Configure compiler cache
+        shell: bash
+        run: |
+          ccache --set-config "cache_dir=${CCACHE_DIR}"
+          ccache --set-config "max_size=${CCACHE_MAXSIZE}"
+          ccache --set-config compression=true
+          ccache --zero-stats
+
+      - name: Build pinned OSRM tools
+        shell: bash
+        run: bash scripts/build_osrm_stage2a.sh "$OSRM_SOURCE" "$OSRM_BUILD"
+
+      - name: Run rebuild audit contract tests
+        shell: bash
+        run: |
+          python3 scripts/test_stage2a_cache_contract.py
+          python3 scripts/test_graph_rebuild_comparison.py
+          python3 scripts/test_stage2a_manifest_contract.py
+
+      - name: Run two independent clean graph builds
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bash scripts/run_graph_rebuild_audit.sh \
+            "${PBF_CACHE_DIR}/poland-260725.osm.pbf" \
+            "$OSRM_SOURCE" \
+            "$OSRM_BUILD" \
+            "$REBUILD_WORK" \
+            "${GITHUB_WORKSPACE}/results/graph"
+
+      - name: Upload clean rebuild certificate
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: stage2a-clean-graph-rebuild-${{ github.run_id }}
+          path: |
+            results/graph/
+            ${{ env.REBUILD_WORK }}/first-clean-build/provenance.json
+            ${{ env.REBUILD_WORK }}/second-clean-build/provenance.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload mismatch diagnostics
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: stage2a-clean-graph-rebuild-failure-${{ github.run_attempt }}
+          path: |
+            results/graph/graph-rebuild-reproducibility.json
+            ${{ env.REBUILD_WORK }}/first-clean-build/provenance.json
+            ${{ env.REBUILD_WORK }}/second-clean-build/provenance.json
+            ${{ env.REBUILD_WORK }}/first-clean-build/metadata/export-summary.json
+            ${{ env.REBUILD_WORK }}/second-clean-build/metadata/export-summary.json
+            ${{ env.REBUILD_WORK }}/first-clean-build/metadata/start-snap.json
+            ${{ env.REBUILD_WORK }}/second-clean-build/metadata/start-snap.json
+            ${{ env.REBUILD_WORK }}/first-clean-build/metadata/turn-restriction-certificate.json
+            ${{ env.REBUILD_WORK }}/second-clean-build/metadata/turn-restriction-certificate.json
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Commit successful rebuild certificate
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/graph
+          git commit -m "Certify Stage 2A clean graph rebuild"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

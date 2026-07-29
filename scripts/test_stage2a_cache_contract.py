@@ -9,6 +9,10 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = REPOSITORY_ROOT / ".github/workflows/road-graph-stage.yml"
 EXPORTER = REPOSITORY_ROOT / "tools/osrm_graph_dump.cpp"
 GRAPH_STAGE = REPOSITORY_ROOT / "scripts/graph_stage.sh"
+REBUILD_WORKFLOW = (
+    REPOSITORY_ROOT / ".github/workflows/road-graph-rebuild-check.yml"
+)
+REBUILD_STAGE = REPOSITORY_ROOT / "scripts/run_graph_rebuild_audit.sh"
 PBF_CACHE_ARCHIVE_BYTES = 2_078_836_070
 DEFAULT_REPOSITORY_CACHE_BYTES = 10_000_000_000
 CCACHE_MAX_BYTES = 750_000_000
@@ -18,6 +22,7 @@ class Stage2ACacheContractTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.workflow = WORKFLOW.read_text(encoding="utf-8")
+        cls.rebuild_workflow = REBUILD_WORKFLOW.read_text(encoding="utf-8")
 
     def env_integer(self, name: str) -> int:
         match = re.search(rf"^\s+{re.escape(name)}:\s+(\d+)$", self.workflow, re.MULTILINE)
@@ -25,6 +30,9 @@ class Stage2ACacheContractTests(unittest.TestCase):
         return int(match.group(1))
 
     def test_cache_budget_stays_below_default_repository_limit(self) -> None:
+        self.assertEqual(
+            self.env_integer("METADATA_CHECKPOINT_MAX_BYTES"), 950_000_000
+        )
         budget = (
             PBF_CACHE_ARCHIVE_BYTES
             + self.env_integer("VCPKG_CACHE_MAX_BYTES")
@@ -35,6 +43,13 @@ class Stage2ACacheContractTests(unittest.TestCase):
         )
         self.assertLess(budget, DEFAULT_REPOSITORY_CACHE_BYTES)
         self.assertGreaterEqual(DEFAULT_REPOSITORY_CACHE_BYTES - budget, 500_000_000)
+
+    def test_metadata_budget_covers_observed_archive(self) -> None:
+        observed_archive_bytes = 932_689_698
+        self.assertLessEqual(
+            observed_archive_bytes,
+            self.env_integer("METADATA_CHECKPOINT_MAX_BYTES"),
+        )
 
     def cache_key_lines(self, prefix: str) -> list[str]:
         return [
@@ -148,6 +163,26 @@ class Stage2ACacheContractTests(unittest.TestCase):
             '  "${METADATA_ROOT}/graph-binary-hashes.txt"',
             source,
         )
+
+    def test_rebuild_workflow_cannot_restore_ready_graph_products(self) -> None:
+        self.assertIn("workflow_dispatch:", self.rebuild_workflow)
+        for forbidden_cache in (
+            "pl18-osrm-checkpoint",
+            "pl18-metadata-checkpoint",
+            "pl18-certified",
+            "OSRM_CHECKPOINT_ROOT",
+            "METADATA_CHECKPOINT_ROOT",
+        ):
+            self.assertNotIn(forbidden_cache, self.rebuild_workflow)
+        for allowed_cache in ("pl18-pbf-", "vcpkg-stage2a-", "ccache-stage2a-"):
+            self.assertIn(allowed_cache, self.rebuild_workflow)
+
+    def test_rebuild_script_creates_two_distinct_graph_roots(self) -> None:
+        source = REBUILD_STAGE.read_text(encoding="utf-8")
+        self.assertIn("build_graph first-clean-build", source)
+        self.assertIn("build_graph second-clean-build", source)
+        self.assertIn('"ready_graph_cache_restored": False', source)
+        self.assertEqual(source.count('"${OSRM_BUILD}/osrm-extract"'), 1)
 
     def test_dependency_caches_are_saved_after_failed_builds(self) -> None:
         self.assertIn(

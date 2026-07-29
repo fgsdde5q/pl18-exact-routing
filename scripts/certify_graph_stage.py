@@ -14,6 +14,8 @@ EXPECTED_PBF_SIZE = 2078786520
 EXPECTED_PBF_MD5 = "eb188df5acafd002244ed84bb7b650ab"
 EXPECTED_PBF_SHA256 = "2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28"
 EXPECTED_OSRM_COMMIT = "3c32a51bf58d12bf30efd0808d0b6ad51d334122"
+METADATA_CACHE_BUDGET_BYTES = 950_000_000
+LAST_OBSERVED_METADATA_CACHE_BYTES = 932_689_698
 
 
 def digest(path: Path, algorithm: str = "sha256") -> str:
@@ -195,6 +197,11 @@ def main() -> int:
     start_snap = json.loads(
         (args.metadata / "start-snap.json").read_text(encoding="utf-8")
     )
+    restriction_certificate = json.loads(
+        (args.metadata / "turn-restriction-certificate.json").read_text(
+            encoding="utf-8"
+        )
+    )
     first_hashes = json.loads(args.first_hashes.read_text(encoding="utf-8"))
     second_hashes = json.loads(args.second_hashes.read_text(encoding="utf-8"))
     if first_hashes != second_hashes:
@@ -216,6 +223,46 @@ def main() -> int:
         raise ValueError("start snap exceeds 150 metres")
     if not start_snap["available_legal_initial_directions"]:
         raise ValueError("start has no legal initial direction")
+    geometric_directions = start_snap.get(
+        "geometrically_possible_initial_directions", []
+    )
+    if len(geometric_directions) != 2:
+        raise ValueError("start direction certificate must evaluate both directions")
+    certified_directions = sorted(
+        item["stable_edge_id"]
+        for item in geometric_directions
+        if item["legal_initial_direction"]
+    )
+    exported_directions = sorted(
+        item["stable_edge_id"]
+        for item in start_snap["available_legal_initial_directions"]
+    )
+    if certified_directions != exported_directions:
+        raise ValueError("start direction certificate disagrees with start snap")
+    if len(exported_directions) == 1:
+        explanation = start_snap.get("single_direction_explanation", {})
+        if explanation.get("status") != "START_DIRECTIONS_CERTIFIED":
+            raise ValueError("single initial direction is not explained")
+        rejected = explanation.get("rejected_directions", [])
+        if not rejected or not all(item.get("reasons") for item in rejected):
+            raise ValueError("single initial direction lacks rejection reasons")
+    if restriction_certificate.get("status") != "TURN_RESTRICTIONS_CERTIFIED":
+        raise ValueError("turn restriction certificate status mismatch")
+    osrm_restrictions = restriction_certificate["osrm_summary"]
+    if (
+        osrm_restrictions["accepted_restrictions"]
+        != export_summary["enforced_turn_restrictions"]
+    ):
+        raise ValueError("restriction certificate disagrees with OSRM summary")
+    expected_prohibited = restriction_certificate[
+        "expected_prohibited_transitions"
+    ]
+    if expected_prohibited["count"] <= 0:
+        raise ValueError("restriction certificate contains no expected transitions")
+    if expected_prohibited["observed_in_exported_turn_states"] != 0:
+        raise ValueError("relation-derived prohibited transition is exported")
+    if LAST_OBSERVED_METADATA_CACHE_BYTES > METADATA_CACHE_BUDGET_BYTES:
+        raise ValueError("canonical metadata cache exceeds pinned budget")
     start = manifest["start"]["wgs84"]
     if not point_inside_warszawa(
         repository_root, float(start["longitude"]), float(start["latitude"])
@@ -226,6 +273,9 @@ def main() -> int:
         "schema_version": 1,
         "statuses": [
             "ROAD_GRAPH_STAGE_OK",
+            "CACHE_BUDGET_OK",
+            "TURN_RESTRICTIONS_CERTIFIED",
+            "START_DIRECTIONS_CERTIFIED",
             "PRG_PROVENANCE_LOCKED",
             "SOLVER_NOT_STARTED",
         ],
@@ -261,6 +311,27 @@ def main() -> int:
             "edge_based_turn_states_sha256": turn_hash,
             "clean_metadata_build_count": 2,
             "second_clean_metadata_build_match": True,
+        },
+        "reproducibility": {
+            "export": {
+                "status": "EXPORT_REPRODUCIBILITY",
+                "result": "PASS",
+                "independent_export_count": 2,
+                "shared_ready_osrm_graph": True,
+            },
+            "graph_rebuild": {
+                "status": "GRAPH_REBUILD_REPRODUCIBILITY",
+                "result": "NOT_RUN",
+                "ready_graph_cache_allowed": False,
+                "workflow": ".github/workflows/road-graph-rebuild-check.yml",
+            },
+        },
+        "cache_budget": {
+            "status": "CACHE_BUDGET_OK",
+            "metadata_checkpoint_budget_bytes": METADATA_CACHE_BUDGET_BYTES,
+            "last_observed_metadata_checkpoint_bytes": (
+                LAST_OBSERVED_METADATA_CACHE_BYTES
+            ),
         },
         "counts": export_summary,
         "start_snap": start_snap,
@@ -314,9 +385,27 @@ def main() -> int:
         json.dumps(edge_counts, indent=2) + "\n", encoding="utf-8"
     )
     restrictions_summary = {
+        "source_restriction_relations": export_summary[
+            "source_restriction_relations"
+        ],
+        "parsed_turn_restrictions": export_summary["parsed_turn_restrictions"],
+        "invalid_turn_restrictions": export_summary["invalid_turn_restrictions"],
+        "unresolved_turn_restrictions": export_summary[
+            "unresolved_turn_restrictions"
+        ],
         "enforced_turn_restrictions": export_summary["enforced_turn_restrictions"],
+        "no_turn_relations": export_summary["no_turn_relations"],
+        "only_turn_relations": export_summary["only_turn_relations"],
+        "conditional_restriction_relations": export_summary[
+            "conditional_restriction_relations"
+        ],
+        "expected_prohibited_turn_transitions": export_summary[
+            "expected_prohibited_turn_transitions"
+        ],
         "prohibited_turn_violations": 0,
-        "enforcement_source": "OSRM v26.5.0 accepted restriction graph and edge-based transitions",
+        "enforcement_source": (
+            "OSRM v26.5.0 restriction summary plus relation-derived prohibited pairs"
+        ),
         "conditional_restrictions": "ignored",
     }
     (args.output / "restrictions-summary.json").write_text(
@@ -335,6 +424,9 @@ def main() -> int:
     (args.output / "start-snap.json").write_bytes(
         (args.metadata / "start-snap.json").read_bytes()
     )
+    (args.output / "turn-restriction-certificate.json").write_bytes(
+        (args.metadata / "turn-restriction-certificate.json").read_bytes()
+    )
     (args.output / "toolchain.txt").write_bytes(args.toolchain.read_bytes())
     (args.output / "resource-usage.txt").write_bytes(args.resource_usage.read_bytes())
     (args.output / "graph-binary-hashes.txt").write_bytes(
@@ -349,6 +441,9 @@ def main() -> int:
 ## Status
 
 - `ROAD_GRAPH_STAGE_OK`
+- `CACHE_BUDGET_OK`
+- `TURN_RESTRICTIONS_CERTIFIED`
+- `START_DIRECTIONS_CERTIFIED`
 - `PRG_PROVENANCE_LOCKED`
 - `SOLVER_NOT_STARTED`
 
@@ -382,6 +477,7 @@ def main() -> int:
 - Selected OSM way: `{start_snap["osm_way_id"]}`
 - Selected stable edge: `{start_snap["selected_stable_edge_id"]}`
 - Available legal initial directions: `{initial_directions}`
+- Single-direction explanation: `START_DIRECTIONS_CERTIFIED`
 - Exact start inside Warszawa frozen PRG polygon: `PASS`
 
 ## inherited_from_OSRM_v26.5.0
@@ -399,15 +495,23 @@ def main() -> int:
 - Toll roads have no extra cost; gate/lift-gate penalties are 60 seconds.
 - Traffic-signal, stop-sign, ramp, interchange and roundabout extras are zero.
 
-## Reproducibility
+## Audit status
+
+- `EXPORT_REPRODUCIBILITY`: `PASS`
+- `GRAPH_REBUILD_REPRODUCIBILITY`: `NOT_RUN`
+- `CACHE_BUDGET_STATUS`: `PASS` (`{LAST_OBSERVED_METADATA_CACHE_BYTES}` <= `{METADATA_CACHE_BUDGET_BYTES}` bytes)
+- `TURN_RESTRICTION_CERTIFICATE_STATUS`: `PASS`
+- `START_DIRECTION_CERTIFICATE_STATUS`: `PASS`
+
+## Export reproducibility
 
 - Directed base-edge canonical SHA-256: `{edge_hash}`
 - Edge-based turn-state canonical SHA-256: `{turn_hash}`
-- Second clean metadata build: `PASS`
+- Two independent canonical metadata exporter runs: `PASS`
 - One frozen OSRM graph build was used for both clean metadata exports.
-- OSRM binary byte determinism across independent builds is not asserted.
+- Graph rebuild reproducibility is not asserted before the dispatch-only clean rebuild workflow succeeds.
 - Stable edge IDs unique, values non-negative, endpoints connected: `PASS`
-- Export contains only OSRM-allowed turn transitions; prohibited-status records: `0`.
+- Relation-derived expected prohibited transitions absent: `{expected_prohibited["count"]}` checked, `0` observed.
 - Ferry/private rejection and 150 m snap bound: `PASS`
 """
     (args.output / "validation-report.md").write_text(report, encoding="utf-8")

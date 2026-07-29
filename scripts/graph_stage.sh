@@ -48,6 +48,7 @@ verify_equal "OSRM source commit" "$EXPECTED_OSRM_COMMIT" "$(git -C "$OSRM_SOURC
 python3 "${REPOSITORY_ROOT}/scripts/test_stage2a_manifest_contract.py"
 python3 "${REPOSITORY_ROOT}/scripts/test_stage2a_cache_contract.py"
 python3 "${REPOSITORY_ROOT}/scripts/test_canonical_build_comparison.py"
+python3 "${REPOSITORY_ROOT}/scripts/test_graph_rebuild_comparison.py"
 python3 "${REPOSITORY_ROOT}/scripts/test_graph_spatial_contract.py"
 python3 "${REPOSITORY_ROOT}/scripts/generate_pl18_profile.py" \
   --manifest "$MANIFEST" \
@@ -178,6 +179,9 @@ result = {
     "edge_based_turn_states_sha256": digest(root / "edge-based-turn-states.tsv"),
     "edge_counts_sha256": digest(root / "export-summary.json"),
     "start_snap_sha256": digest(root / "start-snap.json"),
+    "turn_restriction_certificate_sha256": digest(
+        root / "turn-restriction-certificate.json"
+    ),
 }
 Path(sys.argv[2]).write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
 PY
@@ -228,6 +232,7 @@ build_metadata_checkpoint() {
   cp -- \
     "${WORK_ROOT}/second/metadata/export-summary.json" \
     "${WORK_ROOT}/second/metadata/start-snap.json" \
+    "${WORK_ROOT}/second/metadata/turn-restriction-certificate.json" \
     "$METADATA_ROOT/"
   zstd -6 -T0 \
     "${WORK_ROOT}/second/metadata/directed-base-edges.tsv" \
@@ -254,7 +259,8 @@ verify_metadata_checkpoint() {
     "${METADATA_ROOT}/graph-binary-hashes.txt" \
     "${METADATA_ROOT}/resource-usage.txt" \
     "${METADATA_ROOT}/second-canonical-hashes.json" \
-    "${METADATA_ROOT}/start-snap.json"; do
+    "${METADATA_ROOT}/start-snap.json" \
+    "${METADATA_ROOT}/turn-restriction-certificate.json"; do
     test -f "$path"
   done
   zstd --test \
@@ -290,6 +296,7 @@ else
   cp -- \
     "${METADATA_ROOT}/export-summary.json" \
     "${METADATA_ROOT}/start-snap.json" \
+    "${METADATA_ROOT}/turn-restriction-certificate.json" \
     "$certification_metadata/"
   zstd -dc "${METADATA_ROOT}/directed-base-edges.tsv.zst" \
     > "${certification_metadata}/directed-base-edges.tsv"

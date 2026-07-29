@@ -22,6 +22,37 @@ def main() -> int:
         raise ValueError("turn state count mismatch")
     if summary["prohibited_turn_violations"] != 0:
         raise ValueError("prohibited turn appears in exported graph")
+    restriction_certificate = json.loads(
+        (args.metadata / "turn-restriction-certificate.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    if (
+        restriction_certificate["osrm_summary"]["accepted_restrictions"]
+        != summary["enforced_turn_restrictions"]
+    ):
+        raise ValueError("restriction certificate disagrees with OSRM summary")
+    expected = restriction_certificate["expected_prohibited_transitions"]
+    if expected["count"] <= 0 or expected["observed_in_exported_turn_states"] != 0:
+        raise ValueError("restriction transition proof is incomplete")
+    start_snap = json.loads(
+        (args.metadata / "start-snap.json").read_text(encoding="utf-8")
+    )
+    available = sorted(
+        item["stable_edge_id"]
+        for item in start_snap["available_legal_initial_directions"]
+    )
+    certified = sorted(
+        item["stable_edge_id"]
+        for item in start_snap["geometrically_possible_initial_directions"]
+        if item["legal_initial_direction"]
+    )
+    if available != certified:
+        raise ValueError("start direction certificate disagrees with exported graph")
+    if len(available) == 1:
+        explanation = start_snap.get("single_direction_explanation", {})
+        if explanation.get("status") != "START_DIRECTIONS_CERTIFIED":
+            raise ValueError("single start direction is unexplained")
     return 0
 
 
