@@ -415,6 +415,8 @@ jobs:
             ${{ env.GRAPH_WORK }}/second/canonical-hashes.json
             ${{ env.GRAPH_WORK }}/first/metadata/export-summary.json
             ${{ env.GRAPH_WORK }}/second/metadata/export-summary.json
+            ${{ env.GRAPH_WORK }}/first/metadata/turn-restriction-certificate.json
+            ${{ env.GRAPH_WORK }}/second/metadata/turn-restriction-certificate.json
             ${{ env.GRAPH_WORK }}/first/metadata/export-mismatches.tsv
             ${{ env.GRAPH_WORK }}/second/metadata/export-mismatches.tsv
             ${{ env.METADATA_CHECKPOINT_ROOT }}/first-canonical-hashes.json

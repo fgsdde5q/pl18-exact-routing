@@ -353,6 +353,39 @@ class CertificateInputCollector(osmium.SimpleHandler):
         )
 
 
+class RestrictionWayCollector(osmium.SimpleHandler):
+    def __init__(self, needed_way_ids: set[int]):
+        super().__init__()
+        self.needed_way_ids = needed_way_ids
+        self.ways = {}
+
+    def way(self, way) -> None:
+        if way.id in self.needed_way_ids:
+            self.ways[int(way.id)] = [int(node.ref) for node in way.nodes]
+
+
+def osrm_via_node_path(
+    from_nodes: list[int], to_nodes: list[int], via_node: int
+) -> tuple[int, int, int] | None:
+    if len(from_nodes) < 2 or len(to_nodes) < 2:
+        return None
+    from_first_source, from_first_target = from_nodes[0], from_nodes[1]
+    from_last_source, from_last_target = from_nodes[-2], from_nodes[-1]
+    to_first_source, to_first_target = to_nodes[0], to_nodes[1]
+    to_last_source, to_last_target = to_nodes[-2], to_nodes[-1]
+    if via_node == from_first_source:
+        if from_first_source == to_first_source:
+            return from_first_target, to_first_source, to_first_target
+        if from_first_source == to_last_target:
+            return from_first_target, to_last_target, to_last_source
+    if via_node == from_last_target:
+        if from_last_target == to_first_source:
+            return from_last_source, to_first_source, to_first_target
+        if from_last_target == to_last_target:
+            return from_last_source, to_last_target, to_last_source
+    return None
+
+
 def osrm_restriction_summary(extract_log: Path) -> dict:
     text = extract_log.read_text(encoding="utf-8", errors="replace")
     patterns = {
@@ -435,6 +468,7 @@ def build_restriction_certificate(
     base_edges: Path,
     turn_states: Path,
     extract_log: Path,
+    restriction_ways: dict[int, list[int]],
 ) -> dict:
     shaped = [(relation, relation_shape(relation)) for relation in relations]
     direct_relations = [
@@ -448,45 +482,62 @@ def build_restriction_certificate(
         and shape["from_way_ids"]
         and shape["to_way_ids"]
     ]
-    via_nodes = {shape["via_node_ids"][0] for _, shape in direct_relations}
-    incoming = {}
-    outgoing = {}
+    resolved_paths = []
+    for relation, shape in direct_relations:
+        via_node = shape["via_node_ids"][0]
+        for from_way in shape["from_way_ids"]:
+            for to_way in shape["to_way_ids"]:
+                from_nodes = restriction_ways.get(from_way)
+                to_nodes = restriction_ways.get(to_way)
+                path = (
+                    osrm_via_node_path(from_nodes, to_nodes, via_node)
+                    if from_nodes is not None and to_nodes is not None
+                    else None
+                )
+                if path is not None:
+                    resolved_paths.append((relation, shape, from_way, to_way, path))
+    relevant_via_nodes = {item[4][1] for item in resolved_paths}
+    incoming_by_nodes = {}
+    outgoing_by_nodes = {}
     outgoing_all = {}
     with base_edges.open(encoding="utf-8", newline="") as source:
         for row in csv.reader(source, delimiter="\t"):
             identifier = row[0]
-            way, _, _, from_node, to_node = parse_stable(identifier)
-            if to_node in via_nodes:
-                incoming.setdefault((to_node, way), []).append(identifier)
-            if from_node in via_nodes:
-                outgoing.setdefault((from_node, way), []).append(identifier)
+            _, _, _, from_node, to_node = parse_stable(identifier)
+            if to_node in relevant_via_nodes:
+                incoming_by_nodes.setdefault((from_node, to_node), []).append(
+                    identifier
+                )
+            if from_node in relevant_via_nodes:
+                outgoing_by_nodes.setdefault((from_node, to_node), []).append(
+                    identifier
+                )
                 outgoing_all.setdefault(from_node, []).append(identifier)
     expected = set()
     resolved_relations = []
-    for relation, shape in sorted(
-        direct_relations, key=lambda item: item[0]["relation_id"]
+    for relation, shape, from_way, to_way, path in sorted(
+        resolved_paths,
+        key=lambda item: (
+            item[0]["relation_id"],
+            item[2],
+            item[3],
+            item[4],
+        ),
     ):
-        via_node = shape["via_node_ids"][0]
+        from_node, via_node, to_node = path
         incoming_edges = sorted(
-            {
-                edge
-                for way in shape["from_way_ids"]
-                for edge in incoming.get((via_node, way), [])
-            }
+            incoming_by_nodes.get((from_node, via_node), [])
         )
         designated_outgoing = sorted(
-            {
-                edge
-                for way in shape["to_way_ids"]
-                for edge in outgoing.get((via_node, way), [])
-            }
+            outgoing_by_nodes.get((via_node, to_node), [])
         )
         if shape["restriction_type"] == "no":
             prohibited_outgoing = designated_outgoing
         else:
-            designated = set(designated_outgoing)
             prohibited_outgoing = sorted(
-                edge for edge in outgoing_all.get(via_node, []) if edge not in designated
+                edge
+                for edge in outgoing_all.get(via_node, [])
+                if parse_stable(edge)[4] != to_node
             )
         relation_pairs = sorted(
             (incoming_edge, outgoing_edge)
@@ -500,9 +551,10 @@ def build_restriction_certificate(
                     "relation_id": relation["relation_id"],
                     "restriction_type": shape["restriction_type"],
                     "restriction_values": shape["restriction_values"],
-                    "from_way_ids": shape["from_way_ids"],
+                    "from_way_ids": [from_way],
                     "via": {"type": "node", "node_id": via_node},
-                    "to_way_ids": shape["to_way_ids"],
+                    "to_way_ids": [to_way],
+                    "resolved_osrm_node_path": [from_node, via_node, to_node],
                     "incoming_edges": incoming_edges,
                     "outgoing_edges": designated_outgoing,
                     "expected_prohibited_transition_count": len(relation_pairs),
@@ -518,10 +570,6 @@ def build_restriction_certificate(
             pair = (row[0], row[1])
             if pair in expected:
                 observed.append(pair)
-    if observed:
-        raise ValueError(
-            f"{len(observed)} relation-derived prohibited transitions appear in graph"
-        )
     expected_digest = hashlib.sha256()
     for incoming_edge, outgoing_edge in sorted(expected):
         expected_digest.update(f"{incoming_edge}\t{outgoing_edge}\n".encode())
@@ -534,7 +582,9 @@ def build_restriction_certificate(
     )
     return {
         "schema_version": 1,
-        "status": "TURN_RESTRICTIONS_CERTIFIED",
+        "status": (
+            "TURN_RESTRICTIONS_CERTIFIED" if not observed else "MISMATCH"
+        ),
         "source_relations": {
             "restriction_relation_count": len(relations),
             "no_turn_relation_count": no_relations,
@@ -545,7 +595,8 @@ def build_restriction_certificate(
         "osrm_summary": osrm_summary,
         "direct_relation_coverage": {
             "via_node_candidate_relations": len(direct_relations),
-            "via_node_resolved_relations": len(resolved_relations),
+            "via_node_resolved_paths": len(resolved_paths),
+            "via_node_paths_with_exported_edges": len(resolved_relations),
             "via_way_relation_count": sum(
                 bool(shape["via_way_ids"]) for _, shape in shaped
             ),
@@ -553,7 +604,11 @@ def build_restriction_certificate(
         "expected_prohibited_transitions": {
             "count": len(expected),
             "canonical_sha256": expected_digest.hexdigest(),
-            "observed_in_exported_turn_states": 0,
+            "observed_in_exported_turn_states": len(observed),
+            "observed_transition_sample": [
+                {"incoming_edge": pair[0], "outgoing_edge": pair[1]}
+                for pair in observed[:32]
+            ],
             "proof": "all relation-derived expected pairs were matched against every exported canonical turn state",
         },
         "sample": {
@@ -1075,6 +1130,14 @@ def main() -> int:
     start_snap = snap_start(base_edges, manifest)
     certificate_inputs = CertificateInputCollector(start_snap["osm_way_id"])
     certificate_inputs.apply_file(str(args.pbf), locations=False)
+    restriction_way_ids = {
+        member["ref"]
+        for relation in certificate_inputs.restriction_relations
+        for member in relation["members"]
+        if member["type"] == "w"
+    }
+    restriction_way_collector = RestrictionWayCollector(restriction_way_ids)
+    restriction_way_collector.apply_file(str(args.pbf), locations=False)
     start_snap = enrich_start_direction_certificate(
         start_snap, certificate_inputs.selected_way, handler
     )
@@ -1088,11 +1151,19 @@ def main() -> int:
         base_edges,
         turn_states,
         args.osrm_extract_log,
+        restriction_way_collector.ways,
     )
     (args.output / "turn-restriction-certificate.json").write_text(
         json.dumps(restriction_certificate, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
+    observed_prohibited = restriction_certificate[
+        "expected_prohibited_transitions"
+    ]["observed_in_exported_turn_states"]
+    if observed_prohibited:
+        raise ValueError(
+            f"{observed_prohibited} relation-derived prohibited transitions appear in graph"
+        )
     restriction_summary = restriction_certificate["osrm_summary"]
     summary = {
         "osm_ways_read": handler.ways_read,
