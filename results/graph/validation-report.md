@@ -3,6 +3,7 @@
 ## Status
 
 - `ROAD_GRAPH_STAGE_OK`
+- `GRAPH_REBUILD_REPRODUCIBLE`
 - `CACHE_BUDGET_OK`
 - `TURN_RESTRICTIONS_CERTIFIED`
 - `START_DIRECTIONS_CERTIFIED`
@@ -60,7 +61,7 @@
 ## Audit status
 
 - `EXPORT_REPRODUCIBILITY`: `PASS`
-- `GRAPH_REBUILD_REPRODUCIBILITY`: `NOT_RUN`
+- `GRAPH_REBUILD_REPRODUCIBILITY`: `PASS`
 - `CACHE_BUDGET_STATUS`: `PASS` (`932689698` <= `950000000` bytes)
 - `TURN_RESTRICTION_CERTIFICATE_STATUS`: `PASS`
 - `START_DIRECTION_CERTIFICATE_STATUS`: `PASS`
@@ -71,7 +72,7 @@
 - Edge-based turn-state canonical SHA-256: `6a6a0c8e63380242569548bff93b74931fb5f2d54ca1320c33afceadb5364061`
 - Two independent canonical metadata exporter runs: `PASS`
 - One frozen OSRM graph build was used for both clean metadata exports.
-- Graph rebuild reproducibility is not asserted before the dispatch-only clean rebuild workflow succeeds.
+- Two independent clean OSRM graph rebuilds from frozen inputs produced matching canonical exports and certificates.
 - Stable edge IDs unique, values non-negative, endpoints connected: `PASS`
 - Relation-derived expected prohibited transitions absent: `45381` checked, `0` observed.
 - Source-derived candidates not enforced by pinned OSRM: `25` transitions, retained with relation-ID provenance and not claimed prohibited.

@@ -2,6 +2,7 @@
   "schema_version": 1,
   "statuses": [
     "ROAD_GRAPH_STAGE_OK",
+    "GRAPH_REBUILD_REPRODUCIBLE",
     "CACHE_BUDGET_OK",
     "TURN_RESTRICTIONS_CERTIFIED",
     "START_DIRECTIONS_CERTIFIED",
@@ -63,9 +64,10 @@
     },
     "graph_rebuild": {
       "status": "GRAPH_REBUILD_REPRODUCIBILITY",
-      "result": "NOT_RUN",
-      "ready_graph_cache_allowed": false,
-      "workflow": ".github/workflows/road-graph-rebuild-check.yml"
+      "result": "PASS",
+      "full_graph_build_count": 2,
+      "ready_graph_cache_restored": false,
+      "certificate": "graph-rebuild-reproducibility.json"
     }
   },
   "cache_budget": {
