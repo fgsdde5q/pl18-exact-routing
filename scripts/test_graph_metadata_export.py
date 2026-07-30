@@ -143,6 +143,12 @@ class GraphMetadataExportTests(unittest.TestCase):
                 ],
                 0,
             )
+            self.assertEqual(
+                restriction_certificate[
+                    "osrm_non_enforced_candidate_transitions"
+                ]["count"],
+                0,
+            )
 
             subprocess.run(
                 [
@@ -153,6 +159,32 @@ class GraphMetadataExportTests(unittest.TestCase):
                 ],
                 check=True,
                 env=os.environ.copy(),
+            )
+            certificate_path = output / "turn-restriction-certificate.json"
+            inconsistent = json.loads(
+                certificate_path.read_text(encoding="utf-8")
+            )
+            inconsistent["source_candidate_transitions"]["count"] += 1
+            certificate_path.write_text(
+                json.dumps(inconsistent, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            validation = subprocess.run(
+                [
+                    "python3",
+                    str(repository_root / "scripts/validate_graph_metadata.py"),
+                    "--metadata",
+                    str(output),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                env=os.environ.copy(),
+            )
+            self.assertNotEqual(validation.returncode, 0)
+            self.assertIn(
+                "restriction candidate partition is inconsistent",
+                validation.stderr,
             )
 
     def test_all_unmatched_pairs_are_reported_together(self) -> None:
@@ -261,6 +293,64 @@ class GraphMetadataExportTests(unittest.TestCase):
             )
             self.assertEqual(count, 0)
             self.assertEqual(violations, 1)
+
+    def test_allowed_source_candidate_is_not_claimed_prohibited(self) -> None:
+        repository_root = Path(__file__).resolve().parent.parent
+        spec = importlib.util.spec_from_file_location(
+            "export_graph_metadata_candidate_partition",
+            repository_root / "scripts/export_graph_metadata.py",
+        )
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            base_edges = root / "edges.tsv"
+            base_edges.write_text(
+                "10/0/0/1/2\t1\t2\t0\t0\t0\t0\t1\t1\tresidential\t30\tpublic_default\tnot_ferry\n"
+                "10/0/1/2/1\t2\t1\t0\t0\t0\t0\t1\t1\tresidential\t30\tpublic_default\tnot_ferry\n",
+                encoding="utf-8",
+            )
+            turn_states = root / "turns.tsv"
+            turn_states.write_text(
+                "10/0/0/1/2\t10/0/1/2/1\t0\n",
+                encoding="utf-8",
+            )
+            extract_log = root / "extract.log"
+            extract_log.write_text(
+                "[info] Collecting node information on 1 restrictions...ok\n"
+                "[info] Removing invalid turn restrictions...removed 1 invalid turn restrictions, after 0s\n"
+                "[info] Constructing restriction graph on 0 restrictions...ok\n",
+                encoding="utf-8",
+            )
+            relation = {
+                "relation_id": 20,
+                "recognized_values": ["no_u_turn"],
+                "ignored_by_except": False,
+                "members": [
+                    {"type": "w", "ref": 10, "role": "from"},
+                    {"type": "n", "ref": 2, "role": "via"},
+                    {"type": "w", "ref": 10, "role": "to"},
+                ],
+            }
+            certificate = module.build_restriction_certificate(
+                [relation],
+                [],
+                base_edges,
+                turn_states,
+                extract_log,
+                {10: [1, 2]},
+            )
+            self.assertEqual(
+                certificate["source_candidate_transitions"]["count"], 1
+            )
+            self.assertEqual(
+                certificate["expected_prohibited_transitions"]["count"], 0
+            )
+            non_enforced = certificate[
+                "osrm_non_enforced_candidate_transitions"
+            ]
+            self.assertEqual(non_enforced["count"], 1)
+            self.assertEqual(non_enforced["sample"][0]["relation_ids"], [20])
 
     def test_canonical_edges_exclude_internal_osrm_identifiers(self) -> None:
         repository_root = Path(__file__).resolve().parent.parent

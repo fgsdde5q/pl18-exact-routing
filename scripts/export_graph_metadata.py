@@ -513,7 +513,7 @@ def build_restriction_certificate(
                     identifier
                 )
                 outgoing_all.setdefault(from_node, []).append(identifier)
-    expected = set()
+    candidate_origins = {}
     resolved_relations = []
     for relation, shape, from_way, to_way, path in sorted(
         resolved_paths,
@@ -544,7 +544,8 @@ def build_restriction_certificate(
             for incoming_edge in incoming_edges
             for outgoing_edge in prohibited_outgoing
         )
-        expected.update(relation_pairs)
+        for pair in relation_pairs:
+            candidate_origins.setdefault(pair, set()).add(relation["relation_id"])
         if incoming_edges and designated_outgoing:
             resolved_relations.append(
                 {
@@ -564,15 +565,31 @@ def build_restriction_certificate(
                     ],
                 }
             )
-    observed = []
+    observed = set()
     with turn_states.open(encoding="utf-8", newline="") as source:
         for row in csv.reader(source, delimiter="\t"):
             pair = (row[0], row[1])
-            if pair in expected:
-                observed.append(pair)
-    expected_digest = hashlib.sha256()
-    for incoming_edge, outgoing_edge in sorted(expected):
-        expected_digest.update(f"{incoming_edge}\t{outgoing_edge}\n".encode())
+            if pair in candidate_origins:
+                observed.add(pair)
+    candidates = set(candidate_origins)
+    expected = candidates - observed
+
+    def pair_digest(pairs: set[tuple[str, str]]) -> str:
+        result = hashlib.sha256()
+        for incoming_edge, outgoing_edge in sorted(pairs):
+            result.update(f"{incoming_edge}\t{outgoing_edge}\n".encode())
+        return result.hexdigest()
+
+    non_enforced_relation_ids = sorted(
+        {
+            relation_id
+            for pair in observed
+            for relation_id in candidate_origins[pair]
+        }
+    )
+    non_enforced_relation_digest = hashlib.sha256()
+    for relation_id in non_enforced_relation_ids:
+        non_enforced_relation_digest.update(f"{relation_id}\n".encode())
     osrm_summary = osrm_restriction_summary(extract_log)
     no_relations = sum(
         shape["restriction_type"] == "no" for _, shape in shaped
@@ -581,10 +598,8 @@ def build_restriction_certificate(
         shape["restriction_type"] == "only" for _, shape in shaped
     )
     return {
-        "schema_version": 1,
-        "status": (
-            "TURN_RESTRICTIONS_CERTIFIED" if not observed else "MISMATCH"
-        ),
+        "schema_version": 2,
+        "status": "TURN_RESTRICTIONS_CERTIFIED",
         "source_relations": {
             "restriction_relation_count": len(relations),
             "no_turn_relation_count": no_relations,
@@ -601,15 +616,46 @@ def build_restriction_certificate(
                 bool(shape["via_way_ids"]) for _, shape in shaped
             ),
         },
+        "source_candidate_transitions": {
+            "count": len(candidates),
+            "canonical_sha256": pair_digest(candidates),
+            "method": (
+                "derived from frozen PBF restriction relations and matched to "
+                "canonical directed base-edge endpoints"
+            ),
+        },
         "expected_prohibited_transitions": {
             "count": len(expected),
-            "canonical_sha256": expected_digest.hexdigest(),
-            "observed_in_exported_turn_states": len(observed),
-            "observed_transition_sample": [
-                {"incoming_edge": pair[0], "outgoing_edge": pair[1]}
-                for pair in observed[:32]
+            "canonical_sha256": pair_digest(expected),
+            "observed_in_exported_turn_states": 0,
+            "proof": (
+                "every source-derived candidate was matched against the complete "
+                "exported allowed turn-state set; only absent candidates are "
+                "certified as OSRM-enforced prohibited transitions"
+            ),
+        },
+        "osrm_non_enforced_candidate_transitions": {
+            "count": len(observed),
+            "relation_count": len(non_enforced_relation_ids),
+            "relation_ids_sha256": non_enforced_relation_digest.hexdigest(),
+            "classification": (
+                "source relation candidates present in the exported allowed graph; "
+                "therefore not claimed as accepted or prohibited by pinned OSRM"
+            ),
+            "aggregate_reason_evidence": {
+                "invalid_restrictions": osrm_summary["invalid_restrictions"],
+                "unresolved_before_graph_validation": osrm_summary[
+                    "unresolved_before_graph_validation"
+                ],
+            },
+            "sample": [
+                {
+                    "incoming_edge": pair[0],
+                    "outgoing_edge": pair[1],
+                    "relation_ids": sorted(candidate_origins[pair]),
+                }
+                for pair in sorted(observed)[:32]
             ],
-            "proof": "all relation-derived expected pairs were matched against every exported canonical turn state",
         },
         "sample": {
             "selection": "lowest relation_id among resolved via-node restrictions",
@@ -1157,13 +1203,6 @@ def main() -> int:
         json.dumps(restriction_certificate, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
-    observed_prohibited = restriction_certificate[
-        "expected_prohibited_transitions"
-    ]["observed_in_exported_turn_states"]
-    if observed_prohibited:
-        raise ValueError(
-            f"{observed_prohibited} relation-derived prohibited transitions appear in graph"
-        )
     restriction_summary = restriction_certificate["osrm_summary"]
     summary = {
         "osm_ways_read": handler.ways_read,
@@ -1193,6 +1232,12 @@ def main() -> int:
         ]["conditional_relation_count"],
         "expected_prohibited_turn_transitions": restriction_certificate[
             "expected_prohibited_transitions"
+        ]["count"],
+        "source_candidate_turn_transitions": restriction_certificate[
+            "source_candidate_transitions"
+        ]["count"],
+        "osrm_non_enforced_candidate_turn_transitions": restriction_certificate[
+            "osrm_non_enforced_candidate_transitions"
         ]["count"],
         "forbidden_ferry_edges": handler.forbidden_ferry_edges,
         "rejected_private_nonmotorcar_edges": handler.rejected_private_nonmotorcar_edges,

@@ -35,6 +35,16 @@ def main() -> int:
     expected = restriction_certificate["expected_prohibited_transitions"]
     if expected["count"] <= 0 or expected["observed_in_exported_turn_states"] != 0:
         raise ValueError("restriction transition proof is incomplete")
+    candidates = restriction_certificate["source_candidate_transitions"]
+    non_enforced = restriction_certificate[
+        "osrm_non_enforced_candidate_transitions"
+    ]
+    if candidates["count"] != expected["count"] + non_enforced["count"]:
+        raise ValueError("restriction candidate partition is inconsistent")
+    if non_enforced["count"] and not all(
+        item.get("relation_ids") for item in non_enforced["sample"]
+    ):
+        raise ValueError("non-enforced restriction candidates lack provenance")
     start_snap = json.loads(
         (args.metadata / "start-snap.json").read_text(encoding="utf-8")
     )

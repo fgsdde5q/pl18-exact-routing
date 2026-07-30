@@ -261,6 +261,19 @@ def main() -> int:
         raise ValueError("restriction certificate contains no expected transitions")
     if expected_prohibited["observed_in_exported_turn_states"] != 0:
         raise ValueError("relation-derived prohibited transition is exported")
+    source_candidates = restriction_certificate["source_candidate_transitions"]
+    non_enforced_candidates = restriction_certificate[
+        "osrm_non_enforced_candidate_transitions"
+    ]
+    if (
+        source_candidates["count"]
+        != expected_prohibited["count"] + non_enforced_candidates["count"]
+    ):
+        raise ValueError("restriction candidate partition is inconsistent")
+    if non_enforced_candidates["count"] and not all(
+        item.get("relation_ids") for item in non_enforced_candidates["sample"]
+    ):
+        raise ValueError("non-enforced restriction candidates lack provenance")
     if LAST_OBSERVED_METADATA_CACHE_BYTES > METADATA_CACHE_BUDGET_BYTES:
         raise ValueError("canonical metadata cache exceeds pinned budget")
     start = manifest["start"]["wgs84"]
@@ -402,9 +415,16 @@ def main() -> int:
         "expected_prohibited_turn_transitions": export_summary[
             "expected_prohibited_turn_transitions"
         ],
+        "source_candidate_turn_transitions": export_summary[
+            "source_candidate_turn_transitions"
+        ],
+        "osrm_non_enforced_candidate_turn_transitions": export_summary[
+            "osrm_non_enforced_candidate_turn_transitions"
+        ],
         "prohibited_turn_violations": 0,
         "enforcement_source": (
-            "OSRM v26.5.0 restriction summary plus relation-derived prohibited pairs"
+            "OSRM v26.5.0 counters plus complete source-candidate comparison "
+            "against exported allowed turn states"
         ),
         "conditional_restrictions": "ignored",
     }
@@ -512,6 +532,7 @@ def main() -> int:
 - Graph rebuild reproducibility is not asserted before the dispatch-only clean rebuild workflow succeeds.
 - Stable edge IDs unique, values non-negative, endpoints connected: `PASS`
 - Relation-derived expected prohibited transitions absent: `{expected_prohibited["count"]}` checked, `0` observed.
+- Source-derived candidates not enforced by pinned OSRM: `{non_enforced_candidates["count"]}` transitions, retained with relation-ID provenance and not claimed prohibited.
 - Ferry/private rejection and 150 m snap bound: `PASS`
 """
     (args.output / "validation-report.md").write_text(report, encoding="utf-8")
