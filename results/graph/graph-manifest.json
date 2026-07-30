@@ -2,6 +2,9 @@
   "schema_version": 1,
   "statuses": [
     "ROAD_GRAPH_STAGE_OK",
+    "CACHE_BUDGET_OK",
+    "TURN_RESTRICTIONS_CERTIFIED",
+    "START_DIRECTIONS_CERTIFIED",
     "PRG_PROVENANCE_LOCKED",
     "SOLVER_NOT_STARTED"
   ],
@@ -43,13 +46,32 @@
   "graph_exporter": {
     "source": "tools/osrm_graph_dump.cpp",
     "sha256": "d9e7249cc1bf75c22f82c31c33b76c53354c57b8e15689cca1c593d2690f32cd",
-    "repository_commit": "3e0ad2aba5b074fe6dd35cf8383d9f2b5ced8469"
+    "repository_commit": "9b67f8bfaf2d800e9a49701fce20dcda8a805fb6"
   },
   "canonical_exports": {
     "directed_base_edges_sha256": "f27449dfa026193831458712bcb97c1c8b07fdf9fe4f9d33c6c2f2f613a4406a",
     "edge_based_turn_states_sha256": "6a6a0c8e63380242569548bff93b74931fb5f2d54ca1320c33afceadb5364061",
     "clean_metadata_build_count": 2,
     "second_clean_metadata_build_match": true
+  },
+  "reproducibility": {
+    "export": {
+      "status": "EXPORT_REPRODUCIBILITY",
+      "result": "PASS",
+      "independent_export_count": 2,
+      "shared_ready_osrm_graph": true
+    },
+    "graph_rebuild": {
+      "status": "GRAPH_REBUILD_REPRODUCIBILITY",
+      "result": "NOT_RUN",
+      "ready_graph_cache_allowed": false,
+      "workflow": ".github/workflows/road-graph-rebuild-check.yml"
+    }
+  },
+  "cache_budget": {
+    "status": "CACHE_BUDGET_OK",
+    "metadata_checkpoint_budget_bytes": 950000000,
+    "last_observed_metadata_checkpoint_bytes": 932689698
   },
   "counts": {
     "osm_ways_read": 33321336,
@@ -59,7 +81,17 @@
     "collapsed_duplicate_osrm_node_duration_ds": 101168400,
     "legal_directed_motorcar_edges": 33473569,
     "edge_based_turn_states": 15654639,
+    "source_restriction_relations": 46838,
+    "parsed_turn_restrictions": 45290,
+    "invalid_turn_restrictions": 442,
+    "unresolved_turn_restrictions": 2221,
     "enforced_turn_restrictions": 42627,
+    "no_turn_relations": 33179,
+    "only_turn_relations": 13559,
+    "conditional_restriction_relations": 25,
+    "expected_prohibited_turn_transitions": 45381,
+    "source_candidate_turn_transitions": 45406,
+    "osrm_non_enforced_candidate_turn_transitions": 25,
     "forbidden_ferry_edges": 6612,
     "rejected_private_nonmotorcar_edges": 2401005,
     "prohibited_turn_violations": 0,
@@ -97,7 +129,97 @@
         "direction_bit": 0,
         "initial_cost_s": 0.0
       }
-    ]
+    ],
+    "selected_way_tags": {
+      "cycleway:both": "no",
+      "foot": "no",
+      "highway": "secondary",
+      "lanes": "2",
+      "lit": "yes",
+      "name": "Juliusza Słowackiego",
+      "name:etymology:wikidata": "Q243267",
+      "oneway": "yes",
+      "sidewalk": "no",
+      "surface": "asphalt",
+      "wikidata": "Q9365386",
+      "wikipedia": "pl:Ulica Juliusza Słowackiego w Warszawie"
+    },
+    "oneway_status": {
+      "raw": "yes",
+      "forward_allowed": true,
+      "backward_allowed": false
+    },
+    "geometrically_possible_initial_directions": [
+      {
+        "name": "forward",
+        "direction_bit": 0,
+        "stable_edge_id": "25857664/4/0/3069840595/611255856",
+        "from_node_id": 3069840595,
+        "to_node_id": 611255856,
+        "geometry_possible": true,
+        "oneway_check": {
+          "allowed": true,
+          "tag_value": "yes"
+        },
+        "access_check": {
+          "allowed": true,
+          "decision": "public_default"
+        },
+        "vehicle_dimension_check": {
+          "allowed": true
+        },
+        "graph_edge_present": true,
+        "turn_check": {
+          "allowed": true,
+          "decision": "not_applicable_at_route_start_without_incoming_edge"
+        },
+        "legal_initial_direction": true,
+        "rejection_reasons": []
+      },
+      {
+        "name": "backward",
+        "direction_bit": 1,
+        "stable_edge_id": "25857664/4/1/611255856/3069840595",
+        "from_node_id": 611255856,
+        "to_node_id": 3069840595,
+        "geometry_possible": true,
+        "oneway_check": {
+          "allowed": false,
+          "tag_value": "yes"
+        },
+        "access_check": {
+          "allowed": true,
+          "decision": "public_default"
+        },
+        "vehicle_dimension_check": {
+          "allowed": true
+        },
+        "graph_edge_present": false,
+        "turn_check": {
+          "allowed": true,
+          "decision": "not_applicable_at_route_start_without_incoming_edge"
+        },
+        "legal_initial_direction": false,
+        "rejection_reasons": [
+          "forbidden_by_oneway_tag",
+          "directed_edge_absent_from_osrm_graph"
+        ]
+      }
+    ],
+    "single_direction_explanation": {
+      "status": "START_DIRECTIONS_CERTIFIED",
+      "available_stable_edge_id": "25857664/4/0/3069840595/611255856",
+      "rejected_directions": [
+        {
+          "stable_edge_id": "25857664/4/1/611255856/3069840595",
+          "reasons": [
+            "forbidden_by_oneway_tag",
+            "directed_edge_absent_from_osrm_graph"
+          ]
+        }
+      ],
+      "evidence": "frozen OSM way tags plus project oneway/access/vehicle rules"
+    }
   },
   "resource_usage_file": "resource-usage.txt"
 }

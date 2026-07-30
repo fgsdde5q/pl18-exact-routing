@@ -1,6 +1,16 @@
 {
+  "source_restriction_relations": 46838,
+  "parsed_turn_restrictions": 45290,
+  "invalid_turn_restrictions": 442,
+  "unresolved_turn_restrictions": 2221,
   "enforced_turn_restrictions": 42627,
+  "no_turn_relations": 33179,
+  "only_turn_relations": 13559,
+  "conditional_restriction_relations": 25,
+  "expected_prohibited_turn_transitions": 45381,
+  "source_candidate_turn_transitions": 45406,
+  "osrm_non_enforced_candidate_turn_transitions": 25,
   "prohibited_turn_violations": 0,
-  "enforcement_source": "OSRM v26.5.0 accepted restriction graph and edge-based transitions",
+  "enforcement_source": "OSRM v26.5.0 counters plus complete source-candidate comparison against exported allowed turn states",
   "conditional_restrictions": "ignored"
 }

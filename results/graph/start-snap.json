@@ -30,5 +30,95 @@
       "direction_bit": 0,
       "initial_cost_s": 0.0
     }
-  ]
+  ],
+  "selected_way_tags": {
+    "cycleway:both": "no",
+    "foot": "no",
+    "highway": "secondary",
+    "lanes": "2",
+    "lit": "yes",
+    "name": "Juliusza Słowackiego",
+    "name:etymology:wikidata": "Q243267",
+    "oneway": "yes",
+    "sidewalk": "no",
+    "surface": "asphalt",
+    "wikidata": "Q9365386",
+    "wikipedia": "pl:Ulica Juliusza Słowackiego w Warszawie"
+  },
+  "oneway_status": {
+    "raw": "yes",
+    "forward_allowed": true,
+    "backward_allowed": false
+  },
+  "geometrically_possible_initial_directions": [
+    {
+      "name": "forward",
+      "direction_bit": 0,
+      "stable_edge_id": "25857664/4/0/3069840595/611255856",
+      "from_node_id": 3069840595,
+      "to_node_id": 611255856,
+      "geometry_possible": true,
+      "oneway_check": {
+        "allowed": true,
+        "tag_value": "yes"
+      },
+      "access_check": {
+        "allowed": true,
+        "decision": "public_default"
+      },
+      "vehicle_dimension_check": {
+        "allowed": true
+      },
+      "graph_edge_present": true,
+      "turn_check": {
+        "allowed": true,
+        "decision": "not_applicable_at_route_start_without_incoming_edge"
+      },
+      "legal_initial_direction": true,
+      "rejection_reasons": []
+    },
+    {
+      "name": "backward",
+      "direction_bit": 1,
+      "stable_edge_id": "25857664/4/1/611255856/3069840595",
+      "from_node_id": 611255856,
+      "to_node_id": 3069840595,
+      "geometry_possible": true,
+      "oneway_check": {
+        "allowed": false,
+        "tag_value": "yes"
+      },
+      "access_check": {
+        "allowed": true,
+        "decision": "public_default"
+      },
+      "vehicle_dimension_check": {
+        "allowed": true
+      },
+      "graph_edge_present": false,
+      "turn_check": {
+        "allowed": true,
+        "decision": "not_applicable_at_route_start_without_incoming_edge"
+      },
+      "legal_initial_direction": false,
+      "rejection_reasons": [
+        "forbidden_by_oneway_tag",
+        "directed_edge_absent_from_osrm_graph"
+      ]
+    }
+  ],
+  "single_direction_explanation": {
+    "status": "START_DIRECTIONS_CERTIFIED",
+    "available_stable_edge_id": "25857664/4/0/3069840595/611255856",
+    "rejected_directions": [
+      {
+        "stable_edge_id": "25857664/4/1/611255856/3069840595",
+        "reasons": [
+          "forbidden_by_oneway_tag",
+          "directed_edge_absent_from_osrm_graph"
+        ]
+      }
+    ],
+    "evidence": "frozen OSM way tags plus project oneway/access/vehicle rules"
+  }
 }

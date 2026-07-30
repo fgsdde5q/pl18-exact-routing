@@ -1,0 +1,1355 @@
+{
+  "schema_version": 2,
+  "status": "TURN_RESTRICTIONS_CERTIFIED",
+  "source_relations": {
+    "restriction_relation_count": 46838,
+    "no_turn_relation_count": 33179,
+    "only_turn_relation_count": 13559,
+    "conditional_relation_count": 25,
+    "conditional_policy": "ignored_by_project_and_osrm_extract"
+  },
+  "osrm_summary": {
+    "parsed_restrictions": 45290,
+    "invalid_restrictions": 442,
+    "accepted_restrictions": 42627,
+    "unresolved_before_graph_validation": 2221
+  },
+  "direct_relation_coverage": {
+    "via_node_candidate_relations": 42774,
+    "via_node_resolved_paths": 42677,
+    "via_node_paths_with_exported_edges": 40192,
+    "via_way_relation_count": 2578
+  },
+  "source_candidate_transitions": {
+    "count": 45406,
+    "canonical_sha256": "8adbe9ed92bbdc9049d6777f938bfa2e99d579720bb1082a5c91825138ec52ae",
+    "method": "derived from frozen PBF restriction relations and matched to canonical directed base-edge endpoints"
+  },
+  "expected_prohibited_transitions": {
+    "count": 45381,
+    "canonical_sha256": "9e17d9241f150b09b3603f4d7c15129e35bea1af81c317c2e2052c31f8d38fa9",
+    "observed_in_exported_turn_states": 0,
+    "proof": "every source-derived candidate was matched against the complete exported allowed turn-state set; only absent candidates are certified as OSRM-enforced prohibited transitions"
+  },
+  "osrm_non_enforced_candidate_transitions": {
+    "count": 25,
+    "relation_count": 23,
+    "relation_ids_sha256": "bc35050dd26e64f1b72076ebc40a958bfe52426274424c90d0fef4160fc5cb01",
+    "classification": "source relation candidates present in the exported allowed graph; therefore not claimed as accepted or prohibited by pinned OSRM",
+    "aggregate_reason_evidence": {
+      "invalid_restrictions": 442,
+      "unresolved_before_graph_validation": 2221
+    },
+    "sample": [
+      {
+        "incoming_edge": "1036826951/0/1/4757664330/3652907354",
+        "outgoing_edge": "8608793/0/0/3652907354/3398141046",
+        "relation_ids": [
+          13885687
+        ]
+      },
+      {
+        "incoming_edge": "1226331568/4/0/13464756392/3733293492",
+        "outgoing_edge": "1226331568/4/1/3733293492/13464756392",
+        "relation_ids": [
+          20109263
+        ]
+      },
+      {
+        "incoming_edge": "1231055305/0/1/3852777158/1209828076",
+        "outgoing_edge": "1231055305/0/0/1209828076/3852777158",
+        "relation_ids": [
+          16821221
+        ]
+      },
+      {
+        "incoming_edge": "1294574510/0/1/11358548199/2375423320",
+        "outgoing_edge": "1105244147/0/0/2375423320/2295731577",
+        "relation_ids": [
+          17744874
+        ]
+      },
+      {
+        "incoming_edge": "1329721028/0/1/417886267/7188532231",
+        "outgoing_edge": "770024814/1/1/7188532231/7188532232",
+        "relation_ids": [
+          18234763
+        ]
+      },
+      {
+        "incoming_edge": "1339788552/0/1/13179014827/12393335799",
+        "outgoing_edge": "1536271545/0/0/12393335799/5761697663",
+        "relation_ids": [
+          18365198
+        ]
+      },
+      {
+        "incoming_edge": "144900317/0/1/13152518033/188665899",
+        "outgoing_edge": "144900317/0/0/188665899/13152518033",
+        "relation_ids": [
+          19617084
+        ]
+      },
+      {
+        "incoming_edge": "153267230/2/0/599320010/245421813",
+        "outgoing_edge": "309731882/0/0/245421813/614434580",
+        "relation_ids": [
+          16410741
+        ]
+      },
+      {
+        "incoming_edge": "161926909/0/1/254069693/254069686",
+        "outgoing_edge": "161926909/0/0/254069686/254069693",
+        "relation_ids": [
+          18142429
+        ]
+      },
+      {
+        "incoming_edge": "173138877/0/1/2150917517/1839660164",
+        "outgoing_edge": "183212281/0/0/1839660164/1793791760",
+        "relation_ids": [
+          8362031
+        ]
+      },
+      {
+        "incoming_edge": "238068211/6/0/2459321246/2399792103",
+        "outgoing_edge": "397794518/0/0/2399792103/4005798011",
+        "relation_ids": [
+          17489962
+        ]
+      },
+      {
+        "incoming_edge": "239171556/0/1/2469828539/2469828509",
+        "outgoing_edge": "239171556/0/0/2469828509/2469828539",
+        "relation_ids": [
+          21061260
+        ]
+      },
+      {
+        "incoming_edge": "24157370/4/0/277935854/261675300",
+        "outgoing_edge": "823536388/0/0/261675300/277935850",
+        "relation_ids": [
+          11277824
+        ]
+      },
+      {
+        "incoming_edge": "245265493/15/0/2459321245/2459321242",
+        "outgoing_edge": "1105699435/0/0/2459321242/2399792105",
+        "relation_ids": [
+          17489959
+        ]
+      },
+      {
+        "incoming_edge": "266717649/2/0/3336197479/2648202233",
+        "outgoing_edge": "1039926208/2/1/2648202233/12524321371",
+        "relation_ids": [
+          4049308
+        ]
+      },
+      {
+        "incoming_edge": "266717649/2/0/3336197479/2648202233",
+        "outgoing_edge": "1040189921/0/0/2648202233/9577585621",
+        "relation_ids": [
+          4049308
+        ]
+      },
+      {
+        "incoming_edge": "354946381/1/0/4616039376/252734185",
+        "outgoing_edge": "354946381/1/1/252734185/4616039376",
+        "relation_ids": [
+          5301000
+        ]
+      },
+      {
+        "incoming_edge": "358630525/3/0/3635331799/3635331798",
+        "outgoing_edge": "358630530/0/0/3635331798/3635324146",
+        "relation_ids": [
+          5340226
+        ]
+      },
+      {
+        "incoming_edge": "371413622/0/1/2943749071/9930411300",
+        "outgoing_edge": "1083619453/0/0/9930411300/3054057947",
+        "relation_ids": [
+          14421471
+        ]
+      },
+      {
+        "incoming_edge": "38974227/0/1/8260781860/463531123",
+        "outgoing_edge": "394426333/5/1/463531123/8260781858",
+        "relation_ids": [
+          2336105
+        ]
+      },
+      {
+        "incoming_edge": "455543916/0/1/1941454676/1941454969",
+        "outgoing_edge": "455543908/0/0/1941454969/4519350314",
+        "relation_ids": [
+          6737902
+        ]
+      },
+      {
+        "incoming_edge": "505452977/0/0/4954000976/263703016",
+        "outgoing_edge": "187405592/0/0/263703016/4954000977",
+        "relation_ids": [
+          2524046
+        ]
+      },
+      {
+        "incoming_edge": "706126489/1/0/6634892529/6634892534",
+        "outgoing_edge": "292839971/0/1/6634892534/6634892533",
+        "relation_ids": [
+          9819591
+        ]
+      },
+      {
+        "incoming_edge": "706126489/1/0/6634892529/6634892534",
+        "outgoing_edge": "292839971/1/0/6634892534/2963999145",
+        "relation_ids": [
+          9819591
+        ]
+      },
+      {
+        "incoming_edge": "785389948/2/0/10563697344/7340807670",
+        "outgoing_edge": "350514433/0/0/7340807670/2071777669",
+        "relation_ids": [
+          18321388
+        ]
+      }
+    ]
+  },
+  "sample": {
+    "selection": "lowest relation_id among resolved via-node restrictions",
+    "limit": 32,
+    "relations": [
+      {
+        "relation_id": 35953,
+        "restriction_type": "only",
+        "restriction_values": [
+          "only_straight_on"
+        ],
+        "from_way_ids": [
+          114959440
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 165109504
+        },
+        "to_way_ids": [
+          131477038
+        ],
+        "resolved_osrm_node_path": [
+          4623366284,
+          165109504,
+          4623366589
+        ],
+        "incoming_edges": [
+          "114959440/2/0/4623366284/165109504"
+        ],
+        "outgoing_edges": [
+          "131477038/0/0/165109504/4623366589"
+        ],
+        "expected_prohibited_transition_count": 1,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "114959440/2/0/4623366284/165109504",
+            "outgoing_edge": "131477037/0/0/165109504/4623366282"
+          }
+        ]
+      },
+      {
+        "relation_id": 35954,
+        "restriction_type": "only",
+        "restriction_values": [
+          "only_straight_on"
+        ],
+        "from_way_ids": [
+          16237799
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 165109537
+        },
+        "to_way_ids": [
+          131476956
+        ],
+        "resolved_osrm_node_path": [
+          4623369920,
+          165109537,
+          4623827487
+        ],
+        "incoming_edges": [
+          "16237799/5/0/4623369920/165109537"
+        ],
+        "outgoing_edges": [
+          "131476956/0/0/165109537/4623827487"
+        ],
+        "expected_prohibited_transition_count": 1,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "16237799/5/0/4623369920/165109537",
+            "outgoing_edge": "131476955/0/0/165109537/4623451968"
+          }
+        ]
+      },
+      {
+        "relation_id": 54301,
+        "restriction_type": "no",
+        "restriction_values": [
+          "no_left_turn"
+        ],
+        "from_way_ids": [
+          25560951
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 3676900279
+        },
+        "to_way_ids": [
+          25560943
+        ],
+        "resolved_osrm_node_path": [
+          773660733,
+          3676900279,
+          5160607537
+        ],
+        "incoming_edges": [
+          "25560951/0/1/773660733/3676900279"
+        ],
+        "outgoing_edges": [
+          "25560943/0/0/3676900279/5160607537"
+        ],
+        "expected_prohibited_transition_count": 1,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "25560951/0/1/773660733/3676900279",
+            "outgoing_edge": "25560943/0/0/3676900279/5160607537"
+          }
+        ]
+      },
+      {
+        "relation_id": 75480,
+        "restriction_type": "only",
+        "restriction_values": [
+          "only_right_turn"
+        ],
+        "from_way_ids": [
+          23589329
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 255443832
+        },
+        "to_way_ids": [
+          826925227
+        ],
+        "resolved_osrm_node_path": [
+          4809686950,
+          255443832,
+          10725223609
+        ],
+        "incoming_edges": [
+          "23589329/1/0/4809686950/255443832"
+        ],
+        "outgoing_edges": [
+          "826925227/0/0/255443832/10725223609"
+        ],
+        "expected_prohibited_transition_count": 1,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "23589329/1/0/4809686950/255443832",
+            "outgoing_edge": "30904691/0/0/255443832/2384168594"
+          }
+        ]
+      },
+      {
+        "relation_id": 92201,
+        "restriction_type": "no",
+        "restriction_values": [
+          "no_left_turn"
+        ],
+        "from_way_ids": [
+          32054975
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 359811057
+        },
+        "to_way_ids": [
+          32054748
+        ],
+        "resolved_osrm_node_path": [
+          7365262874,
+          359811057,
+          1769254536
+        ],
+        "incoming_edges": [
+          "32054975/1/0/7365262874/359811057"
+        ],
+        "outgoing_edges": [
+          "32054748/0/1/359811057/1769254536"
+        ],
+        "expected_prohibited_transition_count": 1,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "32054975/1/0/7365262874/359811057",
+            "outgoing_edge": "32054748/0/1/359811057/1769254536"
+          }
+        ]
+      },
+      {
+        "relation_id": 97282,
+        "restriction_type": "no",
+        "restriction_values": [
+          "no_left_turn"
+        ],
+        "from_way_ids": [
+          32282351
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 1616596360
+        },
+        "to_way_ids": [
+          32282037
+        ],
+        "resolved_osrm_node_path": [
+          5127250006,
+          1616596360,
+          5127250008
+        ],
+        "incoming_edges": [
+          "32282351/0/1/5127250006/1616596360"
+        ],
+        "outgoing_edges": [
+          "32282037/0/0/1616596360/5127250008"
+        ],
+        "expected_prohibited_transition_count": 1,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "32282351/0/1/5127250006/1616596360",
+            "outgoing_edge": "32282037/0/0/1616596360/5127250008"
+          }
+        ]
+      },
+      {
+        "relation_id": 97284,
+        "restriction_type": "no",
+        "restriction_values": [
+          "no_left_turn"
+        ],
+        "from_way_ids": [
+          1526440302
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 1832947355
+        },
+        "to_way_ids": [
+          32278995
+        ],
+        "resolved_osrm_node_path": [
+          7590233420,
+          1832947355,
+          7590233421
+        ],
+        "incoming_edges": [
+          "1526440302/2/0/7590233420/1832947355"
+        ],
+        "outgoing_edges": [
+          "32278995/0/0/1832947355/7590233421"
+        ],
+        "expected_prohibited_transition_count": 1,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "1526440302/2/0/7590233420/1832947355",
+            "outgoing_edge": "32278995/0/0/1832947355/7590233421"
+          }
+        ]
+      },
+      {
+        "relation_id": 97285,
+        "restriction_type": "no",
+        "restriction_values": [
+          "no_left_turn"
+        ],
+        "from_way_ids": [
+          32284054
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 362836418
+        },
+        "to_way_ids": [
+          32284062
+        ],
+        "resolved_osrm_node_path": [
+          9214953610,
+          362836418,
+          9214953608
+        ],
+        "incoming_edges": [
+          "32284054/24/0/9214953610/362836418"
+        ],
+        "outgoing_edges": [
+          "32284062/0/0/362836418/9214953608"
+        ],
+        "expected_prohibited_transition_count": 1,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "32284054/24/0/9214953610/362836418",
+            "outgoing_edge": "32284062/0/0/362836418/9214953608"
+          }
+        ]
+      },
+      {
+        "relation_id": 97286,
+        "restriction_type": "no",
+        "restriction_values": [
+          "no_left_turn"
+        ],
+        "from_way_ids": [
+          32283161
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 362835023
+        },
+        "to_way_ids": [
+          32284054
+        ],
+        "resolved_osrm_node_path": [
+          362835295,
+          362835023,
+          2521366017
+        ],
+        "incoming_edges": [
+          "32283161/0/0/362835295/362835023"
+        ],
+        "outgoing_edges": [
+          "32284054/0/0/362835023/2521366017"
+        ],
+        "expected_prohibited_transition_count": 1,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "32283161/0/0/362835295/362835023",
+            "outgoing_edge": "32284054/0/0/362835023/2521366017"
+          }
+        ]
+      },
+      {
+        "relation_id": 97290,
+        "restriction_type": "no",
+        "restriction_values": [
+          "no_left_turn"
+        ],
+        "from_way_ids": [
+          502464759
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 362781811
+        },
+        "to_way_ids": [
+          32284045
+        ],
+        "resolved_osrm_node_path": [
+          5773699885,
+          362781811,
+          4837696719
+        ],
+        "incoming_edges": [
+          "502464759/1/0/5773699885/362781811"
+        ],
+        "outgoing_edges": [
+          "32284045/10/1/362781811/4837696719"
+        ],
+        "expected_prohibited_transition_count": 1,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "502464759/1/0/5773699885/362781811",
+            "outgoing_edge": "32284045/10/1/362781811/4837696719"
+          }
+        ]
+      },
+      {
+        "relation_id": 97295,
+        "restriction_type": "no",
+        "restriction_values": [
+          "no_left_turn"
+        ],
+        "from_way_ids": [
+          32284045
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 362781811
+        },
+        "to_way_ids": [
+          32283537
+        ],
+        "resolved_osrm_node_path": [
+          4837696719,
+          362781811,
+          5773699882
+        ],
+        "incoming_edges": [
+          "32284045/10/0/4837696719/362781811"
+        ],
+        "outgoing_edges": [
+          "32283537/0/0/362781811/5773699882"
+        ],
+        "expected_prohibited_transition_count": 1,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "32284045/10/0/4837696719/362781811",
+            "outgoing_edge": "32283537/0/0/362781811/5773699882"
+          }
+        ]
+      },
+      {
+        "relation_id": 111885,
+        "restriction_type": "only",
+        "restriction_values": [
+          "only_right_turn"
+        ],
+        "from_way_ids": [
+          29190327
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 320997670
+        },
+        "to_way_ids": [
+          33082183
+        ],
+        "resolved_osrm_node_path": [
+          2701497673,
+          320997670,
+          403368778
+        ],
+        "incoming_edges": [
+          "29190327/17/0/2701497673/320997670"
+        ],
+        "outgoing_edges": [
+          "33082183/0/0/320997670/403368778"
+        ],
+        "expected_prohibited_transition_count": 2,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "29190327/17/0/2701497673/320997670",
+            "outgoing_edge": "29190327/17/1/320997670/2701497673"
+          },
+          {
+            "incoming_edge": "29190327/17/0/2701497673/320997670",
+            "outgoing_edge": "379139119/1/1/320997670/1593688433"
+          }
+        ]
+      },
+      {
+        "relation_id": 111886,
+        "restriction_type": "no",
+        "restriction_values": [
+          "no_left_turn"
+        ],
+        "from_way_ids": [
+          33082183
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 320997670
+        },
+        "to_way_ids": [
+          29190327
+        ],
+        "resolved_osrm_node_path": [
+          403368778,
+          320997670,
+          2701497673
+        ],
+        "incoming_edges": [
+          "33082183/0/1/403368778/320997670"
+        ],
+        "outgoing_edges": [
+          "29190327/17/1/320997670/2701497673"
+        ],
+        "expected_prohibited_transition_count": 1,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "33082183/0/1/403368778/320997670",
+            "outgoing_edge": "29190327/17/1/320997670/2701497673"
+          }
+        ]
+      },
+      {
+        "relation_id": 120176,
+        "restriction_type": "no",
+        "restriction_values": [
+          "no_left_turn"
+        ],
+        "from_way_ids": [
+          16314723
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 167074880
+        },
+        "to_way_ids": [
+          33644762
+        ],
+        "resolved_osrm_node_path": [
+          163019302,
+          167074880,
+          10049693314
+        ],
+        "incoming_edges": [
+          "16314723/0/0/163019302/167074880"
+        ],
+        "outgoing_edges": [
+          "33644762/0/0/167074880/10049693314"
+        ],
+        "expected_prohibited_transition_count": 1,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "16314723/0/0/163019302/167074880",
+            "outgoing_edge": "33644762/0/0/167074880/10049693314"
+          }
+        ]
+      },
+      {
+        "relation_id": 148228,
+        "restriction_type": "no",
+        "restriction_values": [
+          "no_left_turn"
+        ],
+        "from_way_ids": [
+          19801103
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 2649545896
+        },
+        "to_way_ids": [
+          19801131
+        ],
+        "resolved_osrm_node_path": [
+          264037413,
+          2649545896,
+          206346500
+        ],
+        "incoming_edges": [
+          "19801103/0/1/264037413/2649545896"
+        ],
+        "outgoing_edges": [
+          "19801131/0/0/2649545896/206346500"
+        ],
+        "expected_prohibited_transition_count": 1,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "19801103/0/1/264037413/2649545896",
+            "outgoing_edge": "19801131/0/0/2649545896/206346500"
+          }
+        ]
+      },
+      {
+        "relation_id": 148232,
+        "restriction_type": "no",
+        "restriction_values": [
+          "no_left_turn"
+        ],
+        "from_way_ids": [
+          29318662
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 207516235
+        },
+        "to_way_ids": [
+          24787975
+        ],
+        "resolved_osrm_node_path": [
+          1079902597,
+          207516235,
+          3556854557
+        ],
+        "incoming_edges": [
+          "29318662/0/1/1079902597/207516235"
+        ],
+        "outgoing_edges": [
+          "24787975/0/0/207516235/3556854557"
+        ],
+        "expected_prohibited_transition_count": 1,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "29318662/0/1/1079902597/207516235",
+            "outgoing_edge": "24787975/0/0/207516235/3556854557"
+          }
+        ]
+      },
+      {
+        "relation_id": 155318,
+        "restriction_type": "no",
+        "restriction_values": [
+          "no_u_turn"
+        ],
+        "from_way_ids": [
+          1161769582
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 417912399
+        },
+        "to_way_ids": [
+          1161769585
+        ],
+        "resolved_osrm_node_path": [
+          3674069985,
+          417912399,
+          3674069990
+        ],
+        "incoming_edges": [
+          "1161769582/3/0/3674069985/417912399"
+        ],
+        "outgoing_edges": [
+          "1161769585/0/0/417912399/3674069990"
+        ],
+        "expected_prohibited_transition_count": 1,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "1161769582/3/0/3674069985/417912399",
+            "outgoing_edge": "1161769585/0/0/417912399/3674069990"
+          }
+        ]
+      },
+      {
+        "relation_id": 155320,
+        "restriction_type": "no",
+        "restriction_values": [
+          "no_left_turn"
+        ],
+        "from_way_ids": [
+          172429387
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 417920598
+        },
+        "to_way_ids": [
+          363637608
+        ],
+        "resolved_osrm_node_path": [
+          3854645184,
+          417920598,
+          2961736258
+        ],
+        "incoming_edges": [
+          "172429387/0/1/3854645184/417920598"
+        ],
+        "outgoing_edges": [
+          "363637608/0/1/417920598/2961736258"
+        ],
+        "expected_prohibited_transition_count": 1,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "172429387/0/1/3854645184/417920598",
+            "outgoing_edge": "363637608/0/1/417920598/2961736258"
+          }
+        ]
+      },
+      {
+        "relation_id": 155328,
+        "restriction_type": "no",
+        "restriction_values": [
+          "no_u_turn"
+        ],
+        "from_way_ids": [
+          1507674926
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 10056082513
+        },
+        "to_way_ids": [
+          1080784393
+        ],
+        "resolved_osrm_node_path": [
+          12328473175,
+          10056082513,
+          12328473177
+        ],
+        "incoming_edges": [
+          "1507674926/1/0/12328473175/10056082513"
+        ],
+        "outgoing_edges": [
+          "1080784393/0/0/10056082513/12328473177"
+        ],
+        "expected_prohibited_transition_count": 1,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "1507674926/1/0/12328473175/10056082513",
+            "outgoing_edge": "1080784393/0/0/10056082513/12328473177"
+          }
+        ]
+      },
+      {
+        "relation_id": 155350,
+        "restriction_type": "no",
+        "restriction_values": [
+          "no_left_turn"
+        ],
+        "from_way_ids": [
+          330164325
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 417920129
+        },
+        "to_way_ids": [
+          1130937103
+        ],
+        "resolved_osrm_node_path": [
+          3371186426,
+          417920129,
+          417920386
+        ],
+        "incoming_edges": [
+          "330164325/0/0/3371186426/417920129"
+        ],
+        "outgoing_edges": [
+          "1130937103/0/0/417920129/417920386"
+        ],
+        "expected_prohibited_transition_count": 1,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "330164325/0/0/3371186426/417920129",
+            "outgoing_edge": "1130937103/0/0/417920129/417920386"
+          }
+        ]
+      },
+      {
+        "relation_id": 198383,
+        "restriction_type": "no",
+        "restriction_values": [
+          "no_left_turn"
+        ],
+        "from_way_ids": [
+          39164391
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 60057978
+        },
+        "to_way_ids": [
+          8034310
+        ],
+        "resolved_osrm_node_path": [
+          12270629764,
+          60057978,
+          12270629750
+        ],
+        "incoming_edges": [
+          "39164391/3/0/12270629764/60057978"
+        ],
+        "outgoing_edges": [
+          "8034310/0/0/60057978/12270629750"
+        ],
+        "expected_prohibited_transition_count": 1,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "39164391/3/0/12270629764/60057978",
+            "outgoing_edge": "8034310/0/0/60057978/12270629750"
+          }
+        ]
+      },
+      {
+        "relation_id": 198385,
+        "restriction_type": "no",
+        "restriction_values": [
+          "no_left_turn"
+        ],
+        "from_way_ids": [
+          290722298
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 60062184
+        },
+        "to_way_ids": [
+          205037356
+        ],
+        "resolved_osrm_node_path": [
+          11516232976,
+          60062184,
+          60060703
+        ],
+        "incoming_edges": [
+          "290722298/7/0/11516232976/60062184"
+        ],
+        "outgoing_edges": [
+          "205037356/0/1/60062184/60060703"
+        ],
+        "expected_prohibited_transition_count": 1,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "290722298/7/0/11516232976/60062184",
+            "outgoing_edge": "205037356/0/1/60062184/60060703"
+          }
+        ]
+      },
+      {
+        "relation_id": 222931,
+        "restriction_type": "no",
+        "restriction_values": [
+          "no_u_turn"
+        ],
+        "from_way_ids": [
+          39718163
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 476238986
+        },
+        "to_way_ids": [
+          39715165
+        ],
+        "resolved_osrm_node_path": [
+          476233812,
+          476238986,
+          2802046144
+        ],
+        "incoming_edges": [
+          "39718163/6/0/476233812/476238986"
+        ],
+        "outgoing_edges": [
+          "39715165/0/0/476238986/2802046144"
+        ],
+        "expected_prohibited_transition_count": 1,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "39718163/6/0/476233812/476238986",
+            "outgoing_edge": "39715165/0/0/476238986/2802046144"
+          }
+        ]
+      },
+      {
+        "relation_id": 254459,
+        "restriction_type": "no",
+        "restriction_values": [
+          "no_right_turn"
+        ],
+        "from_way_ids": [
+          1336964858
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 499913929
+        },
+        "to_way_ids": [
+          317081165
+        ],
+        "resolved_osrm_node_path": [
+          5039875935,
+          499913929,
+          499915317
+        ],
+        "incoming_edges": [
+          "1336964858/0/1/5039875935/499913929"
+        ],
+        "outgoing_edges": [
+          "317081165/3/1/499913929/499915317"
+        ],
+        "expected_prohibited_transition_count": 1,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "1336964858/0/1/5039875935/499913929",
+            "outgoing_edge": "317081165/3/1/499913929/499915317"
+          }
+        ]
+      },
+      {
+        "relation_id": 254463,
+        "restriction_type": "no",
+        "restriction_values": [
+          "no_right_turn"
+        ],
+        "from_way_ids": [
+          173803429
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 499895313
+        },
+        "to_way_ids": [
+          41043926
+        ],
+        "resolved_osrm_node_path": [
+          5718342003,
+          499895313,
+          7235108457
+        ],
+        "incoming_edges": [
+          "173803429/1/0/5718342003/499895313"
+        ],
+        "outgoing_edges": [
+          "41043926/0/0/499895313/7235108457"
+        ],
+        "expected_prohibited_transition_count": 1,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "173803429/1/0/5718342003/499895313",
+            "outgoing_edge": "41043926/0/0/499895313/7235108457"
+          }
+        ]
+      },
+      {
+        "relation_id": 254465,
+        "restriction_type": "no",
+        "restriction_values": [
+          "no_left_turn"
+        ],
+        "from_way_ids": [
+          173803430
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 499913929
+        },
+        "to_way_ids": [
+          317081165
+        ],
+        "resolved_osrm_node_path": [
+          1845635829,
+          499913929,
+          499915317
+        ],
+        "incoming_edges": [
+          "173803430/0/0/1845635829/499913929"
+        ],
+        "outgoing_edges": [
+          "317081165/3/1/499913929/499915317"
+        ],
+        "expected_prohibited_transition_count": 1,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "173803430/0/0/1845635829/499913929",
+            "outgoing_edge": "317081165/3/1/499913929/499915317"
+          }
+        ]
+      },
+      {
+        "relation_id": 299233,
+        "restriction_type": "no",
+        "restriction_values": [
+          "no_left_turn"
+        ],
+        "from_way_ids": [
+          42902528
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 259656147
+        },
+        "to_way_ids": [
+          42902529
+        ],
+        "resolved_osrm_node_path": [
+          2294834369,
+          259656147,
+          7058179393
+        ],
+        "incoming_edges": [
+          "42902528/0/1/2294834369/259656147"
+        ],
+        "outgoing_edges": [
+          "42902529/3/1/259656147/7058179393"
+        ],
+        "expected_prohibited_transition_count": 1,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "42902528/0/1/2294834369/259656147",
+            "outgoing_edge": "42902529/3/1/259656147/7058179393"
+          }
+        ]
+      },
+      {
+        "relation_id": 299234,
+        "restriction_type": "no",
+        "restriction_values": [
+          "no_left_turn"
+        ],
+        "from_way_ids": [
+          42902544
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 259656147
+        },
+        "to_way_ids": [
+          42902528
+        ],
+        "resolved_osrm_node_path": [
+          11366248211,
+          259656147,
+          2294834369
+        ],
+        "incoming_edges": [
+          "42902544/0/1/11366248211/259656147"
+        ],
+        "outgoing_edges": [
+          "42902528/0/0/259656147/2294834369"
+        ],
+        "expected_prohibited_transition_count": 1,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "42902544/0/1/11366248211/259656147",
+            "outgoing_edge": "42902528/0/0/259656147/2294834369"
+          }
+        ]
+      },
+      {
+        "relation_id": 349895,
+        "restriction_type": "only",
+        "restriction_values": [
+          "only_straight_on"
+        ],
+        "from_way_ids": [
+          4949320
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 38427868
+        },
+        "to_way_ids": [
+          443958455
+        ],
+        "resolved_osrm_node_path": [
+          2153140146,
+          38427868,
+          8507830392
+        ],
+        "incoming_edges": [
+          "4949320/3/0/2153140146/38427868"
+        ],
+        "outgoing_edges": [
+          "443958455/0/0/38427868/8507830392"
+        ],
+        "expected_prohibited_transition_count": 2,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "4949320/3/0/2153140146/38427868",
+            "outgoing_edge": "185058522/2/1/38427868/9336075641"
+          },
+          {
+            "incoming_edge": "4949320/3/0/2153140146/38427868",
+            "outgoing_edge": "4949320/3/1/38427868/2153140146"
+          }
+        ]
+      },
+      {
+        "relation_id": 356994,
+        "restriction_type": "no",
+        "restriction_values": [
+          "no_left_turn"
+        ],
+        "from_way_ids": [
+          45663143
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 581904760
+        },
+        "to_way_ids": [
+          45663139
+        ],
+        "resolved_osrm_node_path": [
+          11357298797,
+          581904760,
+          11409387923
+        ],
+        "incoming_edges": [
+          "45663143/14/0/11357298797/581904760"
+        ],
+        "outgoing_edges": [
+          "45663139/2/1/581904760/11409387923"
+        ],
+        "expected_prohibited_transition_count": 1,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "45663143/14/0/11357298797/581904760",
+            "outgoing_edge": "45663139/2/1/581904760/11409387923"
+          }
+        ]
+      },
+      {
+        "relation_id": 356995,
+        "restriction_type": "no",
+        "restriction_values": [
+          "no_left_turn"
+        ],
+        "from_way_ids": [
+          45663240
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 581905427
+        },
+        "to_way_ids": [
+          45663275
+        ],
+        "resolved_osrm_node_path": [
+          11364488108,
+          581905427,
+          2534863040
+        ],
+        "incoming_edges": [
+          "45663240/0/1/11364488108/581905427"
+        ],
+        "outgoing_edges": [
+          "45663275/2/1/581905427/2534863040"
+        ],
+        "expected_prohibited_transition_count": 1,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "45663240/0/1/11364488108/581905427",
+            "outgoing_edge": "45663275/2/1/581905427/2534863040"
+          }
+        ]
+      },
+      {
+        "relation_id": 373755,
+        "restriction_type": "no",
+        "restriction_values": [
+          "no_u_turn"
+        ],
+        "from_way_ids": [
+          47257723
+        ],
+        "via": {
+          "type": "node",
+          "node_id": 31718213
+        },
+        "to_way_ids": [
+          47257721
+        ],
+        "resolved_osrm_node_path": [
+          31930661,
+          31718213,
+          31718141
+        ],
+        "incoming_edges": [
+          "47257723/0/0/31930661/31718213"
+        ],
+        "outgoing_edges": [
+          "47257721/0/0/31718213/31718141"
+        ],
+        "expected_prohibited_transition_count": 1,
+        "expected_prohibited_transition_sample": [
+          {
+            "incoming_edge": "47257723/0/0/31930661/31718213",
+            "outgoing_edge": "47257721/0/0/31718213/31718141"
+          }
+        ]
+      }
+    ]
+  }
+}

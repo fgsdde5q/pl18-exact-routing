@@ -3,6 +3,9 @@
 ## Status
 
 - `ROAD_GRAPH_STAGE_OK`
+- `CACHE_BUDGET_OK`
+- `TURN_RESTRICTIONS_CERTIFIED`
+- `START_DIRECTIONS_CERTIFIED`
 - `PRG_PROVENANCE_LOCKED`
 - `SOLVER_NOT_STARTED`
 
@@ -36,6 +39,7 @@
 - Selected OSM way: `25857664`
 - Selected stable edge: `25857664/4/0/3069840595/611255856`
 - Available legal initial directions: `25857664/4/0/3069840595/611255856`
+- Single-direction explanation: `START_DIRECTIONS_CERTIFIED`
 - Exact start inside Warszawa frozen PRG polygon: `PASS`
 
 ## inherited_from_OSRM_v26.5.0
@@ -53,13 +57,22 @@
 - Toll roads have no extra cost; gate/lift-gate penalties are 60 seconds.
 - Traffic-signal, stop-sign, ramp, interchange and roundabout extras are zero.
 
-## Reproducibility
+## Audit status
+
+- `EXPORT_REPRODUCIBILITY`: `PASS`
+- `GRAPH_REBUILD_REPRODUCIBILITY`: `NOT_RUN`
+- `CACHE_BUDGET_STATUS`: `PASS` (`932689698` <= `950000000` bytes)
+- `TURN_RESTRICTION_CERTIFICATE_STATUS`: `PASS`
+- `START_DIRECTION_CERTIFICATE_STATUS`: `PASS`
+
+## Export reproducibility
 
 - Directed base-edge canonical SHA-256: `f27449dfa026193831458712bcb97c1c8b07fdf9fe4f9d33c6c2f2f613a4406a`
 - Edge-based turn-state canonical SHA-256: `6a6a0c8e63380242569548bff93b74931fb5f2d54ca1320c33afceadb5364061`
-- Second clean metadata build: `PASS`
+- Two independent canonical metadata exporter runs: `PASS`
 - One frozen OSRM graph build was used for both clean metadata exports.
-- OSRM binary byte determinism across independent builds is not asserted.
+- Graph rebuild reproducibility is not asserted before the dispatch-only clean rebuild workflow succeeds.
 - Stable edge IDs unique, values non-negative, endpoints connected: `PASS`
-- Export contains only OSRM-allowed turn transitions; prohibited-status records: `0`.
+- Relation-derived expected prohibited transitions absent: `45381` checked, `0` observed.
+- Source-derived candidates not enforced by pinned OSRM: `25` transitions, retained with relation-ID provenance and not claimed prohibited.
 - Ferry/private rejection and 150 m snap bound: `PASS`
