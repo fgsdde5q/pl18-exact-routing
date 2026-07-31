@@ -64,6 +64,8 @@ class Stage2ACacheContractTests(unittest.TestCase):
         self.assertEqual(key_lines[0], key_lines[1])
         key = key_lines[0]
         self.assertNotIn("github.sha", key)
+        self.assertIn("jobs${{ env.JOBS }}", key)
+        self.assertEqual(self.env_integer("JOBS"), 1)
         for semantic_input in (
             "PBF_SHA256",
             "profiles/pl18-car.lua",
@@ -102,6 +104,20 @@ class Stage2ACacheContractTests(unittest.TestCase):
             self.assertIn(semantic_input, key)
         self.assertNotIn("scripts/certify_graph_stage.py", key)
         self.assertNotIn("scripts/graph_stage.sh", key)
+
+    def test_graph_product_cache_identity_pins_single_thread_build(self) -> None:
+        self.assertEqual(self.env_integer("JOBS"), 1)
+        for prefix in (
+            "pl18-osrm-checkpoint-",
+            "pl18-metadata-checkpoint-",
+            "pl18-certified-",
+        ):
+            key_lines = self.cache_key_lines(prefix)
+            self.assertEqual(len(key_lines), 2)
+            self.assertTrue(
+                all("jobs${{ env.JOBS }}" in key for key in key_lines),
+                prefix,
+            )
 
     def test_certified_cache_key_covers_all_certification_inputs(self) -> None:
         key_lines = self.cache_key_lines("pl18-certified-")

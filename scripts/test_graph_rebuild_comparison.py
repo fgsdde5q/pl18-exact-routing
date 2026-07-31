@@ -101,12 +101,22 @@ class GraphRebuildComparisonTests(unittest.TestCase):
             results = root / "results"
             results.mkdir()
             certificate = root / "certificate.json"
+            comparisons = {
+                "directed_base_edges_sha256": {"first": "edge-hash"},
+                "edge_based_turn_states_sha256": {"first": "turn-hash"},
+                "counts": {"first": {"count": 1}},
+                "start_snap": {"first": {"distance_m": 1}},
+                "turn_restriction_certificate": {
+                    "first": {"status": "TURN_RESTRICTIONS_CERTIFIED"}
+                },
+            }
             certificate.write_text(
                 json.dumps(
                     {
                         "status": "GRAPH_REBUILD_REPRODUCIBLE",
                         "full_graph_build_count": 2,
                         "ready_graph_cache_restored": False,
+                        "comparisons": comparisons,
                     }
                 )
                 + "\n",
@@ -117,6 +127,12 @@ class GraphRebuildComparisonTests(unittest.TestCase):
                     {
                         "statuses": ["ROAD_GRAPH_STAGE_OK"],
                         "reproducibility": {"graph_rebuild": {"result": "NOT_RUN"}},
+                        "canonical_exports": {
+                            "directed_base_edges_sha256": "edge-hash",
+                            "edge_based_turn_states_sha256": "turn-hash",
+                        },
+                        "counts": {"count": 1},
+                        "start_snap": {"distance_m": 1},
                     }
                 )
                 + "\n",
@@ -126,6 +142,10 @@ class GraphRebuildComparisonTests(unittest.TestCase):
                 "- `ROAD_GRAPH_STAGE_OK`\n"
                 "- `GRAPH_REBUILD_REPRODUCIBILITY`: `NOT_RUN`\n"
                 "- Graph rebuild reproducibility is not asserted before the dispatch-only clean rebuild workflow succeeds.\n",
+                encoding="utf-8",
+            )
+            (results / "turn-restriction-certificate.json").write_text(
+                '{"status": "TURN_RESTRICTIONS_CERTIFIED"}\n',
                 encoding="utf-8",
             )
             script = Path(__file__).with_name(
@@ -153,6 +173,71 @@ class GraphRebuildComparisonTests(unittest.TestCase):
             )
             self.assertIn("`GRAPH_REBUILD_REPRODUCIBILITY`: `PASS`", report)
             self.assertNotIn("not asserted", report)
+
+    def test_certificate_must_match_canonical_stage_products(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            results = root / "results"
+            results.mkdir()
+            certificate = root / "certificate.json"
+            certificate.write_text(
+                json.dumps(
+                    {
+                        "status": "GRAPH_REBUILD_REPRODUCIBLE",
+                        "full_graph_build_count": 2,
+                        "ready_graph_cache_restored": False,
+                        "comparisons": {
+                            "directed_base_edges_sha256": {"first": "rebuilt"},
+                            "edge_based_turn_states_sha256": {"first": "turn"},
+                            "counts": {"first": {}},
+                            "start_snap": {"first": {}},
+                            "turn_restriction_certificate": {
+                                "first": {"status": "TURN_RESTRICTIONS_CERTIFIED"}
+                            },
+                        },
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            (results / "graph-manifest.json").write_text(
+                json.dumps(
+                    {
+                        "canonical_exports": {
+                            "directed_base_edges_sha256": "canonical",
+                            "edge_based_turn_states_sha256": "turn",
+                        },
+                        "counts": {},
+                        "start_snap": {},
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            (results / "turn-restriction-certificate.json").write_text(
+                '{"status": "TURN_RESTRICTIONS_CERTIFIED"}\n',
+                encoding="utf-8",
+            )
+            (results / "validation-report.md").write_text("", encoding="utf-8")
+            script = Path(__file__).with_name(
+                "apply_graph_rebuild_certificate.py"
+            )
+            result = subprocess.run(
+                [
+                    "python3",
+                    str(script),
+                    "--certificate",
+                    str(certificate),
+                    "--results",
+                    str(results),
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn(
+                "disagrees with canonical Stage 2A products", result.stderr
+            )
 
 
 if __name__ == "__main__":

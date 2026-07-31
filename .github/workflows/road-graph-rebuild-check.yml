@@ -2,11 +2,6 @@ name: Stage 2A clean graph rebuild audit
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - codex/stage-2a-road-graph
-    paths:
-      - .github/workflows/road-graph-rebuild-check.yml
 
 permissions:
   actions: write

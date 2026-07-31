@@ -2,7 +2,6 @@
   "schema_version": 1,
   "statuses": [
     "ROAD_GRAPH_STAGE_OK",
-    "GRAPH_REBUILD_REPRODUCIBLE",
     "CACHE_BUDGET_OK",
     "TURN_RESTRICTIONS_CERTIFIED",
     "START_DIRECTIONS_CERTIFIED",
@@ -64,10 +63,11 @@
     },
     "graph_rebuild": {
       "status": "GRAPH_REBUILD_REPRODUCIBILITY",
-      "result": "PASS",
+      "result": "CROSS_CHECK_FAILED",
       "full_graph_build_count": 2,
       "ready_graph_cache_restored": false,
-      "certificate": "graph-rebuild-reproducibility.json"
+      "certificate": "graph-rebuild-reproducibility.json",
+      "reason": "clean rebuild turn-state hash and counts differ from the previously cached canonical graph"
     }
   },
   "cache_budget": {

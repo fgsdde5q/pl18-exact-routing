@@ -43,6 +43,37 @@ def main() -> int:
     destination.write_bytes(args.certificate.read_bytes())
     manifest_path = args.results / "graph-manifest.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    first = certificate["comparisons"]
+    canonical = manifest["canonical_exports"]
+    cross_checks = {
+        "directed base-edge canonical SHA-256": (
+            first["directed_base_edges_sha256"]["first"],
+            canonical["directed_base_edges_sha256"],
+        ),
+        "edge-based turn-state canonical SHA-256": (
+            first["edge_based_turn_states_sha256"]["first"],
+            canonical["edge_based_turn_states_sha256"],
+        ),
+        "counts": (first["counts"]["first"], manifest["counts"]),
+        "start snap": (first["start_snap"]["first"], manifest["start_snap"]),
+        "turn restriction certificate": (
+            first["turn_restriction_certificate"]["first"],
+            json.loads(
+                (args.results / "turn-restriction-certificate.json").read_text(
+                    encoding="utf-8"
+                )
+            ),
+        ),
+    }
+    mismatches = [
+        label for label, (rebuilt, canonical_value) in cross_checks.items()
+        if rebuilt != canonical_value
+    ]
+    if mismatches:
+        raise ValueError(
+            "clean rebuild disagrees with canonical Stage 2A products: "
+            + ", ".join(mismatches)
+        )
     manifest["statuses"] = FINAL_STATUSES
     manifest["reproducibility"]["graph_rebuild"] = {
         "status": "GRAPH_REBUILD_REPRODUCIBILITY",
