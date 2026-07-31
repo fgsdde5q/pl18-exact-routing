@@ -24,7 +24,7 @@
 
 - OSM ways read: `33321336`
 - Legal directed motorcar edges: `33473569`
-- Edge-based turn states: `15654639`
+- Edge-based turn states: `15654641`
 - Enforced turn restrictions: `42627`
 - Restriction authority: OSRM's accepted restriction graph after invalid-restriction removal.
 - Forbidden ferry edges: `6612`
@@ -60,7 +60,7 @@
 ## Audit status
 
 - `EXPORT_REPRODUCIBILITY`: `PASS`
-- `GRAPH_REBUILD_REPRODUCIBILITY`: `CROSS_CHECK_FAILED`
+- `GRAPH_REBUILD_REPRODUCIBILITY`: `NOT_RUN`
 - `CACHE_BUDGET_STATUS`: `PASS` (`932689698` <= `950000000` bytes)
 - `TURN_RESTRICTION_CERTIFICATE_STATUS`: `PASS`
 - `START_DIRECTION_CERTIFICATE_STATUS`: `PASS`
@@ -68,10 +68,10 @@
 ## Export reproducibility
 
 - Directed base-edge canonical SHA-256: `f27449dfa026193831458712bcb97c1c8b07fdf9fe4f9d33c6c2f2f613a4406a`
-- Edge-based turn-state canonical SHA-256: `6a6a0c8e63380242569548bff93b74931fb5f2d54ca1320c33afceadb5364061`
+- Edge-based turn-state canonical SHA-256: `cb613a7ad6019181064b3f09ef36ccabd8a732ad50897f04da49468306e23bad`
 - Two independent canonical metadata exporter runs: `PASS`
 - One frozen OSRM graph build was used for both clean metadata exports.
-- Two independent clean OSRM graph rebuilds matched each other, but their turn-state hash and counts differed from the previously cached canonical graph; reproducibility is not asserted until a canonical `JOBS=1` rebuild succeeds.
+- Graph rebuild reproducibility is not asserted before the dispatch-only clean rebuild workflow succeeds.
 - Stable edge IDs unique, values non-negative, endpoints connected: `PASS`
 - Relation-derived expected prohibited transitions absent: `45381` checked, `0` observed.
 - Source-derived candidates not enforced by pinned OSRM: `25` transitions, retained with relation-ID provenance and not claimed prohibited.

@@ -13,5 +13,5 @@ architecture=x86_64
 kernel=Linux 6.17.0-1020-azure #20~24.04.1-Ubuntu SMP Fri Jun 19 20:09:14 UTC 2026 x86_64 GNU/Linux
 docker_image_digest=not_used
 graph_exporter_sha256=d9e7249cc1bf75c22f82c31c33b76c53354c57b8e15689cca1c593d2690f32cd
-graph_exporter_commit=3e0ad2aba5b074fe6dd35cf8383d9f2b5ced8469
+graph_exporter_commit=5049c28cc511550be5cbd20c7f49870b989a13d8
 profile_sha256=0caa3c72a43df86fc5f5df8fa039b1dce9e9584aed120857a4df8624c23f2839
