@@ -30,6 +30,9 @@ def build_record(metadata: Path, provenance: Path) -> dict:
         "turn_restriction_certificate": load_json(
             metadata / "turn-restriction-certificate.json"
         ),
+        "non_enforced_restriction_candidates": load_json(
+            metadata / "non-enforced-restriction-candidates.json"
+        ),
     }
 
 
@@ -65,6 +68,7 @@ def main() -> int:
         "counts",
         "start_snap",
         "turn_restriction_certificate",
+        "non_enforced_restriction_candidates",
     ]
     mismatches = [
         field for field in compared_fields if first[field] != second[field]

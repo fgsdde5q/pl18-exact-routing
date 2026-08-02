@@ -1,4 +1,6 @@
-# Stage 2A cache budget decision
+# Stage 2A cache budget decision v2
+
+Decision ID: `stage2a-metadata-cache-budget-v2`.
 
 The canonical metadata checkpoint produced by run `30384412281` was
 `932689698` bytes. The previous `900000000` byte limit rejected that valid
@@ -13,3 +15,7 @@ certificate cache.
 `scripts/test_stage2a_cache_contract.py` enforces both the pinned metadata limit
 and the aggregate repository-cache margin. The workflow independently rejects
 any produced archive larger than the pinned limit.
+
+This changes only the versioned infrastructure storage ceiling. It does not
+change frozen manifest v2, routing profile semantics, the PBF or PRG inputs,
+the OSRM commit, graph eligibility, turn costs, or any solver input.

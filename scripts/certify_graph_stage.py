@@ -5,6 +5,7 @@ import hashlib
 import json
 import math
 import os
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -202,6 +203,13 @@ def main() -> int:
             encoding="utf-8"
         )
     )
+    non_enforced_path = args.metadata / "non-enforced-restriction-candidates.json"
+    non_enforced = json.loads(non_enforced_path.read_text(encoding="utf-8"))
+    if (
+        non_enforced["record_count"]
+        != export_summary["osrm_non_enforced_candidate_turn_transitions"]
+    ):
+        raise ValueError("non-enforced restriction candidate table count mismatch")
     first_hashes = json.loads(args.first_hashes.read_text(encoding="utf-8"))
     second_hashes = json.loads(args.second_hashes.read_text(encoding="utf-8"))
     if first_hashes != second_hashes:
@@ -353,6 +361,10 @@ def main() -> int:
     (args.output / "graph-manifest.json").write_text(
         json.dumps(graph_manifest, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
+    )
+    shutil.copyfile(
+        non_enforced_path,
+        args.output / "non-enforced-restriction-candidates.json",
     )
     profile_manifest = {
         "schema_version": 1,

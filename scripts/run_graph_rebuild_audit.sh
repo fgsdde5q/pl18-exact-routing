@@ -97,6 +97,10 @@ python3 "${REPOSITORY_ROOT}/scripts/compare_graph_rebuilds.py" \
   --second-provenance "${WORK_ROOT}/second-clean-build/provenance.json" \
   --output "${RESULTS_ROOT}/graph-rebuild-reproducibility.json"
 
+cp -- \
+  "${WORK_ROOT}/first-clean-build/metadata/non-enforced-restriction-candidates.json" \
+  "${RESULTS_ROOT}/non-enforced-restriction-candidates.json"
+
 python3 "${REPOSITORY_ROOT}/scripts/apply_graph_rebuild_certificate.py" \
   --certificate "${RESULTS_ROOT}/graph-rebuild-reproducibility.json" \
   --results "$RESULTS_ROOT"

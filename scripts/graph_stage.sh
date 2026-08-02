@@ -232,6 +232,7 @@ build_metadata_checkpoint() {
     "${METADATA_ROOT}/graph-binary-hashes.txt"
   cp -- \
     "${WORK_ROOT}/second/metadata/export-summary.json" \
+    "${WORK_ROOT}/second/metadata/non-enforced-restriction-candidates.json" \
     "${WORK_ROOT}/second/metadata/start-snap.json" \
     "${WORK_ROOT}/second/metadata/turn-restriction-certificate.json" \
     "$METADATA_ROOT/"
@@ -258,6 +259,7 @@ verify_metadata_checkpoint() {
     "${METADATA_ROOT}/export-summary.json" \
     "${METADATA_ROOT}/first-canonical-hashes.json" \
     "${METADATA_ROOT}/graph-binary-hashes.txt" \
+    "${METADATA_ROOT}/non-enforced-restriction-candidates.json" \
     "${METADATA_ROOT}/resource-usage.txt" \
     "${METADATA_ROOT}/second-canonical-hashes.json" \
     "${METADATA_ROOT}/start-snap.json" \
@@ -296,6 +298,7 @@ else
   mkdir -p -- "$certification_metadata"
   cp -- \
     "${METADATA_ROOT}/export-summary.json" \
+    "${METADATA_ROOT}/non-enforced-restriction-candidates.json" \
     "${METADATA_ROOT}/start-snap.json" \
     "${METADATA_ROOT}/turn-restriction-certificate.json" \
     "$certification_metadata/"

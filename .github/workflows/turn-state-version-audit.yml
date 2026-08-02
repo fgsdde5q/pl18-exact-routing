@@ -1,0 +1,93 @@
+name: Stage 2A turn-state version audit
+
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: turn-state-version-audit-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  version-audit:
+    name: Compare certified canonical turn-state sets
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+
+      - name: Set isolated audit paths
+        shell: bash
+        run: |
+          {
+            echo "CACHE_METADATA_ARCHIVE=${RUNNER_TEMP}/pl18-metadata-checkpoint.tar.zst"
+            echo "OLD_METADATA_ARCHIVE=${RUNNER_TEMP}/stage2a-old-metadata.tar.zst"
+            echo "NEW_METADATA_ARCHIVE=${RUNNER_TEMP}/stage2a-new-metadata.tar.zst"
+            echo "TURN_VERSION_AUDIT=${RUNNER_TEMP}/stage2a-turn-version-audit"
+          } >> "$GITHUB_ENV"
+
+      - name: Restore previous canonical metadata
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ env.CACHE_METADATA_ARCHIVE }}
+          key: pl18-metadata-checkpoint-v1-X64-2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28-c1d50ad5833be538d84b3ccc764b1b762258bd27053b84e16d0319acd3cfb66a-e63ee4e6c461f152a6cbc114d441461b37211f4d4c5796da8065256e7c6ca952-3c32a51bf58d12bf30efd0808d0b6ad51d334122-c3867e714dd3a51c272826eea77267876517ed99-09c9526dd1117629af6fad8e827b538ebd7e9391dd41b916b60bfa21d765fbc6
+
+      - name: Preserve previous metadata archive
+        shell: bash
+        run: mv "$CACHE_METADATA_ARCHIVE" "$OLD_METADATA_ARCHIVE"
+
+      - name: Restore authoritative canonical metadata
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ env.CACHE_METADATA_ARCHIVE }}
+          key: pl18-metadata-checkpoint-v1-X64-2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28-jobs1-c1d50ad5833be538d84b3ccc764b1b762258bd27053b84e16d0319acd3cfb66a-e63ee4e6c461f152a6cbc114d441461b37211f4d4c5796da8065256e7c6ca952-3c32a51bf58d12bf30efd0808d0b6ad51d334122-c3867e714dd3a51c272826eea77267876517ed99-09c9526dd1117629af6fad8e827b538ebd7e9391dd41b916b60bfa21d765fbc6
+
+      - name: Preserve authoritative metadata archive
+        shell: bash
+        run: mv "$CACHE_METADATA_ARCHIVE" "$NEW_METADATA_ARCHIVE"
+
+      - name: Compare canonical exports as sets
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends zstd
+          old_root="${TURN_VERSION_AUDIT}/old"
+          new_root="${TURN_VERSION_AUDIT}/new"
+          mkdir -p "$old_root" "$new_root"
+          tar --extract --use-compress-program=unzstd --file="$OLD_METADATA_ARCHIVE" --directory="$old_root"
+          tar --extract --use-compress-program=unzstd --file="$NEW_METADATA_ARCHIVE" --directory="$new_root"
+          zstd -dc "$old_root/edge-based-turn-states.tsv.zst" > "${TURN_VERSION_AUDIT}/old.tsv"
+          zstd -dc "$new_root/edge-based-turn-states.tsv.zst" > "${TURN_VERSION_AUDIT}/new.tsv"
+          python3 scripts/compare_turn_state_versions.py \
+            --old "${TURN_VERSION_AUDIT}/old.tsv" \
+            --new "${TURN_VERSION_AUDIT}/new.tsv" \
+            --restriction-certificate results/graph/turn-restriction-certificate.json \
+            --json results/graph/turn-state-version-diff.json \
+            --markdown results/graph/turn-state-version-diff.md
+
+      - name: Upload version diff
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: stage2a-turn-state-version-diff-${{ github.run_id }}
+          path: |
+            results/graph/turn-state-version-diff.json
+            results/graph/turn-state-version-diff.md
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Commit version diff
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/graph/turn-state-version-diff.json results/graph/turn-state-version-diff.md
+          git commit -m "Explain Stage 2A turn-state version change"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

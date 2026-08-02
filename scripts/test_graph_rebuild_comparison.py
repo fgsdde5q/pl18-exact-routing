@@ -25,6 +25,9 @@ class GraphRebuildComparisonTests(unittest.TestCase):
             '{"status": "TURN_RESTRICTIONS_CERTIFIED"}\n',
             encoding="utf-8",
         )
+        (metadata / "non-enforced-restriction-candidates.json").write_text(
+            '{"record_count": 0}\n', encoding="utf-8"
+        )
         provenance = root / name / "provenance.json"
         provenance.write_text(
             json.dumps(
@@ -109,6 +112,9 @@ class GraphRebuildComparisonTests(unittest.TestCase):
                 "turn_restriction_certificate": {
                     "first": {"status": "TURN_RESTRICTIONS_CERTIFIED"}
                 },
+                "non_enforced_restriction_candidates": {
+                    "first": {"record_count": 0}
+                },
             }
             certificate.write_text(
                 json.dumps(
@@ -147,6 +153,9 @@ class GraphRebuildComparisonTests(unittest.TestCase):
             (results / "turn-restriction-certificate.json").write_text(
                 '{"status": "TURN_RESTRICTIONS_CERTIFIED"}\n',
                 encoding="utf-8",
+            )
+            (results / "non-enforced-restriction-candidates.json").write_text(
+                '{"record_count": 0}\n', encoding="utf-8"
             )
             script = Path(__file__).with_name(
                 "apply_graph_rebuild_certificate.py"
@@ -194,6 +203,9 @@ class GraphRebuildComparisonTests(unittest.TestCase):
                             "turn_restriction_certificate": {
                                 "first": {"status": "TURN_RESTRICTIONS_CERTIFIED"}
                             },
+                            "non_enforced_restriction_candidates": {
+                                "first": {"record_count": 0}
+                            },
                         },
                     }
                 )
@@ -217,6 +229,9 @@ class GraphRebuildComparisonTests(unittest.TestCase):
             (results / "turn-restriction-certificate.json").write_text(
                 '{"status": "TURN_RESTRICTIONS_CERTIFIED"}\n',
                 encoding="utf-8",
+            )
+            (results / "non-enforced-restriction-candidates.json").write_text(
+                '{"record_count": 0}\n', encoding="utf-8"
             )
             (results / "validation-report.md").write_text("", encoding="utf-8")
             script = Path(__file__).with_name(

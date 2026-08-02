@@ -64,6 +64,14 @@ def main() -> int:
                 )
             ),
         ),
+        "non-enforced restriction candidates": (
+            first["non_enforced_restriction_candidates"]["first"],
+            json.loads(
+                (args.results / "non-enforced-restriction-candidates.json").read_text(
+                    encoding="utf-8"
+                )
+            ),
+        ),
     }
     mismatches = [
         label for label, (rebuilt, canonical_value) in cross_checks.items()

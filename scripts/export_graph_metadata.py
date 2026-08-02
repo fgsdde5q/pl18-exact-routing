@@ -597,6 +597,42 @@ def build_restriction_certificate(
     only_relations = sum(
         shape["restriction_type"] == "only" for _, shape in shaped
     )
+    relation_by_id = {relation["relation_id"]: relation for relation in relations}
+    non_enforced_records = []
+    for pair in sorted(observed):
+        for relation_id in sorted(candidate_origins[pair]):
+            relation = relation_by_id[relation_id]
+            shape = relation_shape(relation)
+            restriction_tags = {
+                key: value
+                for key, value in relation.get("tags", {}).items()
+                if key == "restriction" or key.startswith("restriction:")
+            }
+            conditional = relation.get("conditional", False)
+            non_enforced_records.append(
+                {
+                    "osm_relation_id": relation_id,
+                    "restriction_tags": restriction_tags,
+                    "conditional_status": (
+                        "conditional" if conditional else "unconditional"
+                    ),
+                    "via_type": "node" if shape["via_node_ids"] else "way",
+                    "incoming_stable_edge_id": pair[0],
+                    "outgoing_stable_edge_id": pair[1],
+                    "osrm_non_enforcement_reason": (
+                        "the pinned OSRM edge-based graph exports this exact transition "
+                        "as allowed; its aggregate extract log does not expose a "
+                        "per-relation invalid/unresolved disposition"
+                    ),
+                    "transition_remains_allowed": True,
+                    "matches_frozen_static_model": True if conditional else None,
+                    "frozen_static_model_assessment": (
+                        "conditional restrictions are ignored by the frozen static model"
+                        if conditional
+                        else "unconditional source candidate is not certified prohibited without per-relation OSRM evidence"
+                    ),
+                }
+            )
     return {
         "schema_version": 2,
         "status": "TURN_RESTRICTIONS_CERTIFIED",
@@ -656,6 +692,7 @@ def build_restriction_certificate(
                 }
                 for pair in sorted(observed)[:32]
             ],
+            "machine_readable_records": non_enforced_records,
         },
         "sample": {
             "selection": "lowest relation_id among resolved via-node restrictions",
@@ -1199,8 +1236,25 @@ def main() -> int:
         args.osrm_extract_log,
         restriction_way_collector.ways,
     )
+    non_enforced_records = restriction_certificate[
+        "osrm_non_enforced_candidate_transitions"
+    ].pop("machine_readable_records")
     (args.output / "turn-restriction-certificate.json").write_text(
         json.dumps(restriction_certificate, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    (args.output / "non-enforced-restriction-candidates.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "status": "OSRM_NON_ENFORCED_RESTRICTION_CANDIDATES",
+                "record_count": len(non_enforced_records),
+                "records": non_enforced_records,
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+        + "\n",
         encoding="utf-8",
     )
     restriction_summary = restriction_certificate["osrm_summary"]
