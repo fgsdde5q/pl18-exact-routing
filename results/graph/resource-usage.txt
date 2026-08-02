@@ -99,23 +99,23 @@
 5.8G	/home/runner/work/_temp/pl18-osrm-checkpoint/dump
 ## first metadata
 	Command being timed: "python3 /home/runner/work/pl18-exact-routing/pl18-exact-routing/scripts/export_graph_metadata.py --manifest /home/runner/work/pl18-exact-routing/pl18-exact-routing/instance/pl_18_capitals_static_instance_v2.yaml --pbf /home/runner/work/_temp/pl18-pbf/poland-260725.osm.pbf --osrm-dump /home/runner/work/_temp/pl18-osrm-checkpoint/dump --osrm-extract-log /home/runner/work/_temp/pl18-osrm-checkpoint/extract.log --output /home/runner/work/_temp/pl18-graph-work/first/metadata --temp /home/runner/work/_temp/pl18-graph-work/first/sort-temp"
-	User time (seconds): 1812.71
-	System time (seconds): 78.84
+	User time (seconds): 1869.99
+	System time (seconds): 87.21
 	Percent of CPU this job got: 104%
-	Elapsed (wall clock) time (h:mm:ss or m:ss): 30:12.55
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 31:04.55
 	Average shared text size (kbytes): 0
 	Average unshared data size (kbytes): 0
 	Average stack size (kbytes): 0
 	Average total size (kbytes): 0
-	Maximum resident set size (kbytes): 3681628
+	Maximum resident set size (kbytes): 3685140
 	Average resident set size (kbytes): 0
-	Major (requiring I/O) page faults: 118
-	Minor (reclaiming a frame) page faults: 1442624
-	Voluntary context switches: 265774
-	Involuntary context switches: 31354
+	Major (requiring I/O) page faults: 1
+	Minor (reclaiming a frame) page faults: 1595727
+	Voluntary context switches: 253250
+	Involuntary context switches: 31711
 	Swaps: 0
-	File system inputs: 113414752
-	File system outputs: 119234328
+	File system inputs: 86370584
+	File system outputs: 119234400
 	Socket messages sent: 0
 	Socket messages received: 0
 	Signals delivered: 0
@@ -123,23 +123,23 @@
 	Exit status: 0
 ## second metadata
 	Command being timed: "python3 /home/runner/work/pl18-exact-routing/pl18-exact-routing/scripts/export_graph_metadata.py --manifest /home/runner/work/pl18-exact-routing/pl18-exact-routing/instance/pl_18_capitals_static_instance_v2.yaml --pbf /home/runner/work/_temp/pl18-pbf/poland-260725.osm.pbf --osrm-dump /home/runner/work/_temp/pl18-osrm-checkpoint/dump --osrm-extract-log /home/runner/work/_temp/pl18-osrm-checkpoint/extract.log --output /home/runner/work/_temp/pl18-graph-work/second/metadata --temp /home/runner/work/_temp/pl18-graph-work/second/sort-temp"
-	User time (seconds): 1851.81
-	System time (seconds): 77.71
-	Percent of CPU this job got: 103%
-	Elapsed (wall clock) time (h:mm:ss or m:ss): 31:00.39
+	User time (seconds): 1834.29
+	System time (seconds): 86.84
+	Percent of CPU this job got: 104%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 30:42.27
 	Average shared text size (kbytes): 0
 	Average unshared data size (kbytes): 0
 	Average stack size (kbytes): 0
 	Average total size (kbytes): 0
-	Maximum resident set size (kbytes): 3751300
+	Maximum resident set size (kbytes): 3694084
 	Average resident set size (kbytes): 0
-	Major (requiring I/O) page faults: 6
-	Minor (reclaiming a frame) page faults: 1240697
-	Voluntary context switches: 267481
-	Involuntary context switches: 32333
+	Major (requiring I/O) page faults: 21
+	Minor (reclaiming a frame) page faults: 1242321
+	Voluntary context switches: 255354
+	Involuntary context switches: 31080
 	Swaps: 0
-	File system inputs: 112941984
-	File system outputs: 119234392
+	File system inputs: 96008824
+	File system outputs: 119234456
 	Socket messages sent: 0
 	Socket messages received: 0
 	Signals delivered: 0

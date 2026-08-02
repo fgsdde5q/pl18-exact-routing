@@ -46,7 +46,7 @@
   "graph_exporter": {
     "source": "tools/osrm_graph_dump.cpp",
     "sha256": "d9e7249cc1bf75c22f82c31c33b76c53354c57b8e15689cca1c593d2690f32cd",
-    "repository_commit": "5049c28cc511550be5cbd20c7f49870b989a13d8"
+    "repository_commit": "8fa089cf0261dab092c81bb3659b6c35a0b05fdd"
   },
   "canonical_exports": {
     "directed_base_edges_sha256": "f27449dfa026193831458712bcb97c1c8b07fdf9fe4f9d33c6c2f2f613a4406a",

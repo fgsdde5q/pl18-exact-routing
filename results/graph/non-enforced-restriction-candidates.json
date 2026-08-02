@@ -1,0 +1,357 @@
+{
+  "schema_version": 1,
+  "status": "OSRM_NON_ENFORCED_RESTRICTION_CANDIDATES",
+  "record_count": 25,
+  "records": [
+    {
+      "osm_relation_id": 13885687,
+      "restriction_tags": {
+        "restriction": "only_straight_on"
+      },
+      "conditional_status": "unconditional",
+      "via_type": "node",
+      "incoming_stable_edge_id": "1036826951/0/1/4757664330/3652907354",
+      "outgoing_stable_edge_id": "8608793/0/0/3652907354/3398141046",
+      "osrm_non_enforcement_reason": "the pinned OSRM edge-based graph exports this exact transition as allowed; its aggregate extract log does not expose a per-relation invalid/unresolved disposition",
+      "transition_remains_allowed": true,
+      "matches_frozen_static_model": null,
+      "frozen_static_model_assessment": "unconditional source candidate is not certified prohibited without per-relation OSRM evidence"
+    },
+    {
+      "osm_relation_id": 20109263,
+      "restriction_tags": {
+        "restriction": "only_right_turn"
+      },
+      "conditional_status": "unconditional",
+      "via_type": "node",
+      "incoming_stable_edge_id": "1226331568/4/0/13464756392/3733293492",
+      "outgoing_stable_edge_id": "1226331568/4/1/3733293492/13464756392",
+      "osrm_non_enforcement_reason": "the pinned OSRM edge-based graph exports this exact transition as allowed; its aggregate extract log does not expose a per-relation invalid/unresolved disposition",
+      "transition_remains_allowed": true,
+      "matches_frozen_static_model": null,
+      "frozen_static_model_assessment": "unconditional source candidate is not certified prohibited without per-relation OSRM evidence"
+    },
+    {
+      "osm_relation_id": 16821221,
+      "restriction_tags": {
+        "restriction": "only_right_turn"
+      },
+      "conditional_status": "unconditional",
+      "via_type": "node",
+      "incoming_stable_edge_id": "1231055305/0/1/3852777158/1209828076",
+      "outgoing_stable_edge_id": "1231055305/0/0/1209828076/3852777158",
+      "osrm_non_enforcement_reason": "the pinned OSRM edge-based graph exports this exact transition as allowed; its aggregate extract log does not expose a per-relation invalid/unresolved disposition",
+      "transition_remains_allowed": true,
+      "matches_frozen_static_model": null,
+      "frozen_static_model_assessment": "unconditional source candidate is not certified prohibited without per-relation OSRM evidence"
+    },
+    {
+      "osm_relation_id": 17744874,
+      "restriction_tags": {
+        "restriction": "only_straight_on"
+      },
+      "conditional_status": "unconditional",
+      "via_type": "node",
+      "incoming_stable_edge_id": "1294574510/0/1/11358548199/2375423320",
+      "outgoing_stable_edge_id": "1105244147/0/0/2375423320/2295731577",
+      "osrm_non_enforcement_reason": "the pinned OSRM edge-based graph exports this exact transition as allowed; its aggregate extract log does not expose a per-relation invalid/unresolved disposition",
+      "transition_remains_allowed": true,
+      "matches_frozen_static_model": null,
+      "frozen_static_model_assessment": "unconditional source candidate is not certified prohibited without per-relation OSRM evidence"
+    },
+    {
+      "osm_relation_id": 18234763,
+      "restriction_tags": {
+        "restriction": "only_u_turn"
+      },
+      "conditional_status": "unconditional",
+      "via_type": "node",
+      "incoming_stable_edge_id": "1329721028/0/1/417886267/7188532231",
+      "outgoing_stable_edge_id": "770024814/1/1/7188532231/7188532232",
+      "osrm_non_enforcement_reason": "the pinned OSRM edge-based graph exports this exact transition as allowed; its aggregate extract log does not expose a per-relation invalid/unresolved disposition",
+      "transition_remains_allowed": true,
+      "matches_frozen_static_model": null,
+      "frozen_static_model_assessment": "unconditional source candidate is not certified prohibited without per-relation OSRM evidence"
+    },
+    {
+      "osm_relation_id": 18365198,
+      "restriction_tags": {
+        "restriction": "only_right_turn"
+      },
+      "conditional_status": "unconditional",
+      "via_type": "node",
+      "incoming_stable_edge_id": "1339788552/0/1/13179014827/12393335799",
+      "outgoing_stable_edge_id": "1536271545/0/0/12393335799/5761697663",
+      "osrm_non_enforcement_reason": "the pinned OSRM edge-based graph exports this exact transition as allowed; its aggregate extract log does not expose a per-relation invalid/unresolved disposition",
+      "transition_remains_allowed": true,
+      "matches_frozen_static_model": null,
+      "frozen_static_model_assessment": "unconditional source candidate is not certified prohibited without per-relation OSRM evidence"
+    },
+    {
+      "osm_relation_id": 19617084,
+      "restriction_tags": {
+        "restriction": "only_left_turn"
+      },
+      "conditional_status": "unconditional",
+      "via_type": "node",
+      "incoming_stable_edge_id": "144900317/0/1/13152518033/188665899",
+      "outgoing_stable_edge_id": "144900317/0/0/188665899/13152518033",
+      "osrm_non_enforcement_reason": "the pinned OSRM edge-based graph exports this exact transition as allowed; its aggregate extract log does not expose a per-relation invalid/unresolved disposition",
+      "transition_remains_allowed": true,
+      "matches_frozen_static_model": null,
+      "frozen_static_model_assessment": "unconditional source candidate is not certified prohibited without per-relation OSRM evidence"
+    },
+    {
+      "osm_relation_id": 16410741,
+      "restriction_tags": {
+        "restriction": "only_right_turn"
+      },
+      "conditional_status": "unconditional",
+      "via_type": "node",
+      "incoming_stable_edge_id": "153267230/2/0/599320010/245421813",
+      "outgoing_stable_edge_id": "309731882/0/0/245421813/614434580",
+      "osrm_non_enforcement_reason": "the pinned OSRM edge-based graph exports this exact transition as allowed; its aggregate extract log does not expose a per-relation invalid/unresolved disposition",
+      "transition_remains_allowed": true,
+      "matches_frozen_static_model": null,
+      "frozen_static_model_assessment": "unconditional source candidate is not certified prohibited without per-relation OSRM evidence"
+    },
+    {
+      "osm_relation_id": 18142429,
+      "restriction_tags": {
+        "restriction": "only_straight_on"
+      },
+      "conditional_status": "unconditional",
+      "via_type": "node",
+      "incoming_stable_edge_id": "161926909/0/1/254069693/254069686",
+      "outgoing_stable_edge_id": "161926909/0/0/254069686/254069693",
+      "osrm_non_enforcement_reason": "the pinned OSRM edge-based graph exports this exact transition as allowed; its aggregate extract log does not expose a per-relation invalid/unresolved disposition",
+      "transition_remains_allowed": true,
+      "matches_frozen_static_model": null,
+      "frozen_static_model_assessment": "unconditional source candidate is not certified prohibited without per-relation OSRM evidence"
+    },
+    {
+      "osm_relation_id": 8362031,
+      "restriction_tags": {
+        "restriction": "only_left_turn"
+      },
+      "conditional_status": "unconditional",
+      "via_type": "node",
+      "incoming_stable_edge_id": "173138877/0/1/2150917517/1839660164",
+      "outgoing_stable_edge_id": "183212281/0/0/1839660164/1793791760",
+      "osrm_non_enforcement_reason": "the pinned OSRM edge-based graph exports this exact transition as allowed; its aggregate extract log does not expose a per-relation invalid/unresolved disposition",
+      "transition_remains_allowed": true,
+      "matches_frozen_static_model": null,
+      "frozen_static_model_assessment": "unconditional source candidate is not certified prohibited without per-relation OSRM evidence"
+    },
+    {
+      "osm_relation_id": 17489962,
+      "restriction_tags": {
+        "restriction": "only_straight_on"
+      },
+      "conditional_status": "unconditional",
+      "via_type": "node",
+      "incoming_stable_edge_id": "238068211/6/0/2459321246/2399792103",
+      "outgoing_stable_edge_id": "397794518/0/0/2399792103/4005798011",
+      "osrm_non_enforcement_reason": "the pinned OSRM edge-based graph exports this exact transition as allowed; its aggregate extract log does not expose a per-relation invalid/unresolved disposition",
+      "transition_remains_allowed": true,
+      "matches_frozen_static_model": null,
+      "frozen_static_model_assessment": "unconditional source candidate is not certified prohibited without per-relation OSRM evidence"
+    },
+    {
+      "osm_relation_id": 21061260,
+      "restriction_tags": {
+        "restriction": "only_right_turn"
+      },
+      "conditional_status": "unconditional",
+      "via_type": "node",
+      "incoming_stable_edge_id": "239171556/0/1/2469828539/2469828509",
+      "outgoing_stable_edge_id": "239171556/0/0/2469828509/2469828539",
+      "osrm_non_enforcement_reason": "the pinned OSRM edge-based graph exports this exact transition as allowed; its aggregate extract log does not expose a per-relation invalid/unresolved disposition",
+      "transition_remains_allowed": true,
+      "matches_frozen_static_model": null,
+      "frozen_static_model_assessment": "unconditional source candidate is not certified prohibited without per-relation OSRM evidence"
+    },
+    {
+      "osm_relation_id": 11277824,
+      "restriction_tags": {
+        "restriction": "only_right_turn"
+      },
+      "conditional_status": "unconditional",
+      "via_type": "node",
+      "incoming_stable_edge_id": "24157370/4/0/277935854/261675300",
+      "outgoing_stable_edge_id": "823536388/0/0/261675300/277935850",
+      "osrm_non_enforcement_reason": "the pinned OSRM edge-based graph exports this exact transition as allowed; its aggregate extract log does not expose a per-relation invalid/unresolved disposition",
+      "transition_remains_allowed": true,
+      "matches_frozen_static_model": null,
+      "frozen_static_model_assessment": "unconditional source candidate is not certified prohibited without per-relation OSRM evidence"
+    },
+    {
+      "osm_relation_id": 17489959,
+      "restriction_tags": {
+        "restriction": "only_right_turn"
+      },
+      "conditional_status": "unconditional",
+      "via_type": "node",
+      "incoming_stable_edge_id": "245265493/15/0/2459321245/2459321242",
+      "outgoing_stable_edge_id": "1105699435/0/0/2459321242/2399792105",
+      "osrm_non_enforcement_reason": "the pinned OSRM edge-based graph exports this exact transition as allowed; its aggregate extract log does not expose a per-relation invalid/unresolved disposition",
+      "transition_remains_allowed": true,
+      "matches_frozen_static_model": null,
+      "frozen_static_model_assessment": "unconditional source candidate is not certified prohibited without per-relation OSRM evidence"
+    },
+    {
+      "osm_relation_id": 4049308,
+      "restriction_tags": {
+        "restriction": "only_right_turn"
+      },
+      "conditional_status": "unconditional",
+      "via_type": "node",
+      "incoming_stable_edge_id": "266717649/2/0/3336197479/2648202233",
+      "outgoing_stable_edge_id": "1039926208/2/1/2648202233/12524321371",
+      "osrm_non_enforcement_reason": "the pinned OSRM edge-based graph exports this exact transition as allowed; its aggregate extract log does not expose a per-relation invalid/unresolved disposition",
+      "transition_remains_allowed": true,
+      "matches_frozen_static_model": null,
+      "frozen_static_model_assessment": "unconditional source candidate is not certified prohibited without per-relation OSRM evidence"
+    },
+    {
+      "osm_relation_id": 4049308,
+      "restriction_tags": {
+        "restriction": "only_right_turn"
+      },
+      "conditional_status": "unconditional",
+      "via_type": "node",
+      "incoming_stable_edge_id": "266717649/2/0/3336197479/2648202233",
+      "outgoing_stable_edge_id": "1040189921/0/0/2648202233/9577585621",
+      "osrm_non_enforcement_reason": "the pinned OSRM edge-based graph exports this exact transition as allowed; its aggregate extract log does not expose a per-relation invalid/unresolved disposition",
+      "transition_remains_allowed": true,
+      "matches_frozen_static_model": null,
+      "frozen_static_model_assessment": "unconditional source candidate is not certified prohibited without per-relation OSRM evidence"
+    },
+    {
+      "osm_relation_id": 5301000,
+      "restriction_tags": {
+        "restriction": "only_right_turn"
+      },
+      "conditional_status": "unconditional",
+      "via_type": "node",
+      "incoming_stable_edge_id": "354946381/1/0/4616039376/252734185",
+      "outgoing_stable_edge_id": "354946381/1/1/252734185/4616039376",
+      "osrm_non_enforcement_reason": "the pinned OSRM edge-based graph exports this exact transition as allowed; its aggregate extract log does not expose a per-relation invalid/unresolved disposition",
+      "transition_remains_allowed": true,
+      "matches_frozen_static_model": null,
+      "frozen_static_model_assessment": "unconditional source candidate is not certified prohibited without per-relation OSRM evidence"
+    },
+    {
+      "osm_relation_id": 5340226,
+      "restriction_tags": {
+        "restriction": "only_right_turn"
+      },
+      "conditional_status": "unconditional",
+      "via_type": "node",
+      "incoming_stable_edge_id": "358630525/3/0/3635331799/3635331798",
+      "outgoing_stable_edge_id": "358630530/0/0/3635331798/3635324146",
+      "osrm_non_enforcement_reason": "the pinned OSRM edge-based graph exports this exact transition as allowed; its aggregate extract log does not expose a per-relation invalid/unresolved disposition",
+      "transition_remains_allowed": true,
+      "matches_frozen_static_model": null,
+      "frozen_static_model_assessment": "unconditional source candidate is not certified prohibited without per-relation OSRM evidence"
+    },
+    {
+      "osm_relation_id": 14421471,
+      "restriction_tags": {
+        "restriction": "only_right_turn"
+      },
+      "conditional_status": "unconditional",
+      "via_type": "node",
+      "incoming_stable_edge_id": "371413622/0/1/2943749071/9930411300",
+      "outgoing_stable_edge_id": "1083619453/0/0/9930411300/3054057947",
+      "osrm_non_enforcement_reason": "the pinned OSRM edge-based graph exports this exact transition as allowed; its aggregate extract log does not expose a per-relation invalid/unresolved disposition",
+      "transition_remains_allowed": true,
+      "matches_frozen_static_model": null,
+      "frozen_static_model_assessment": "unconditional source candidate is not certified prohibited without per-relation OSRM evidence"
+    },
+    {
+      "osm_relation_id": 2336105,
+      "restriction_tags": {
+        "restriction": "only_right_turn"
+      },
+      "conditional_status": "unconditional",
+      "via_type": "node",
+      "incoming_stable_edge_id": "38974227/0/1/8260781860/463531123",
+      "outgoing_stable_edge_id": "394426333/5/1/463531123/8260781858",
+      "osrm_non_enforcement_reason": "the pinned OSRM edge-based graph exports this exact transition as allowed; its aggregate extract log does not expose a per-relation invalid/unresolved disposition",
+      "transition_remains_allowed": true,
+      "matches_frozen_static_model": null,
+      "frozen_static_model_assessment": "unconditional source candidate is not certified prohibited without per-relation OSRM evidence"
+    },
+    {
+      "osm_relation_id": 6737902,
+      "restriction_tags": {
+        "restriction": "only_straight_on"
+      },
+      "conditional_status": "unconditional",
+      "via_type": "node",
+      "incoming_stable_edge_id": "455543916/0/1/1941454676/1941454969",
+      "outgoing_stable_edge_id": "455543908/0/0/1941454969/4519350314",
+      "osrm_non_enforcement_reason": "the pinned OSRM edge-based graph exports this exact transition as allowed; its aggregate extract log does not expose a per-relation invalid/unresolved disposition",
+      "transition_remains_allowed": true,
+      "matches_frozen_static_model": null,
+      "frozen_static_model_assessment": "unconditional source candidate is not certified prohibited without per-relation OSRM evidence"
+    },
+    {
+      "osm_relation_id": 2524046,
+      "restriction_tags": {
+        "restriction": "only_straight_on"
+      },
+      "conditional_status": "unconditional",
+      "via_type": "node",
+      "incoming_stable_edge_id": "505452977/0/0/4954000976/263703016",
+      "outgoing_stable_edge_id": "187405592/0/0/263703016/4954000977",
+      "osrm_non_enforcement_reason": "the pinned OSRM edge-based graph exports this exact transition as allowed; its aggregate extract log does not expose a per-relation invalid/unresolved disposition",
+      "transition_remains_allowed": true,
+      "matches_frozen_static_model": null,
+      "frozen_static_model_assessment": "unconditional source candidate is not certified prohibited without per-relation OSRM evidence"
+    },
+    {
+      "osm_relation_id": 9819591,
+      "restriction_tags": {
+        "restriction": "only_straight_on"
+      },
+      "conditional_status": "unconditional",
+      "via_type": "node",
+      "incoming_stable_edge_id": "706126489/1/0/6634892529/6634892534",
+      "outgoing_stable_edge_id": "292839971/0/1/6634892534/6634892533",
+      "osrm_non_enforcement_reason": "the pinned OSRM edge-based graph exports this exact transition as allowed; its aggregate extract log does not expose a per-relation invalid/unresolved disposition",
+      "transition_remains_allowed": true,
+      "matches_frozen_static_model": null,
+      "frozen_static_model_assessment": "unconditional source candidate is not certified prohibited without per-relation OSRM evidence"
+    },
+    {
+      "osm_relation_id": 9819591,
+      "restriction_tags": {
+        "restriction": "only_straight_on"
+      },
+      "conditional_status": "unconditional",
+      "via_type": "node",
+      "incoming_stable_edge_id": "706126489/1/0/6634892529/6634892534",
+      "outgoing_stable_edge_id": "292839971/1/0/6634892534/2963999145",
+      "osrm_non_enforcement_reason": "the pinned OSRM edge-based graph exports this exact transition as allowed; its aggregate extract log does not expose a per-relation invalid/unresolved disposition",
+      "transition_remains_allowed": true,
+      "matches_frozen_static_model": null,
+      "frozen_static_model_assessment": "unconditional source candidate is not certified prohibited without per-relation OSRM evidence"
+    },
+    {
+      "osm_relation_id": 18321388,
+      "restriction_tags": {
+        "restriction": "only_left_turn"
+      },
+      "conditional_status": "unconditional",
+      "via_type": "node",
+      "incoming_stable_edge_id": "785389948/2/0/10563697344/7340807670",
+      "outgoing_stable_edge_id": "350514433/0/0/7340807670/2071777669",
+      "osrm_non_enforcement_reason": "the pinned OSRM edge-based graph exports this exact transition as allowed; its aggregate extract log does not expose a per-relation invalid/unresolved disposition",
+      "transition_remains_allowed": true,
+      "matches_frozen_static_model": null,
+      "frozen_static_model_assessment": "unconditional source candidate is not certified prohibited without per-relation OSRM evidence"
+    }
+  ]
+}
