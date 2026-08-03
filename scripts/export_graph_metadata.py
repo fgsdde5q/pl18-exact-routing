@@ -514,6 +514,7 @@ def build_restriction_certificate(
                 )
                 outgoing_all.setdefault(from_node, []).append(identifier)
     candidate_origins = {}
+    legacy_projection_origins = {}
     resolved_relations = []
     for relation, shape, from_way, to_way, path in sorted(
         resolved_paths,
@@ -525,11 +526,16 @@ def build_restriction_certificate(
         ),
     ):
         from_node, via_node, to_node = path
-        incoming_edges = sorted(
+        endpoint_incoming_edges = sorted(
             incoming_by_nodes.get((from_node, via_node), [])
         )
+        incoming_edges = [
+            edge for edge in endpoint_incoming_edges
+            if parse_stable(edge)[0] == from_way
+        ]
         designated_outgoing = sorted(
-            outgoing_by_nodes.get((via_node, to_node), [])
+            edge for edge in outgoing_by_nodes.get((via_node, to_node), [])
+            if parse_stable(edge)[0] == to_way
         )
         if shape["restriction_type"] == "no":
             prohibited_outgoing = designated_outgoing
@@ -544,8 +550,22 @@ def build_restriction_certificate(
             for incoming_edge in incoming_edges
             for outgoing_edge in prohibited_outgoing
         )
+        legacy_relation_pairs = sorted(
+            (incoming_edge, outgoing_edge)
+            for incoming_edge in endpoint_incoming_edges
+            for outgoing_edge in prohibited_outgoing
+        )
         for pair in relation_pairs:
             candidate_origins.setdefault(pair, set()).add(relation["relation_id"])
+        for pair in legacy_relation_pairs:
+            legacy_projection_origins.setdefault(pair, []).append(
+                {
+                    "relation_id": relation["relation_id"],
+                    "from_way_id": from_way,
+                    "to_way_id": to_way,
+                    "resolved_osrm_node_path": [from_node, via_node, to_node],
+                }
+            )
         if incoming_edges and designated_outgoing:
             resolved_relations.append(
                 {
@@ -566,11 +586,14 @@ def build_restriction_certificate(
                 }
             )
     observed = set()
+    legacy_projection_observed = set()
     with turn_states.open(encoding="utf-8", newline="") as source:
         for row in csv.reader(source, delimiter="\t"):
             pair = (row[0], row[1])
             if pair in candidate_origins:
                 observed.add(pair)
+            if pair in legacy_projection_origins and pair not in candidate_origins:
+                legacy_projection_observed.add(pair)
     candidates = set(candidate_origins)
     expected = candidates - observed
 
@@ -582,9 +605,9 @@ def build_restriction_certificate(
 
     non_enforced_relation_ids = sorted(
         {
-            relation_id
-            for pair in observed
-            for relation_id in candidate_origins[pair]
+            origin["relation_id"]
+            for pair in legacy_projection_observed
+            for origin in legacy_projection_origins[pair]
         }
     )
     non_enforced_relation_digest = hashlib.sha256()
@@ -599,10 +622,22 @@ def build_restriction_certificate(
     )
     relation_by_id = {relation["relation_id"]: relation for relation in relations}
     non_enforced_records = []
-    for pair in sorted(observed):
-        for relation_id in sorted(candidate_origins[pair]):
+    for pair in sorted(legacy_projection_observed):
+        origins = sorted(
+            legacy_projection_origins[pair],
+            key=lambda item: (item["relation_id"], item["from_way_id"], item["to_way_id"]),
+        )
+        for origin in origins:
+            relation_id = origin["relation_id"]
             relation = relation_by_id[relation_id]
             shape = relation_shape(relation)
+            incoming_way_id = parse_stable(pair[0])[0]
+            outgoing_way_id = parse_stable(pair[1])[0]
+            projection_mismatch = (
+                "incoming_way_id_differs_from_restriction_from_way"
+                if incoming_way_id != origin["from_way_id"]
+                else "legacy_endpoint_projection_did_not_preserve_relation_way_identity"
+            )
             restriction_tags = {
                 key: value
                 for key, value in relation.get("tags", {}).items()
@@ -619,17 +654,24 @@ def build_restriction_certificate(
                     "via_type": "node" if shape["via_node_ids"] else "way",
                     "incoming_stable_edge_id": pair[0],
                     "outgoing_stable_edge_id": pair[1],
+                    "restriction_from_way_id": origin["from_way_id"],
+                    "restriction_to_way_id": origin["to_way_id"],
+                    "transition_incoming_way_id": incoming_way_id,
+                    "transition_outgoing_way_id": outgoing_way_id,
+                    "resolved_osrm_node_path": origin["resolved_osrm_node_path"],
+                    "projection_mismatch": projection_mismatch,
                     "osrm_non_enforcement_reason": (
-                        "the pinned OSRM edge-based graph exports this exact transition "
-                        "as allowed; its aggregate extract log does not expose a "
-                        "per-relation invalid/unresolved disposition"
+                        "the transition enters the via node on a different OSM way than "
+                        "the restriction's from member; pinned OSRM therefore does not "
+                        "apply this relation to the transition. The previous exporter "
+                        "candidate logic matched only the OSM node pair and produced a "
+                        "false positive by discarding from-way identity"
                     ),
                     "transition_remains_allowed": True,
-                    "matches_frozen_static_model": True if conditional else None,
+                    "matches_frozen_static_model": True,
                     "frozen_static_model_assessment": (
-                        "conditional restrictions are ignored by the frozen static model"
-                        if conditional
-                        else "unconditional source candidate is not certified prohibited without per-relation OSRM evidence"
+                        "allowed: the frozen relation applies only to its declared from "
+                        "way, while this stable incoming edge belongs to a parallel way"
                     ),
                 }
             )
@@ -671,12 +713,12 @@ def build_restriction_certificate(
             ),
         },
         "osrm_non_enforced_candidate_transitions": {
-            "count": len(observed),
+            "count": len(legacy_projection_observed),
             "relation_count": len(non_enforced_relation_ids),
             "relation_ids_sha256": non_enforced_relation_digest.hexdigest(),
             "classification": (
-                "source relation candidates present in the exported allowed graph; "
-                "therefore not claimed as accepted or prohibited by pinned OSRM"
+                "historical exporter-v1 endpoint-projection false positives: allowed "
+                "transitions whose incoming stable edge is not the restriction from way"
             ),
             "aggregate_reason_evidence": {
                 "invalid_restrictions": osrm_summary["invalid_restrictions"],
@@ -688,9 +730,14 @@ def build_restriction_certificate(
                 {
                     "incoming_edge": pair[0],
                     "outgoing_edge": pair[1],
-                    "relation_ids": sorted(candidate_origins[pair]),
+                    "relation_ids": sorted(
+                        {
+                            origin["relation_id"]
+                            for origin in legacy_projection_origins[pair]
+                        }
+                    ),
                 }
-                for pair in sorted(observed)[:32]
+                for pair in sorted(legacy_projection_observed)[:32]
             ],
             "machine_readable_records": non_enforced_records,
         },

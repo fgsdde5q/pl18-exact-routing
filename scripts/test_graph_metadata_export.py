@@ -349,8 +349,65 @@ class GraphMetadataExportTests(unittest.TestCase):
             non_enforced = certificate[
                 "osrm_non_enforced_candidate_transitions"
             ]
+            self.assertEqual(non_enforced["count"], 0)
+            self.assertEqual(non_enforced["sample"], [])
+
+    def test_restriction_candidates_preserve_from_way_identity(self) -> None:
+        repository_root = Path(__file__).resolve().parent.parent
+        spec = importlib.util.spec_from_file_location(
+            "export_graph_metadata_restriction_way_identity",
+            repository_root / "scripts/export_graph_metadata.py",
+        )
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            base_edges = root / "edges.tsv"
+            base_edges.write_text(
+                "10/0/0/1/2\t1\t2\t0\t0\t0\t0\t1\t1\tresidential\t30\tpublic_default\tnot_ferry\n"
+                "11/0/0/1/2\t1\t2\t0\t0\t0\t0\t1\t1\tresidential\t30\tpublic_default\tnot_ferry\n"
+                "12/0/0/2/3\t2\t3\t0\t0\t0\t0\t1\t1\tresidential\t30\tpublic_default\tnot_ferry\n"
+                "13/0/0/2/4\t2\t4\t0\t0\t0\t0\t1\t1\tresidential\t30\tpublic_default\tnot_ferry\n",
+                encoding="utf-8",
+            )
+            turn_states = root / "turns.tsv"
+            turn_states.write_text(
+                "11/0/0/1/2\t13/0/0/2/4\t0.0\tallowed\n",
+                encoding="utf-8",
+            )
+            extract_log = root / "extract.log"
+            extract_log.write_text(
+                "[info] Collecting node information on 1 restrictions...ok\n"
+                "[info] Removing invalid turn restrictions...removed 0 invalid turn restrictions, after 0s\n"
+                "[info] Constructing restriction graph on 1 restrictions...ok\n",
+                encoding="utf-8",
+            )
+            relation = {
+                "relation_id": 20,
+                "recognized_values": ["only_straight_on"],
+                "ignored_by_except": False,
+                "conditional": False,
+                "tags": {"restriction": "only_straight_on"},
+                "members": [
+                    {"type": "w", "ref": 10, "role": "from"},
+                    {"type": "n", "ref": 2, "role": "via"},
+                    {"type": "w", "ref": 12, "role": "to"},
+                ],
+            }
+            certificate = module.build_restriction_certificate(
+                [relation], [], base_edges, turn_states, extract_log,
+                {10: [1, 2], 12: [2, 3]},
+            )
+            non_enforced = certificate["osrm_non_enforced_candidate_transitions"]
             self.assertEqual(non_enforced["count"], 1)
-            self.assertEqual(non_enforced["sample"][0]["relation_ids"], [20])
+            record = non_enforced["machine_readable_records"][0]
+            self.assertEqual(record["restriction_from_way_id"], 10)
+            self.assertEqual(record["transition_incoming_way_id"], 11)
+            self.assertTrue(record["matches_frozen_static_model"])
+            self.assertEqual(
+                record["projection_mismatch"],
+                "incoming_way_id_differs_from_restriction_from_way",
+            )
 
     def test_canonical_edges_exclude_internal_osrm_identifiers(self) -> None:
         repository_root = Path(__file__).resolve().parent.parent
