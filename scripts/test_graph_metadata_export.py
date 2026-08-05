@@ -400,6 +400,9 @@ class GraphMetadataExportTests(unittest.TestCase):
             )
             non_enforced = certificate["osrm_non_enforced_candidate_transitions"]
             self.assertEqual(non_enforced["count"], 1)
+            self.assertEqual(
+                certificate["way_aware_non_enforced_transitions"]["count"], 0
+            )
             record = non_enforced["machine_readable_records"][0]
             self.assertEqual(record["restriction_from_way_id"], 10)
             self.assertEqual(record["transition_incoming_way_id"], 11)

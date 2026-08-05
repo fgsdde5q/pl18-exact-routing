@@ -39,8 +39,13 @@ def main() -> int:
     non_enforced = restriction_certificate[
         "osrm_non_enforced_candidate_transitions"
     ]
-    if candidates["count"] != expected["count"] + non_enforced["count"]:
+    way_aware_non_enforced = restriction_certificate[
+        "way_aware_non_enforced_transitions"
+    ]
+    if candidates["count"] != expected["count"] + way_aware_non_enforced["count"]:
         raise ValueError("restriction candidate partition is inconsistent")
+    if way_aware_non_enforced["count"] != 0:
+        raise ValueError("way-aware restriction candidate remains allowed")
     if non_enforced["count"] and not all(
         item.get("relation_ids") for item in non_enforced["sample"]
     ):

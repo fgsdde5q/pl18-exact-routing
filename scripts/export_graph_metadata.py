@@ -712,6 +712,18 @@ def build_restriction_certificate(
                 "certified as OSRM-enforced prohibited transitions"
             ),
         },
+        "way_aware_non_enforced_transitions": {
+            "count": len(observed),
+            "canonical_sha256": pair_digest(observed),
+            "sample": [
+                {
+                    "incoming_edge": pair[0],
+                    "outgoing_edge": pair[1],
+                    "relation_ids": sorted(candidate_origins[pair]),
+                }
+                for pair in sorted(observed)[:32]
+            ],
+        },
         "osrm_non_enforced_candidate_transitions": {
             "count": len(legacy_projection_observed),
             "relation_count": len(non_enforced_relation_ids),
