@@ -545,10 +545,15 @@ def build_restriction_certificate(
                 for edge in outgoing_all.get(via_node, [])
                 if parse_stable(edge)[4] != to_node
             )
-        relation_pairs = sorted(
-            (incoming_edge, outgoing_edge)
-            for incoming_edge in incoming_edges
-            for outgoing_edge in prohibited_outgoing
+        relation_has_legal_path = bool(incoming_edges and designated_outgoing)
+        relation_pairs = (
+            sorted(
+                (incoming_edge, outgoing_edge)
+                for incoming_edge in incoming_edges
+                for outgoing_edge in prohibited_outgoing
+            )
+            if relation_has_legal_path
+            else []
         )
         legacy_relation_pairs = sorted(
             (incoming_edge, outgoing_edge)
@@ -564,6 +569,15 @@ def build_restriction_certificate(
                     "from_way_id": from_way,
                     "to_way_id": to_way,
                     "resolved_osrm_node_path": [from_node, via_node, to_node],
+                    "candidate_exclusion_reason": (
+                        None
+                        if relation_has_legal_path
+                        else (
+                            "restriction_from_way_has_no_legal_incoming_edge"
+                            if not incoming_edges
+                            else "restriction_to_way_has_no_legal_outgoing_edge"
+                        )
+                    ),
                 }
             )
         if incoming_edges and designated_outgoing:
@@ -636,8 +650,32 @@ def build_restriction_certificate(
             projection_mismatch = (
                 "incoming_way_id_differs_from_restriction_from_way"
                 if incoming_way_id != origin["from_way_id"]
-                else "legacy_endpoint_projection_did_not_preserve_relation_way_identity"
+                else origin["candidate_exclusion_reason"]
             )
+            if projection_mismatch == "incoming_way_id_differs_from_restriction_from_way":
+                reason = (
+                    "the transition enters the via node on a different OSM way than "
+                    "the restriction's from member; pinned OSRM therefore does not "
+                    "apply this relation. Exporter v1 matched only the node pair and "
+                    "discarded from-way identity"
+                )
+                assessment = (
+                    "allowed: the frozen relation applies only to its declared from "
+                    "way, while this incoming edge belongs to a parallel way"
+                )
+            else:
+                reason = (
+                    "the unconditional only_* relation's declared to way has no legal "
+                    "outgoing directed motorcar edge from the via node in the frozen "
+                    "graph. Pinned OSRM removes the unusable restriction path as invalid; "
+                    "exporter v1 incorrectly generated prohibited candidates without "
+                    "requiring a legal designated turn"
+                )
+                assessment = (
+                    "allowed: the frozen static model follows the pinned OSRM legal "
+                    "motorcar graph and does not apply an only_* relation whose designated "
+                    "turn is absent"
+                )
             restriction_tags = {
                 key: value
                 for key, value in relation.get("tags", {}).items()
@@ -660,19 +698,10 @@ def build_restriction_certificate(
                     "transition_outgoing_way_id": outgoing_way_id,
                     "resolved_osrm_node_path": origin["resolved_osrm_node_path"],
                     "projection_mismatch": projection_mismatch,
-                    "osrm_non_enforcement_reason": (
-                        "the transition enters the via node on a different OSM way than "
-                        "the restriction's from member; pinned OSRM therefore does not "
-                        "apply this relation to the transition. The previous exporter "
-                        "candidate logic matched only the OSM node pair and produced a "
-                        "false positive by discarding from-way identity"
-                    ),
+                    "osrm_non_enforcement_reason": reason,
                     "transition_remains_allowed": True,
                     "matches_frozen_static_model": True,
-                    "frozen_static_model_assessment": (
-                        "allowed: the frozen relation applies only to its declared from "
-                        "way, while this stable incoming edge belongs to a parallel way"
-                    ),
+                    "frozen_static_model_assessment": assessment,
                 }
             )
     return {
@@ -729,8 +758,8 @@ def build_restriction_certificate(
             "relation_count": len(non_enforced_relation_ids),
             "relation_ids_sha256": non_enforced_relation_digest.hexdigest(),
             "classification": (
-                "historical exporter-v1 endpoint-projection false positives: allowed "
-                "transitions whose incoming stable edge is not the restriction from way"
+                "historical exporter-v1 false positives: endpoint-only from-way "
+                "projection or only_* relations without a legal designated motorcar turn"
             ),
             "aggregate_reason_evidence": {
                 "invalid_restrictions": osrm_summary["invalid_restrictions"],
