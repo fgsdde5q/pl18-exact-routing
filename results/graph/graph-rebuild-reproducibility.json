@@ -52,8 +52,8 @@
         "no_turn_relations": 33179,
         "only_turn_relations": 13559,
         "conditional_restriction_relations": 25,
-        "expected_prohibited_turn_transitions": 45381,
-        "source_candidate_turn_transitions": 45406,
+        "expected_prohibited_turn_transitions": 45363,
+        "source_candidate_turn_transitions": 45363,
         "osrm_non_enforced_candidate_turn_transitions": 25,
         "forbidden_ferry_edges": 6612,
         "rejected_private_nonmotorcar_edges": 2401005,
@@ -76,8 +76,8 @@
         "no_turn_relations": 33179,
         "only_turn_relations": 13559,
         "conditional_restriction_relations": 25,
-        "expected_prohibited_turn_transitions": 45381,
-        "source_candidate_turn_transitions": 45406,
+        "expected_prohibited_turn_transitions": 45363,
+        "source_candidate_turn_transitions": 45363,
         "osrm_non_enforced_candidate_turn_transitions": 25,
         "forbidden_ferry_edges": 6612,
         "rejected_private_nonmotorcar_edges": 2401005,
@@ -357,25 +357,30 @@
         "direct_relation_coverage": {
           "via_node_candidate_relations": 42774,
           "via_node_resolved_paths": 42677,
-          "via_node_paths_with_exported_edges": 40192,
+          "via_node_paths_with_exported_edges": 40191,
           "via_way_relation_count": 2578
         },
         "source_candidate_transitions": {
-          "count": 45406,
-          "canonical_sha256": "8adbe9ed92bbdc9049d6777f938bfa2e99d579720bb1082a5c91825138ec52ae",
+          "count": 45363,
+          "canonical_sha256": "53c940b06b5a4aaa5eca7be25680c61a71f846b0fc0e8443bc03b67558f7ef08",
           "method": "derived from frozen PBF restriction relations and matched to canonical directed base-edge endpoints"
         },
         "expected_prohibited_transitions": {
-          "count": 45381,
-          "canonical_sha256": "9e17d9241f150b09b3603f4d7c15129e35bea1af81c317c2e2052c31f8d38fa9",
+          "count": 45363,
+          "canonical_sha256": "53c940b06b5a4aaa5eca7be25680c61a71f846b0fc0e8443bc03b67558f7ef08",
           "observed_in_exported_turn_states": 0,
           "proof": "every source-derived candidate was matched against the complete exported allowed turn-state set; only absent candidates are certified as OSRM-enforced prohibited transitions"
+        },
+        "way_aware_non_enforced_transitions": {
+          "count": 0,
+          "canonical_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "sample": []
         },
         "osrm_non_enforced_candidate_transitions": {
           "count": 25,
           "relation_count": 23,
           "relation_ids_sha256": "bc35050dd26e64f1b72076ebc40a958bfe52426274424c90d0fef4160fc5cb01",
-          "classification": "source relation candidates present in the exported allowed graph; therefore not claimed as accepted or prohibited by pinned OSRM",
+          "classification": "historical exporter-v1 false positives: endpoint-only from-way projection or only_* relations without a legal designated motorcar turn",
           "aggregate_reason_evidence": {
             "invalid_restrictions": 442,
             "unresolved_before_graph_validation": 2221
@@ -1712,25 +1717,30 @@
         "direct_relation_coverage": {
           "via_node_candidate_relations": 42774,
           "via_node_resolved_paths": 42677,
-          "via_node_paths_with_exported_edges": 40192,
+          "via_node_paths_with_exported_edges": 40191,
           "via_way_relation_count": 2578
         },
         "source_candidate_transitions": {
-          "count": 45406,
-          "canonical_sha256": "8adbe9ed92bbdc9049d6777f938bfa2e99d579720bb1082a5c91825138ec52ae",
+          "count": 45363,
+          "canonical_sha256": "53c940b06b5a4aaa5eca7be25680c61a71f846b0fc0e8443bc03b67558f7ef08",
           "method": "derived from frozen PBF restriction relations and matched to canonical directed base-edge endpoints"
         },
         "expected_prohibited_transitions": {
-          "count": 45381,
-          "canonical_sha256": "9e17d9241f150b09b3603f4d7c15129e35bea1af81c317c2e2052c31f8d38fa9",
+          "count": 45363,
+          "canonical_sha256": "53c940b06b5a4aaa5eca7be25680c61a71f846b0fc0e8443bc03b67558f7ef08",
           "observed_in_exported_turn_states": 0,
           "proof": "every source-derived candidate was matched against the complete exported allowed turn-state set; only absent candidates are certified as OSRM-enforced prohibited transitions"
+        },
+        "way_aware_non_enforced_transitions": {
+          "count": 0,
+          "canonical_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "sample": []
         },
         "osrm_non_enforced_candidate_transitions": {
           "count": 25,
           "relation_count": 23,
           "relation_ids_sha256": "bc35050dd26e64f1b72076ebc40a958bfe52426274424c90d0fef4160fc5cb01",
-          "classification": "source relation candidates present in the exported allowed graph; therefore not claimed as accepted or prohibited by pinned OSRM",
+          "classification": "historical exporter-v1 false positives: endpoint-only from-way projection or only_* relations without a legal designated motorcar turn",
           "aggregate_reason_evidence": {
             "invalid_restrictions": 442,
             "unresolved_before_graph_validation": 2221
@@ -3047,6 +3057,1223 @@
             }
           ]
         }
+      }
+    },
+    "non_enforced_restriction_candidates": {
+      "match": true,
+      "first": {
+        "schema_version": 1,
+        "status": "OSRM_NON_ENFORCED_RESTRICTION_CANDIDATES",
+        "record_count": 25,
+        "records": [
+          {
+            "osm_relation_id": 13885687,
+            "restriction_tags": {
+              "restriction": "only_straight_on"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "1036826951/0/1/4757664330/3652907354",
+            "outgoing_stable_edge_id": "8608793/0/0/3652907354/3398141046",
+            "restriction_from_way_id": 1036826951,
+            "restriction_to_way_id": 1076205906,
+            "transition_incoming_way_id": 1036826951,
+            "transition_outgoing_way_id": 8608793,
+            "resolved_osrm_node_path": [
+              4757664330,
+              3652907354,
+              3652911860
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 20109263,
+            "restriction_tags": {
+              "restriction": "only_right_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "1226331568/4/0/13464756392/3733293492",
+            "outgoing_stable_edge_id": "1226331568/4/1/3733293492/13464756392",
+            "restriction_from_way_id": 1226331568,
+            "restriction_to_way_id": 1468071209,
+            "transition_incoming_way_id": 1226331568,
+            "transition_outgoing_way_id": 1226331568,
+            "resolved_osrm_node_path": [
+              13464756392,
+              3733293492,
+              5069887716
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 16821221,
+            "restriction_tags": {
+              "restriction": "only_right_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "1231055305/0/1/3852777158/1209828076",
+            "outgoing_stable_edge_id": "1231055305/0/0/1209828076/3852777158",
+            "restriction_from_way_id": 1231055305,
+            "restriction_to_way_id": 104922661,
+            "transition_incoming_way_id": 1231055305,
+            "transition_outgoing_way_id": 1231055305,
+            "resolved_osrm_node_path": [
+              3852777158,
+              1209828076,
+              6364571365
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 17744874,
+            "restriction_tags": {
+              "restriction": "only_straight_on"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "1294574510/0/1/11358548199/2375423320",
+            "outgoing_stable_edge_id": "1105244147/0/0/2375423320/2295731577",
+            "restriction_from_way_id": 1294574510,
+            "restriction_to_way_id": 1531352490,
+            "transition_incoming_way_id": 1294574510,
+            "transition_outgoing_way_id": 1105244147,
+            "resolved_osrm_node_path": [
+              11358548199,
+              2375423320,
+              13957278571
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 18234763,
+            "restriction_tags": {
+              "restriction": "only_u_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "1329721028/0/1/417886267/7188532231",
+            "outgoing_stable_edge_id": "770024814/1/1/7188532231/7188532232",
+            "restriction_from_way_id": 35712228,
+            "restriction_to_way_id": 35712228,
+            "transition_incoming_way_id": 1329721028,
+            "transition_outgoing_way_id": 770024814,
+            "resolved_osrm_node_path": [
+              417886267,
+              7188532231,
+              417886267
+            ],
+            "projection_mismatch": "incoming_way_id_differs_from_restriction_from_way",
+            "osrm_non_enforcement_reason": "the transition enters the via node on a different OSM way than the restriction's from member; pinned OSRM therefore does not apply this relation. Exporter v1 matched only the node pair and discarded from-way identity",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen relation applies only to its declared from way, while this incoming edge belongs to a parallel way"
+          },
+          {
+            "osm_relation_id": 18365198,
+            "restriction_tags": {
+              "restriction": "only_right_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "1339788552/0/1/13179014827/12393335799",
+            "outgoing_stable_edge_id": "1536271545/0/0/12393335799/5761697663",
+            "restriction_from_way_id": 1339788552,
+            "restriction_to_way_id": 1536271546,
+            "transition_incoming_way_id": 1339788552,
+            "transition_outgoing_way_id": 1536271545,
+            "resolved_osrm_node_path": [
+              13179014827,
+              12393335799,
+              13995714413
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 19617084,
+            "restriction_tags": {
+              "restriction": "only_left_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "144900317/0/1/13152518033/188665899",
+            "outgoing_stable_edge_id": "144900317/0/0/188665899/13152518033",
+            "restriction_from_way_id": 144900317,
+            "restriction_to_way_id": 1430830127,
+            "transition_incoming_way_id": 144900317,
+            "transition_outgoing_way_id": 144900317,
+            "resolved_osrm_node_path": [
+              13152518033,
+              188665899,
+              3373745220
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 16410741,
+            "restriction_tags": {
+              "restriction": "only_right_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "153267230/2/0/599320010/245421813",
+            "outgoing_stable_edge_id": "309731882/0/0/245421813/614434580",
+            "restriction_from_way_id": 153267230,
+            "restriction_to_way_id": 1326332391,
+            "transition_incoming_way_id": 153267230,
+            "transition_outgoing_way_id": 309731882,
+            "resolved_osrm_node_path": [
+              599320010,
+              245421813,
+              12271746744
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 18142429,
+            "restriction_tags": {
+              "restriction": "only_straight_on"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "161926909/0/1/254069693/254069686",
+            "outgoing_stable_edge_id": "161926909/0/0/254069686/254069693",
+            "restriction_from_way_id": 161926909,
+            "restriction_to_way_id": 1322984381,
+            "transition_incoming_way_id": 161926909,
+            "transition_outgoing_way_id": 161926909,
+            "resolved_osrm_node_path": [
+              254069693,
+              254069686,
+              9332218265
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 8362031,
+            "restriction_tags": {
+              "restriction": "only_left_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "173138877/0/1/2150917517/1839660164",
+            "outgoing_stable_edge_id": "183212281/0/0/1839660164/1793791760",
+            "restriction_from_way_id": 173138877,
+            "restriction_to_way_id": 183212170,
+            "transition_incoming_way_id": 173138877,
+            "transition_outgoing_way_id": 183212281,
+            "resolved_osrm_node_path": [
+              2150917517,
+              1839660164,
+              1935798959
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 17489962,
+            "restriction_tags": {
+              "restriction": "only_straight_on"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "238068211/6/0/2459321246/2399792103",
+            "outgoing_stable_edge_id": "397794518/0/0/2399792103/4005798011",
+            "restriction_from_way_id": 238068211,
+            "restriction_to_way_id": 231635197,
+            "transition_incoming_way_id": 238068211,
+            "transition_outgoing_way_id": 397794518,
+            "resolved_osrm_node_path": [
+              2459321246,
+              2399792103,
+              2459321250
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 21061260,
+            "restriction_tags": {
+              "restriction": "only_right_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "239171556/0/1/2469828539/2469828509",
+            "outgoing_stable_edge_id": "239171556/0/0/2469828509/2469828539",
+            "restriction_from_way_id": 239171556,
+            "restriction_to_way_id": 1537227584,
+            "transition_incoming_way_id": 239171556,
+            "transition_outgoing_way_id": 239171556,
+            "resolved_osrm_node_path": [
+              2469828539,
+              2469828509,
+              9890608284
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 11277824,
+            "restriction_tags": {
+              "restriction": "only_right_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "24157370/4/0/277935854/261675300",
+            "outgoing_stable_edge_id": "823536388/0/0/261675300/277935850",
+            "restriction_from_way_id": 24157370,
+            "restriction_to_way_id": 1369164438,
+            "transition_incoming_way_id": 24157370,
+            "transition_outgoing_way_id": 823536388,
+            "resolved_osrm_node_path": [
+              277935854,
+              261675300,
+              5707456389
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 17489959,
+            "restriction_tags": {
+              "restriction": "only_right_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "245265493/15/0/2459321245/2459321242",
+            "outgoing_stable_edge_id": "1105699435/0/0/2459321242/2399792105",
+            "restriction_from_way_id": 245265493,
+            "restriction_to_way_id": 1105699436,
+            "transition_incoming_way_id": 245265493,
+            "transition_outgoing_way_id": 1105699435,
+            "resolved_osrm_node_path": [
+              2459321245,
+              2459321242,
+              2399792118
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 4049308,
+            "restriction_tags": {
+              "restriction": "only_right_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "266717649/2/0/3336197479/2648202233",
+            "outgoing_stable_edge_id": "1039926208/2/1/2648202233/12524321371",
+            "restriction_from_way_id": 266717649,
+            "restriction_to_way_id": 303894886,
+            "transition_incoming_way_id": 266717649,
+            "transition_outgoing_way_id": 1039926208,
+            "resolved_osrm_node_path": [
+              3336197479,
+              2648202233,
+              9577585619
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 4049308,
+            "restriction_tags": {
+              "restriction": "only_right_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "266717649/2/0/3336197479/2648202233",
+            "outgoing_stable_edge_id": "1040189921/0/0/2648202233/9577585621",
+            "restriction_from_way_id": 266717649,
+            "restriction_to_way_id": 303894886,
+            "transition_incoming_way_id": 266717649,
+            "transition_outgoing_way_id": 1040189921,
+            "resolved_osrm_node_path": [
+              3336197479,
+              2648202233,
+              9577585619
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 5301000,
+            "restriction_tags": {
+              "restriction": "only_right_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "354946381/1/0/4616039376/252734185",
+            "outgoing_stable_edge_id": "354946381/1/1/252734185/4616039376",
+            "restriction_from_way_id": 354946381,
+            "restriction_to_way_id": 349642244,
+            "transition_incoming_way_id": 354946381,
+            "transition_outgoing_way_id": 354946381,
+            "resolved_osrm_node_path": [
+              4616039376,
+              252734185,
+              4616039341
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 5340226,
+            "restriction_tags": {
+              "restriction": "only_right_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "358630525/3/0/3635331799/3635331798",
+            "outgoing_stable_edge_id": "358630530/0/0/3635331798/3635324146",
+            "restriction_from_way_id": 358630525,
+            "restriction_to_way_id": 358630527,
+            "transition_incoming_way_id": 358630525,
+            "transition_outgoing_way_id": 358630530,
+            "resolved_osrm_node_path": [
+              3635331799,
+              3635331798,
+              3523741200
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 14421471,
+            "restriction_tags": {
+              "restriction": "only_right_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "371413622/0/1/2943749071/9930411300",
+            "outgoing_stable_edge_id": "1083619453/0/0/9930411300/3054057947",
+            "restriction_from_way_id": 371413622,
+            "restriction_to_way_id": 1083619456,
+            "transition_incoming_way_id": 371413622,
+            "transition_outgoing_way_id": 1083619453,
+            "resolved_osrm_node_path": [
+              2943749071,
+              9930411300,
+              9930411320
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 2336105,
+            "restriction_tags": {
+              "restriction": "only_right_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "38974227/0/1/8260781860/463531123",
+            "outgoing_stable_edge_id": "394426333/5/1/463531123/8260781858",
+            "restriction_from_way_id": 38974227,
+            "restriction_to_way_id": 174837336,
+            "transition_incoming_way_id": 38974227,
+            "transition_outgoing_way_id": 394426333,
+            "resolved_osrm_node_path": [
+              8260781860,
+              463531123,
+              8260781861
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 6737902,
+            "restriction_tags": {
+              "restriction": "only_straight_on"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "455543916/0/1/1941454676/1941454969",
+            "outgoing_stable_edge_id": "455543908/0/0/1941454969/4519350314",
+            "restriction_from_way_id": 455543916,
+            "restriction_to_way_id": 183735155,
+            "transition_incoming_way_id": 455543916,
+            "transition_outgoing_way_id": 455543908,
+            "resolved_osrm_node_path": [
+              1941454676,
+              1941454969,
+              3810279580
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 2524046,
+            "restriction_tags": {
+              "restriction": "only_straight_on"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "505452977/0/0/4954000976/263703016",
+            "outgoing_stable_edge_id": "187405592/0/0/263703016/4954000977",
+            "restriction_from_way_id": 505452977,
+            "restriction_to_way_id": 1330672770,
+            "transition_incoming_way_id": 505452977,
+            "transition_outgoing_way_id": 187405592,
+            "resolved_osrm_node_path": [
+              4954000976,
+              263703016,
+              12312122650
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 9819591,
+            "restriction_tags": {
+              "restriction": "only_straight_on"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "706126489/1/0/6634892529/6634892534",
+            "outgoing_stable_edge_id": "292839971/0/1/6634892534/6634892533",
+            "restriction_from_way_id": 706126489,
+            "restriction_to_way_id": 706126481,
+            "transition_incoming_way_id": 706126489,
+            "transition_outgoing_way_id": 292839971,
+            "resolved_osrm_node_path": [
+              6634892529,
+              6634892534,
+              6634892531
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 9819591,
+            "restriction_tags": {
+              "restriction": "only_straight_on"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "706126489/1/0/6634892529/6634892534",
+            "outgoing_stable_edge_id": "292839971/1/0/6634892534/2963999145",
+            "restriction_from_way_id": 706126489,
+            "restriction_to_way_id": 706126481,
+            "transition_incoming_way_id": 706126489,
+            "transition_outgoing_way_id": 292839971,
+            "resolved_osrm_node_path": [
+              6634892529,
+              6634892534,
+              6634892531
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 18321388,
+            "restriction_tags": {
+              "restriction": "only_left_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "785389948/2/0/10563697344/7340807670",
+            "outgoing_stable_edge_id": "350514433/0/0/7340807670/2071777669",
+            "restriction_from_way_id": 785389948,
+            "restriction_to_way_id": 1337199158,
+            "transition_incoming_way_id": 785389948,
+            "transition_outgoing_way_id": 350514433,
+            "resolved_osrm_node_path": [
+              10563697344,
+              7340807670,
+              2071777428
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          }
+        ]
+      },
+      "second": {
+        "schema_version": 1,
+        "status": "OSRM_NON_ENFORCED_RESTRICTION_CANDIDATES",
+        "record_count": 25,
+        "records": [
+          {
+            "osm_relation_id": 13885687,
+            "restriction_tags": {
+              "restriction": "only_straight_on"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "1036826951/0/1/4757664330/3652907354",
+            "outgoing_stable_edge_id": "8608793/0/0/3652907354/3398141046",
+            "restriction_from_way_id": 1036826951,
+            "restriction_to_way_id": 1076205906,
+            "transition_incoming_way_id": 1036826951,
+            "transition_outgoing_way_id": 8608793,
+            "resolved_osrm_node_path": [
+              4757664330,
+              3652907354,
+              3652911860
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 20109263,
+            "restriction_tags": {
+              "restriction": "only_right_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "1226331568/4/0/13464756392/3733293492",
+            "outgoing_stable_edge_id": "1226331568/4/1/3733293492/13464756392",
+            "restriction_from_way_id": 1226331568,
+            "restriction_to_way_id": 1468071209,
+            "transition_incoming_way_id": 1226331568,
+            "transition_outgoing_way_id": 1226331568,
+            "resolved_osrm_node_path": [
+              13464756392,
+              3733293492,
+              5069887716
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 16821221,
+            "restriction_tags": {
+              "restriction": "only_right_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "1231055305/0/1/3852777158/1209828076",
+            "outgoing_stable_edge_id": "1231055305/0/0/1209828076/3852777158",
+            "restriction_from_way_id": 1231055305,
+            "restriction_to_way_id": 104922661,
+            "transition_incoming_way_id": 1231055305,
+            "transition_outgoing_way_id": 1231055305,
+            "resolved_osrm_node_path": [
+              3852777158,
+              1209828076,
+              6364571365
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 17744874,
+            "restriction_tags": {
+              "restriction": "only_straight_on"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "1294574510/0/1/11358548199/2375423320",
+            "outgoing_stable_edge_id": "1105244147/0/0/2375423320/2295731577",
+            "restriction_from_way_id": 1294574510,
+            "restriction_to_way_id": 1531352490,
+            "transition_incoming_way_id": 1294574510,
+            "transition_outgoing_way_id": 1105244147,
+            "resolved_osrm_node_path": [
+              11358548199,
+              2375423320,
+              13957278571
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 18234763,
+            "restriction_tags": {
+              "restriction": "only_u_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "1329721028/0/1/417886267/7188532231",
+            "outgoing_stable_edge_id": "770024814/1/1/7188532231/7188532232",
+            "restriction_from_way_id": 35712228,
+            "restriction_to_way_id": 35712228,
+            "transition_incoming_way_id": 1329721028,
+            "transition_outgoing_way_id": 770024814,
+            "resolved_osrm_node_path": [
+              417886267,
+              7188532231,
+              417886267
+            ],
+            "projection_mismatch": "incoming_way_id_differs_from_restriction_from_way",
+            "osrm_non_enforcement_reason": "the transition enters the via node on a different OSM way than the restriction's from member; pinned OSRM therefore does not apply this relation. Exporter v1 matched only the node pair and discarded from-way identity",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen relation applies only to its declared from way, while this incoming edge belongs to a parallel way"
+          },
+          {
+            "osm_relation_id": 18365198,
+            "restriction_tags": {
+              "restriction": "only_right_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "1339788552/0/1/13179014827/12393335799",
+            "outgoing_stable_edge_id": "1536271545/0/0/12393335799/5761697663",
+            "restriction_from_way_id": 1339788552,
+            "restriction_to_way_id": 1536271546,
+            "transition_incoming_way_id": 1339788552,
+            "transition_outgoing_way_id": 1536271545,
+            "resolved_osrm_node_path": [
+              13179014827,
+              12393335799,
+              13995714413
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 19617084,
+            "restriction_tags": {
+              "restriction": "only_left_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "144900317/0/1/13152518033/188665899",
+            "outgoing_stable_edge_id": "144900317/0/0/188665899/13152518033",
+            "restriction_from_way_id": 144900317,
+            "restriction_to_way_id": 1430830127,
+            "transition_incoming_way_id": 144900317,
+            "transition_outgoing_way_id": 144900317,
+            "resolved_osrm_node_path": [
+              13152518033,
+              188665899,
+              3373745220
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 16410741,
+            "restriction_tags": {
+              "restriction": "only_right_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "153267230/2/0/599320010/245421813",
+            "outgoing_stable_edge_id": "309731882/0/0/245421813/614434580",
+            "restriction_from_way_id": 153267230,
+            "restriction_to_way_id": 1326332391,
+            "transition_incoming_way_id": 153267230,
+            "transition_outgoing_way_id": 309731882,
+            "resolved_osrm_node_path": [
+              599320010,
+              245421813,
+              12271746744
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 18142429,
+            "restriction_tags": {
+              "restriction": "only_straight_on"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "161926909/0/1/254069693/254069686",
+            "outgoing_stable_edge_id": "161926909/0/0/254069686/254069693",
+            "restriction_from_way_id": 161926909,
+            "restriction_to_way_id": 1322984381,
+            "transition_incoming_way_id": 161926909,
+            "transition_outgoing_way_id": 161926909,
+            "resolved_osrm_node_path": [
+              254069693,
+              254069686,
+              9332218265
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 8362031,
+            "restriction_tags": {
+              "restriction": "only_left_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "173138877/0/1/2150917517/1839660164",
+            "outgoing_stable_edge_id": "183212281/0/0/1839660164/1793791760",
+            "restriction_from_way_id": 173138877,
+            "restriction_to_way_id": 183212170,
+            "transition_incoming_way_id": 173138877,
+            "transition_outgoing_way_id": 183212281,
+            "resolved_osrm_node_path": [
+              2150917517,
+              1839660164,
+              1935798959
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 17489962,
+            "restriction_tags": {
+              "restriction": "only_straight_on"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "238068211/6/0/2459321246/2399792103",
+            "outgoing_stable_edge_id": "397794518/0/0/2399792103/4005798011",
+            "restriction_from_way_id": 238068211,
+            "restriction_to_way_id": 231635197,
+            "transition_incoming_way_id": 238068211,
+            "transition_outgoing_way_id": 397794518,
+            "resolved_osrm_node_path": [
+              2459321246,
+              2399792103,
+              2459321250
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 21061260,
+            "restriction_tags": {
+              "restriction": "only_right_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "239171556/0/1/2469828539/2469828509",
+            "outgoing_stable_edge_id": "239171556/0/0/2469828509/2469828539",
+            "restriction_from_way_id": 239171556,
+            "restriction_to_way_id": 1537227584,
+            "transition_incoming_way_id": 239171556,
+            "transition_outgoing_way_id": 239171556,
+            "resolved_osrm_node_path": [
+              2469828539,
+              2469828509,
+              9890608284
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 11277824,
+            "restriction_tags": {
+              "restriction": "only_right_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "24157370/4/0/277935854/261675300",
+            "outgoing_stable_edge_id": "823536388/0/0/261675300/277935850",
+            "restriction_from_way_id": 24157370,
+            "restriction_to_way_id": 1369164438,
+            "transition_incoming_way_id": 24157370,
+            "transition_outgoing_way_id": 823536388,
+            "resolved_osrm_node_path": [
+              277935854,
+              261675300,
+              5707456389
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 17489959,
+            "restriction_tags": {
+              "restriction": "only_right_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "245265493/15/0/2459321245/2459321242",
+            "outgoing_stable_edge_id": "1105699435/0/0/2459321242/2399792105",
+            "restriction_from_way_id": 245265493,
+            "restriction_to_way_id": 1105699436,
+            "transition_incoming_way_id": 245265493,
+            "transition_outgoing_way_id": 1105699435,
+            "resolved_osrm_node_path": [
+              2459321245,
+              2459321242,
+              2399792118
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 4049308,
+            "restriction_tags": {
+              "restriction": "only_right_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "266717649/2/0/3336197479/2648202233",
+            "outgoing_stable_edge_id": "1039926208/2/1/2648202233/12524321371",
+            "restriction_from_way_id": 266717649,
+            "restriction_to_way_id": 303894886,
+            "transition_incoming_way_id": 266717649,
+            "transition_outgoing_way_id": 1039926208,
+            "resolved_osrm_node_path": [
+              3336197479,
+              2648202233,
+              9577585619
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 4049308,
+            "restriction_tags": {
+              "restriction": "only_right_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "266717649/2/0/3336197479/2648202233",
+            "outgoing_stable_edge_id": "1040189921/0/0/2648202233/9577585621",
+            "restriction_from_way_id": 266717649,
+            "restriction_to_way_id": 303894886,
+            "transition_incoming_way_id": 266717649,
+            "transition_outgoing_way_id": 1040189921,
+            "resolved_osrm_node_path": [
+              3336197479,
+              2648202233,
+              9577585619
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 5301000,
+            "restriction_tags": {
+              "restriction": "only_right_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "354946381/1/0/4616039376/252734185",
+            "outgoing_stable_edge_id": "354946381/1/1/252734185/4616039376",
+            "restriction_from_way_id": 354946381,
+            "restriction_to_way_id": 349642244,
+            "transition_incoming_way_id": 354946381,
+            "transition_outgoing_way_id": 354946381,
+            "resolved_osrm_node_path": [
+              4616039376,
+              252734185,
+              4616039341
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 5340226,
+            "restriction_tags": {
+              "restriction": "only_right_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "358630525/3/0/3635331799/3635331798",
+            "outgoing_stable_edge_id": "358630530/0/0/3635331798/3635324146",
+            "restriction_from_way_id": 358630525,
+            "restriction_to_way_id": 358630527,
+            "transition_incoming_way_id": 358630525,
+            "transition_outgoing_way_id": 358630530,
+            "resolved_osrm_node_path": [
+              3635331799,
+              3635331798,
+              3523741200
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 14421471,
+            "restriction_tags": {
+              "restriction": "only_right_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "371413622/0/1/2943749071/9930411300",
+            "outgoing_stable_edge_id": "1083619453/0/0/9930411300/3054057947",
+            "restriction_from_way_id": 371413622,
+            "restriction_to_way_id": 1083619456,
+            "transition_incoming_way_id": 371413622,
+            "transition_outgoing_way_id": 1083619453,
+            "resolved_osrm_node_path": [
+              2943749071,
+              9930411300,
+              9930411320
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 2336105,
+            "restriction_tags": {
+              "restriction": "only_right_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "38974227/0/1/8260781860/463531123",
+            "outgoing_stable_edge_id": "394426333/5/1/463531123/8260781858",
+            "restriction_from_way_id": 38974227,
+            "restriction_to_way_id": 174837336,
+            "transition_incoming_way_id": 38974227,
+            "transition_outgoing_way_id": 394426333,
+            "resolved_osrm_node_path": [
+              8260781860,
+              463531123,
+              8260781861
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 6737902,
+            "restriction_tags": {
+              "restriction": "only_straight_on"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "455543916/0/1/1941454676/1941454969",
+            "outgoing_stable_edge_id": "455543908/0/0/1941454969/4519350314",
+            "restriction_from_way_id": 455543916,
+            "restriction_to_way_id": 183735155,
+            "transition_incoming_way_id": 455543916,
+            "transition_outgoing_way_id": 455543908,
+            "resolved_osrm_node_path": [
+              1941454676,
+              1941454969,
+              3810279580
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 2524046,
+            "restriction_tags": {
+              "restriction": "only_straight_on"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "505452977/0/0/4954000976/263703016",
+            "outgoing_stable_edge_id": "187405592/0/0/263703016/4954000977",
+            "restriction_from_way_id": 505452977,
+            "restriction_to_way_id": 1330672770,
+            "transition_incoming_way_id": 505452977,
+            "transition_outgoing_way_id": 187405592,
+            "resolved_osrm_node_path": [
+              4954000976,
+              263703016,
+              12312122650
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 9819591,
+            "restriction_tags": {
+              "restriction": "only_straight_on"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "706126489/1/0/6634892529/6634892534",
+            "outgoing_stable_edge_id": "292839971/0/1/6634892534/6634892533",
+            "restriction_from_way_id": 706126489,
+            "restriction_to_way_id": 706126481,
+            "transition_incoming_way_id": 706126489,
+            "transition_outgoing_way_id": 292839971,
+            "resolved_osrm_node_path": [
+              6634892529,
+              6634892534,
+              6634892531
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 9819591,
+            "restriction_tags": {
+              "restriction": "only_straight_on"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "706126489/1/0/6634892529/6634892534",
+            "outgoing_stable_edge_id": "292839971/1/0/6634892534/2963999145",
+            "restriction_from_way_id": 706126489,
+            "restriction_to_way_id": 706126481,
+            "transition_incoming_way_id": 706126489,
+            "transition_outgoing_way_id": 292839971,
+            "resolved_osrm_node_path": [
+              6634892529,
+              6634892534,
+              6634892531
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          },
+          {
+            "osm_relation_id": 18321388,
+            "restriction_tags": {
+              "restriction": "only_left_turn"
+            },
+            "conditional_status": "unconditional",
+            "via_type": "node",
+            "incoming_stable_edge_id": "785389948/2/0/10563697344/7340807670",
+            "outgoing_stable_edge_id": "350514433/0/0/7340807670/2071777669",
+            "restriction_from_way_id": 785389948,
+            "restriction_to_way_id": 1337199158,
+            "transition_incoming_way_id": 785389948,
+            "transition_outgoing_way_id": 350514433,
+            "resolved_osrm_node_path": [
+              10563697344,
+              7340807670,
+              2071777428
+            ],
+            "projection_mismatch": "restriction_to_way_has_no_legal_outgoing_edge",
+            "osrm_non_enforcement_reason": "the unconditional only_* relation's declared to way has no legal outgoing directed motorcar edge from the via node in the frozen graph. Pinned OSRM removes the unusable restriction path as invalid; exporter v1 incorrectly generated prohibited candidates without requiring a legal designated turn",
+            "transition_remains_allowed": true,
+            "matches_frozen_static_model": true,
+            "frozen_static_model_assessment": "allowed: the frozen static model follows the pinned OSRM legal motorcar graph and does not apply an only_* relation whose designated turn is absent"
+          }
+        ]
       }
     }
   },
