@@ -17,25 +17,30 @@
   "direct_relation_coverage": {
     "via_node_candidate_relations": 42774,
     "via_node_resolved_paths": 42677,
-    "via_node_paths_with_exported_edges": 40192,
+    "via_node_paths_with_exported_edges": 40191,
     "via_way_relation_count": 2578
   },
   "source_candidate_transitions": {
-    "count": 45406,
-    "canonical_sha256": "8adbe9ed92bbdc9049d6777f938bfa2e99d579720bb1082a5c91825138ec52ae",
+    "count": 45363,
+    "canonical_sha256": "53c940b06b5a4aaa5eca7be25680c61a71f846b0fc0e8443bc03b67558f7ef08",
     "method": "derived from frozen PBF restriction relations and matched to canonical directed base-edge endpoints"
   },
   "expected_prohibited_transitions": {
-    "count": 45381,
-    "canonical_sha256": "9e17d9241f150b09b3603f4d7c15129e35bea1af81c317c2e2052c31f8d38fa9",
+    "count": 45363,
+    "canonical_sha256": "53c940b06b5a4aaa5eca7be25680c61a71f846b0fc0e8443bc03b67558f7ef08",
     "observed_in_exported_turn_states": 0,
     "proof": "every source-derived candidate was matched against the complete exported allowed turn-state set; only absent candidates are certified as OSRM-enforced prohibited transitions"
+  },
+  "way_aware_non_enforced_transitions": {
+    "count": 0,
+    "canonical_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sample": []
   },
   "osrm_non_enforced_candidate_transitions": {
     "count": 25,
     "relation_count": 23,
     "relation_ids_sha256": "bc35050dd26e64f1b72076ebc40a958bfe52426274424c90d0fef4160fc5cb01",
-    "classification": "source relation candidates present in the exported allowed graph; therefore not claimed as accepted or prohibited by pinned OSRM",
+    "classification": "historical exporter-v1 false positives: endpoint-only from-way projection or only_* relations without a legal designated motorcar turn",
     "aggregate_reason_evidence": {
       "invalid_restrictions": 442,
       "unresolved_before_graph_validation": 2221

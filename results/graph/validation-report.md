@@ -73,6 +73,6 @@
 - One frozen OSRM graph build was used for both clean metadata exports.
 - Graph rebuild reproducibility is not asserted before the dispatch-only clean rebuild workflow succeeds.
 - Stable edge IDs unique, values non-negative, endpoints connected: `PASS`
-- Relation-derived expected prohibited transitions absent: `45381` checked, `0` observed.
+- Relation-derived expected prohibited transitions absent: `45363` checked, `0` observed.
 - Source-derived candidates not enforced by pinned OSRM: `25` transitions, retained with relation-ID provenance and not claimed prohibited.
 - Ferry/private rejection and 150 m snap bound: `PASS`
