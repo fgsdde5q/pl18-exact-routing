@@ -31,27 +31,34 @@ jobs:
         shell: bash
         run: |
           {
+            echo "PBF_CACHE_DIR=${RUNNER_TEMP}/pl18-pbf"
             echo "CACHE_METADATA_ARCHIVE=${RUNNER_TEMP}/pl18-metadata-checkpoint.tar.zst"
-            echo "OLD_METADATA_ARCHIVE=${RUNNER_TEMP}/stage2a-old-metadata.tar.zst"
+            echo "OLD_OSRM_ARCHIVE=${RUNNER_TEMP}/stage2a-old-osrm.tar.zst"
+            echo "OLD_OSRM_ROOT=${RUNNER_TEMP}/stage2a-old-osrm"
             echo "NEW_METADATA_ARCHIVE=${RUNNER_TEMP}/stage2a-new-metadata.tar.zst"
             echo "TURN_VERSION_AUDIT=${RUNNER_TEMP}/stage2a-turn-version-audit"
           } >> "$GITHUB_ENV"
 
-      - name: Restore previous canonical metadata
+      - name: Restore frozen PBF
         uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
         with:
-          path: ${{ env.CACHE_METADATA_ARCHIVE }}
-          key: pl18-metadata-checkpoint-v1-X64-2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28-c1d50ad5833be538d84b3ccc764b1b762258bd27053b84e16d0319acd3cfb66a-e63ee4e6c461f152a6cbc114d441461b37211f4d4c5796da8065256e7c6ca952-3c32a51bf58d12bf30efd0808d0b6ad51d334122-c3867e714dd3a51c272826eea77267876517ed99-09c9526dd1117629af6fad8e827b538ebd7e9391dd41b916b60bfa21d765fbc6
+          path: ${{ env.PBF_CACHE_DIR }}/poland-260725.osm.pbf
+          key: pl18-pbf-v2-Linux-X64-2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28
+          fail-on-cache-miss: true
 
-      - name: Preserve previous metadata archive
-        shell: bash
-        run: mv "$CACHE_METADATA_ARCHIVE" "$OLD_METADATA_ARCHIVE"
+      - name: Restore previous OSRM graph checkpoint
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ env.OLD_OSRM_ARCHIVE }}
+          key: pl18-osrm-checkpoint-v1-X64-2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28-e63ee4e6c461f152a6cbc114d441461b37211f4d4c5796da8065256e7c6ca952-3c32a51bf58d12bf30efd0808d0b6ad51d334122-c3867e714dd3a51c272826eea77267876517ed99-4576bf638b9c7706468ebccf7605c8a99d90df6eebaafa6e23c1b50c896d627d
+          fail-on-cache-miss: true
 
       - name: Restore authoritative canonical metadata
         uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
         with:
           path: ${{ env.CACHE_METADATA_ARCHIVE }}
-          key: pl18-metadata-checkpoint-v1-X64-2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28-jobs1-c1d50ad5833be538d84b3ccc764b1b762258bd27053b84e16d0319acd3cfb66a-e63ee4e6c461f152a6cbc114d441461b37211f4d4c5796da8065256e7c6ca952-3c32a51bf58d12bf30efd0808d0b6ad51d334122-c3867e714dd3a51c272826eea77267876517ed99-09c9526dd1117629af6fad8e827b538ebd7e9391dd41b916b60bfa21d765fbc6
+          key: pl18-metadata-checkpoint-v1-X64-2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28-jobs1-c1d50ad5833be538d84b3ccc764b1b762258bd27053b84e16d0319acd3cfb66a-e63ee4e6c461f152a6cbc114d441461b37211f4d4c5796da8065256e7c6ca952-3c32a51bf58d12bf30efd0808d0b6ad51d334122-c3867e714dd3a51c272826eea77267876517ed99-853a68ac93c3091f68dbc41af53726600db4ca51833e028f2e2e12ea95ac7505
+          fail-on-cache-miss: true
 
       - name: Preserve authoritative metadata archive
         shell: bash
@@ -62,13 +69,24 @@ jobs:
         run: |
           set -Eeuo pipefail
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends zstd
+          sudo apt-get install -y --no-install-recommends \
+            python3-gdal python3-pip python3-pyproj python3-venv ruby zstd
+          python3 -m venv --system-site-packages "${RUNNER_TEMP}/stage2a-python"
+          "${RUNNER_TEMP}/stage2a-python/bin/python" -m pip install \
+            --disable-pip-version-check --only-binary=:all: osmium==4.1.1
           old_root="${TURN_VERSION_AUDIT}/old"
           new_root="${TURN_VERSION_AUDIT}/new"
-          mkdir -p "$old_root" "$new_root"
-          tar --extract --use-compress-program=unzstd --file="$OLD_METADATA_ARCHIVE" --directory="$old_root"
+          mkdir -p "$OLD_OSRM_ROOT" "$old_root" "$new_root" "${TURN_VERSION_AUDIT}/sort-temp"
+          tar --extract --use-compress-program=unzstd --file="$OLD_OSRM_ARCHIVE" --directory="$OLD_OSRM_ROOT"
           tar --extract --use-compress-program=unzstd --file="$NEW_METADATA_ARCHIVE" --directory="$new_root"
-          zstd -dc "$old_root/edge-based-turn-states.tsv.zst" > "${TURN_VERSION_AUDIT}/old.tsv"
+          "${RUNNER_TEMP}/stage2a-python/bin/python" scripts/export_graph_metadata.py \
+            --manifest instance/pl_18_capitals_static_instance_v2.yaml \
+            --pbf "${PBF_CACHE_DIR}/poland-260725.osm.pbf" \
+            --osrm-dump "${OLD_OSRM_ROOT}/dump" \
+            --osrm-extract-log "${OLD_OSRM_ROOT}/extract.log" \
+            --output "$old_root" \
+            --temp "${TURN_VERSION_AUDIT}/sort-temp"
+          mv "$old_root/edge-based-turn-states.tsv" "${TURN_VERSION_AUDIT}/old.tsv"
           zstd -dc "$new_root/edge-based-turn-states.tsv.zst" > "${TURN_VERSION_AUDIT}/new.tsv"
           python3 scripts/compare_turn_state_versions.py \
             --old "${TURN_VERSION_AUDIT}/old.tsv" \
