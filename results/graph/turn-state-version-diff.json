@@ -1,0 +1,175 @@
+{
+  "schema_version": 1,
+  "canonical_schema": {
+    "version": "turn-state-canonical-v1",
+    "fields": [
+      "incoming_stable_edge_id",
+      "outgoing_stable_edge_id",
+      "turn_duration_s",
+      "restriction_status"
+    ],
+    "sorting": [
+      "incoming_stable_edge_id",
+      "outgoing_stable_edge_id"
+    ],
+    "initial_start_states_included": false
+  },
+  "versions": {
+    "previous": {
+      "count": 15654639,
+      "sha256": "6a6a0c8e63380242569548bff93b74931fb5f2d54ca1320c33afceadb5364061"
+    },
+    "current_authoritative": {
+      "count": 15654641,
+      "sha256": "cb613a7ad6019181064b3f09ef36ccabd8a732ad50897f04da49468306e23bad"
+    },
+    "directed_base_edges_sha256_both": "f27449dfa026193831458712bcb97c1c8b07fdf9fe4f9d33c6c2f2f613a4406a"
+  },
+  "set_comparison": {
+    "added_count": 4,
+    "removed_count": 2,
+    "changed_count": 2,
+    "added": [
+      {
+        "incoming_stable_edge_id": "1113411440/0/0/2958930023/10186470794",
+        "outgoing_stable_edge_id": "1113411441/0/0/10186470794/7891279887",
+        "turn_duration_s": 0.0,
+        "restriction_status": "allowed",
+        "restriction_relation_ids": [],
+        "transition_category": "ordinary_turn",
+        "reason": "Pinned OSRM graph built with one extraction thread contains this allowed transition; the earlier unpinned parallel extraction omitted it.",
+        "first_changed_graph_build_commit": "5049c28cc511550be5cbd20c7f49870b989a13d8",
+        "first_changed_certificate_commit": "69d3746"
+      },
+      {
+        "incoming_stable_edge_id": "1113411441/0/0/10186470794/7891279887",
+        "outgoing_stable_edge_id": "1113411441/1/0/7891279887/2958930025",
+        "turn_duration_s": 0.0,
+        "restriction_status": "allowed",
+        "restriction_relation_ids": [],
+        "transition_category": "ordinary_turn",
+        "reason": "Pinned OSRM graph built with one extraction thread contains this allowed transition; the earlier unpinned parallel extraction omitted it.",
+        "first_changed_graph_build_commit": "5049c28cc511550be5cbd20c7f49870b989a13d8",
+        "first_changed_certificate_commit": "69d3746"
+      },
+      {
+        "incoming_stable_edge_id": "1113411441/0/1/7891279887/10186470794",
+        "outgoing_stable_edge_id": "1113411440/0/1/10186470794/2958930023",
+        "turn_duration_s": 0.0,
+        "restriction_status": "allowed",
+        "restriction_relation_ids": [],
+        "transition_category": "ordinary_turn",
+        "reason": "Pinned OSRM graph built with one extraction thread contains this allowed transition; the earlier unpinned parallel extraction omitted it.",
+        "first_changed_graph_build_commit": "5049c28cc511550be5cbd20c7f49870b989a13d8",
+        "first_changed_certificate_commit": "69d3746"
+      },
+      {
+        "incoming_stable_edge_id": "1113411441/1/1/2958930025/7891279887",
+        "outgoing_stable_edge_id": "1113411441/0/1/7891279887/10186470794",
+        "turn_duration_s": 0.0,
+        "restriction_status": "allowed",
+        "restriction_relation_ids": [],
+        "transition_category": "ordinary_turn",
+        "reason": "Pinned OSRM graph built with one extraction thread contains this allowed transition; the earlier unpinned parallel extraction omitted it.",
+        "first_changed_graph_build_commit": "5049c28cc511550be5cbd20c7f49870b989a13d8",
+        "first_changed_certificate_commit": "69d3746"
+      }
+    ],
+    "removed": [
+      {
+        "incoming_stable_edge_id": "179044511/2/0/14010797401/1893818934",
+        "outgoing_stable_edge_id": "179044511/3/0/1893818934/14010797405",
+        "turn_duration_s": 0.0,
+        "restriction_status": "allowed",
+        "restriction_relation_ids": [],
+        "transition_category": "ordinary_turn",
+        "reason": "Record differs after pinning the OSRM graph build to one extraction thread.",
+        "first_changed_graph_build_commit": "5049c28cc511550be5cbd20c7f49870b989a13d8",
+        "first_changed_certificate_commit": "69d3746"
+      },
+      {
+        "incoming_stable_edge_id": "179044511/3/1/14010797405/1893818934",
+        "outgoing_stable_edge_id": "179044511/2/1/1893818934/14010797401",
+        "turn_duration_s": 0.0,
+        "restriction_status": "allowed",
+        "restriction_relation_ids": [],
+        "transition_category": "ordinary_turn",
+        "reason": "Record differs after pinning the OSRM graph build to one extraction thread.",
+        "first_changed_graph_build_commit": "5049c28cc511550be5cbd20c7f49870b989a13d8",
+        "first_changed_certificate_commit": "69d3746"
+      }
+    ],
+    "changed": [
+      {
+        "incoming_stable_edge_id": "179044511/3/0/1893818934/14010797405",
+        "outgoing_stable_edge_id": "991464888/1/0/14010797405/14010797400",
+        "old": {
+          "incoming_stable_edge_id": "179044511/3/0/1893818934/14010797405",
+          "outgoing_stable_edge_id": "991464888/1/0/14010797405/14010797400",
+          "turn_duration_s": 5.1,
+          "restriction_status": "allowed",
+          "restriction_relation_ids": [],
+          "transition_category": "ordinary_turn"
+        },
+        "new": {
+          "incoming_stable_edge_id": "179044511/3/0/1893818934/14010797405",
+          "outgoing_stable_edge_id": "991464888/1/0/14010797405/14010797400",
+          "turn_duration_s": 3.7,
+          "restriction_status": "allowed",
+          "restriction_relation_ids": [],
+          "transition_category": "ordinary_turn"
+        },
+        "restriction_relation_ids": [],
+        "transition_category": "ordinary_turn",
+        "reason": "Record payload changed after pinning the OSRM build to one thread.",
+        "first_changed_graph_build_commit": "5049c28cc511550be5cbd20c7f49870b989a13d8",
+        "first_changed_certificate_commit": "69d3746"
+      },
+      {
+        "incoming_stable_edge_id": "991464888/1/1/14010797400/14010797405",
+        "outgoing_stable_edge_id": "179044511/3/1/14010797405/1893818934",
+        "old": {
+          "incoming_stable_edge_id": "991464888/1/1/14010797400/14010797405",
+          "outgoing_stable_edge_id": "179044511/3/1/14010797405/1893818934",
+          "turn_duration_s": 1.9,
+          "restriction_status": "allowed",
+          "restriction_relation_ids": [],
+          "transition_category": "ordinary_turn"
+        },
+        "new": {
+          "incoming_stable_edge_id": "991464888/1/1/14010797400/14010797405",
+          "outgoing_stable_edge_id": "179044511/3/1/14010797405/1893818934",
+          "turn_duration_s": 1.1,
+          "restriction_status": "allowed",
+          "restriction_relation_ids": [],
+          "transition_category": "ordinary_turn"
+        },
+        "restriction_relation_ids": [],
+        "transition_category": "ordinary_turn",
+        "reason": "Record payload changed after pinning the OSRM build to one thread.",
+        "first_changed_graph_build_commit": "5049c28cc511550be5cbd20c7f49870b989a13d8",
+        "first_changed_certificate_commit": "69d3746"
+      }
+    ]
+  },
+  "cause": {
+    "real_osrm_graph_changed": true,
+    "exporter_fix": false,
+    "canonical_schema_or_sorting_changed": false,
+    "initial_start_states_added": false,
+    "restriction_certificate_logic_changed": false,
+    "non_enforced_restriction_candidates_changed": false,
+    "exact_cause": "The earlier graph was extracted with an unpinned parallel thread count. The current graph pins extract, partition, and customize to one thread. Two independent clean single-thread builds agree and contain two additional allowed edge-based transitions."
+  },
+  "authority": {
+    "count": 15654641,
+    "sha256": "cb613a7ad6019181064b3f09ef36ccabd8a732ad50897f04da49468306e23bad",
+    "basis": "frozen manifest v2, frozen profile, frozen PBF, pinned OSRM commit, JOBS=1",
+    "history_retained": [
+      {
+        "count": 15654639,
+        "sha256": "6a6a0c8e63380242569548bff93b74931fb5f2d54ca1320c33afceadb5364061"
+      }
+    ]
+  }
+}
