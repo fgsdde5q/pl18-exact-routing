@@ -2,6 +2,11 @@ name: Stage 2A turn-state version audit
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - codex/stage-2a-road-graph
+    paths:
+      - .github/workflows/turn-state-version-audit.yml
 
 permissions:
   actions: read
