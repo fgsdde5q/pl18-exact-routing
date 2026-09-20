@@ -1,0 +1,274 @@
+name: Stage 2B reusable build engine
+
+on:
+  workflow_call:
+    inputs:
+      mode:
+        required: true
+        type: string
+
+permissions:
+  actions: write
+  contents: write
+
+jobs:
+  stage2b:
+    name: Build and certify PRG augmented graph
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    env:
+      PBF_SHA256: 2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28
+      OSRM_COMMIT: 3c32a51bf58d12bf30efd0808d0b6ad51d334122
+      VCPKG_COMMIT: c3867e714dd3a51c272826eea77267876517ed99
+      PYOSMIUM_VERSION: 4.1.1
+      SHAPELY_VERSION: 2.1.2
+      PYPROJ_VERSION: 3.7.2
+      JOBS: 1
+      STAGE2B_ARCHIVE_BUDGET_BYTES: 7000000000
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+
+      - name: Set runner paths
+        shell: bash
+        run: |
+          {
+            echo "PBF_CACHE_DIR=${RUNNER_TEMP}/pl18-pbf"
+            echo "METADATA_CHECKPOINT_ROOT=${RUNNER_TEMP}/pl18-metadata-checkpoint"
+            echo "METADATA_CHECKPOINT_ARCHIVE=${RUNNER_TEMP}/pl18-metadata-checkpoint.tar.zst"
+            echo "OSRM_CHECKPOINT_ROOT=${RUNNER_TEMP}/pl18-osrm-checkpoint"
+            echo "OSRM_CHECKPOINT_ARCHIVE=${RUNNER_TEMP}/pl18-osrm-checkpoint.tar.zst"
+            echo "OSRM_SOURCE=${RUNNER_TEMP}/osrm-backend"
+            echo "OSRM_BUILD=${RUNNER_TEMP}/osrm-build"
+            echo "VCPKG_ROOT=${RUNNER_TEMP}/vcpkg"
+            echo "VCPKG_DEFAULT_BINARY_CACHE=${RUNNER_TEMP}/vcpkg-bincache"
+            echo "CCACHE_DIR=${RUNNER_TEMP}/ccache"
+            echo "STAGE2A_WORK=${RUNNER_TEMP}/pl18-stage2a-input-rebuild"
+            echo "STAGE2B_WORK=${RUNNER_TEMP}/pl18-stage2b-${{ inputs.mode }}"
+            echo "STAGE2B_ARTIFACTS=${RUNNER_TEMP}/pl18-stage2b-artifacts"
+            echo "STAGE2B_ARCHIVE=${RUNNER_TEMP}/pl18-stage2b-${{ inputs.mode }}.tar.zst"
+            echo "STAGE2B_PYTHON=${RUNNER_TEMP}/stage2b-python"
+          } >> "$GITHUB_ENV"
+
+      - name: Restore frozen PBF cache
+        id: pbf-cache
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ env.PBF_CACHE_DIR }}/poland-260725.osm.pbf
+          key: pl18-pbf-v2-${{ runner.os }}-${{ runner.arch }}-${{ env.PBF_SHA256 }}
+          restore-keys: |
+            pl18-pbf-v1-${{ env.PBF_SHA256 }}
+
+      - name: Restore or fetch exact frozen PBF
+        shell: bash
+        run: bash scripts/restore_frozen_pbf.sh "${PBF_CACHE_DIR}/poland-260725.osm.pbf"
+
+      - name: Save restored frozen PBF
+        if: steps.pbf-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ env.PBF_CACHE_DIR }}/poland-260725.osm.pbf
+          key: pl18-pbf-v2-${{ runner.os }}-${{ runner.arch }}-${{ env.PBF_SHA256 }}
+
+      - name: Restore immutable Stage 2A metadata
+        id: metadata-cache
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ env.METADATA_CHECKPOINT_ARCHIVE }}
+          key: pl18-metadata-checkpoint-v1-${{ runner.arch }}-${{ env.PBF_SHA256 }}-jobs${{ env.JOBS }}-${{ hashFiles('instance/pl_18_capitals_static_instance_v2.yaml') }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ env.VCPKG_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp', 'scripts/build_osrm_stage2a.sh', 'scripts/export_graph_metadata.py', 'scripts/compare_canonical_builds.py', 'scripts/validate_graph_metadata.py') }}
+
+      - name: Unpack immutable Stage 2A metadata
+        if: steps.metadata-cache.outputs.cache-hit == 'true'
+        shell: bash
+        run: |
+          mkdir -p "$METADATA_CHECKPOINT_ROOT"
+          tar --extract --use-compress-program=unzstd \
+            --file="$METADATA_CHECKPOINT_ARCHIVE" \
+            --directory="$METADATA_CHECKPOINT_ROOT"
+          test -f "${METADATA_CHECKPOINT_ROOT}/.complete"
+          rm -f "$METADATA_CHECKPOINT_ARCHIVE"
+
+      - name: Free hosted-runner disk space
+        if: steps.metadata-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup
+          df -h /
+
+      - name: Install runtime dependencies
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            autoconf automake build-essential ca-certificates ccache cmake \
+            curl git jq libtool ninja-build pkg-config ruby tar unzip zip zstd \
+            python3-gdal python3-pip python3-venv
+          python3 -m venv --system-site-packages "$STAGE2B_PYTHON"
+          "$STAGE2B_PYTHON/bin/python" -m pip install \
+            --disable-pip-version-check --only-binary=:all: \
+            "shapely==${SHAPELY_VERSION}" "pyproj==${PYPROJ_VERSION}"
+          test "$("$STAGE2B_PYTHON/bin/python" -c 'import shapely; print(shapely.geos_version_string)')" = "3.13.1"
+
+      - name: Restore frozen OSRM checkpoint
+        id: osrm-checkpoint
+        if: steps.metadata-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ env.OSRM_CHECKPOINT_ARCHIVE }}
+          key: pl18-osrm-checkpoint-v1-${{ runner.arch }}-${{ env.PBF_SHA256 }}-jobs${{ env.JOBS }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ env.VCPKG_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp', 'scripts/build_osrm_stage2a.sh') }}
+
+      - name: Unpack frozen OSRM checkpoint
+        if: steps.metadata-cache.outputs.cache-hit != 'true' && steps.osrm-checkpoint.outputs.cache-hit == 'true'
+        shell: bash
+        run: |
+          mkdir -p "$OSRM_CHECKPOINT_ROOT"
+          tar --extract --use-compress-program=unzstd \
+            --file="$OSRM_CHECKPOINT_ARCHIVE" \
+            --directory="$OSRM_CHECKPOINT_ROOT"
+          test -f "${OSRM_CHECKPOINT_ROOT}/.complete"
+          rm -f "$OSRM_CHECKPOINT_ARCHIVE"
+
+      - name: Restore pinned vcpkg cache
+        id: vcpkg-cache
+        if: steps.metadata-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
+          key: vcpkg-stage2a-v2-${{ runner.os }}-${{ runner.arch }}-${{ env.VCPKG_COMMIT }}-${{ env.OSRM_COMMIT }}
+
+      - name: Restore compiler cache
+        id: ccache
+        if: steps.metadata-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-stage2a-v1-${{ runner.os }}-${{ runner.arch }}-${{ env.OSRM_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp') }}
+
+      - name: Prepare pinned Stage 2A toolchain
+        if: steps.metadata-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          "$STAGE2B_PYTHON/bin/python" -m pip install \
+            --disable-pip-version-check --only-binary=:all: "osmium==${PYOSMIUM_VERSION}"
+          git clone --filter=blob:none https://github.com/Project-OSRM/osrm-backend.git "$OSRM_SOURCE"
+          git -C "$OSRM_SOURCE" checkout "$OSRM_COMMIT"
+          git clone --filter=blob:none https://github.com/microsoft/vcpkg.git "$VCPKG_ROOT"
+          git -C "$VCPKG_ROOT" checkout "$VCPKG_COMMIT"
+          "$VCPKG_ROOT/bootstrap-vcpkg.sh" -disableMetrics
+          mkdir -p "$VCPKG_DEFAULT_BINARY_CACHE" "$CCACHE_DIR"
+          ccache --set-config "cache_dir=${CCACHE_DIR}"
+          ccache --set-config max_size=750M
+          ccache --set-config compression=true
+          bash scripts/build_osrm_stage2a.sh "$OSRM_SOURCE" "$OSRM_BUILD"
+
+      - name: Rebuild immutable Stage 2A metadata if absent
+        if: steps.metadata-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$STAGE2A_WORK/cache" "$STAGE2A_WORK/results"
+          PATH="$STAGE2B_PYTHON/bin:$PATH" bash scripts/graph_stage.sh \
+            "${PBF_CACHE_DIR}/poland-260725.osm.pbf" \
+            "$OSRM_SOURCE" "$OSRM_BUILD" "$STAGE2A_WORK/work" \
+            "$STAGE2A_WORK/cache" "$STAGE2A_WORK/results"
+
+      - name: Pack rebuilt Stage 2A metadata
+        if: steps.metadata-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          tar --create --use-compress-program="zstd -T0 -6" \
+            --file="$METADATA_CHECKPOINT_ARCHIVE" \
+            --directory="$METADATA_CHECKPOINT_ROOT" .
+          test "$(stat --format='%s' "$METADATA_CHECKPOINT_ARCHIVE")" -le 950000000
+
+      - name: Save rebuilt Stage 2A metadata
+        if: steps.metadata-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ env.METADATA_CHECKPOINT_ARCHIVE }}
+          key: pl18-metadata-checkpoint-v1-${{ runner.arch }}-${{ env.PBF_SHA256 }}-jobs${{ env.JOBS }}-${{ hashFiles('instance/pl_18_capitals_static_instance_v2.yaml') }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ env.VCPKG_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp', 'scripts/build_osrm_stage2a.sh', 'scripts/export_graph_metadata.py', 'scripts/compare_canonical_builds.py', 'scripts/validate_graph_metadata.py') }}
+
+      - name: Run Stage 2B contract and fixture tests
+        shell: bash
+        run: |
+          PYTHONPATH=scripts "$STAGE2B_PYTHON/bin/python" scripts/test_stage2b_core.py
+          PYTHONPATH=scripts "$STAGE2B_PYTHON/bin/python" scripts/test_stage2b_contract.py
+          PYTHONPATH=scripts "$STAGE2B_PYTHON/bin/python" scripts/test_stage2b_integration.py
+          "$STAGE2B_PYTHON/bin/python" scripts/test_stage2b_comparison.py
+
+      - name: Build and compare two independent Stage 2B exports
+        shell: bash
+        run: |
+          bash scripts/run_stage2b_audit.sh \
+            "$METADATA_CHECKPOINT_ROOT" "$STAGE2B_WORK" \
+            "${GITHUB_WORKSPACE}/results/graph-prg" "$STAGE2B_ARTIFACTS" \
+            "${{ inputs.mode }}" "$STAGE2B_PYTHON/bin/python"
+
+      - name: Pack canonical Stage 2B artifacts
+        shell: bash
+        run: |
+          tar --create --use-compress-program="zstd -T0 -6" \
+            --file="$STAGE2B_ARCHIVE" --directory="$STAGE2B_ARTIFACTS" .
+          "$STAGE2B_PYTHON/bin/python" scripts/apply_stage2b_cache_certificate.py \
+            --results results/graph-prg --archive "$STAGE2B_ARCHIVE" \
+            --budget-bytes "$STAGE2B_ARCHIVE_BUDGET_BYTES"
+
+      - name: Upload canonical Stage 2B graph
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: stage2b-canonical-${{ inputs.mode }}-${{ github.run_id }}
+          path: ${{ env.STAGE2B_ARCHIVE }}
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+      - name: Upload compact Stage 2B certificates
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: stage2b-certificates-${{ inputs.mode }}-${{ github.run_id }}
+          path: results/graph-prg/
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 9
+
+      - name: Commit compact Stage 2B certificates
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/graph-prg
+          if ! git diff --cached --quiet; then
+            if [[ "${{ inputs.mode }}" == rebuild ]]; then
+              message="Certify Stage 2B clean rebuild"
+            else
+              message="Add Stage 2B graph certificates"
+            fi
+            git commit -m "$message"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
+
+      - name: Publish validation report
+        if: always()
+        shell: bash
+        run: |
+          if [[ -f results/graph-prg/stage2b-validation-report.md ]]; then
+            cat results/graph-prg/stage2b-validation-report.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload mismatch diagnostics
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: stage2b-failure-${{ inputs.mode }}-${{ github.run_attempt }}
+          path: |
+            results/graph-prg/
+            ${{ env.STAGE2B_WORK }}/first-clean-build/results/
+            ${{ env.STAGE2B_WORK }}/second-clean-build/results/
+          if-no-files-found: ignore
+          retention-days: 7

@@ -1,0 +1,28 @@
+name: Stage 2B PRG road graph
+
+on:
+  push:
+    branches:
+      - codex/stage-2b-prg-road-graph
+    paths:
+      - ".github/workflows/stage2b-*.yml"
+      - "scripts/*stage2b*"
+      - "scripts/restore_frozen_pbf.sh"
+      - "schemas/stage2b-*.json"
+      - "schemas/stage2b-artifact-layout.json"
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: write
+
+concurrency:
+  group: stage2b-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    uses: ./.github/workflows/stage2b-engine.yml
+    with:
+      mode: export
+    secrets: inherit

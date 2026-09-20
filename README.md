@@ -14,6 +14,30 @@ Stage 2A uses separate semantic caches for the frozen PBF, pinned vcpkg binaries
 
 No PRG geometry refresh, city-region intersection, M-boundary construction, or route optimization is performed in Stage 2A.
 
+## Stage 2B
+
+Stage 2B intersects every authoritative Stage 2A directed edge with all 18
+official PRG city geometries under the frozen `M-boundary`, `M-300`, and
+`M-500` visit models. `A`, `B`, and `C` are report-only aliases; canonical
+model IDs never change. The canonical subdivision is the union of all model
+boundary events and every child edge carries three separate city bitmasks.
+
+`scripts/run_stage2b_audit.sh` performs two independent streaming builds from
+the immutable Stage 2A metadata export. Large split-edge, split-point, gate,
+geometry, and turn products are uploaded as Actions artifacts and are not
+committed. Compact contracts, hashes, counts, and preservation certificates
+are written under `results/graph-prg/`.
+
+The ordinary `Stage 2B PRG road graph` workflow certifies export
+reproducibility. The dispatch-only `Stage 2B clean rebuild audit` starts from
+empty Stage 2B work directories and certifies rebuild reproducibility. Both
+may restore only immutable Stage 2A metadata and dependencies. They never
+restore Stage 2B split products or metadata checkpoints. If the frozen PBF
+cache has expired, `scripts/restore_frozen_pbf.sh` downloads the same pinned
+file and verifies its size, MD5, and SHA-256 before any Stage 2A rebuild.
+
+No Stage 3 route search, upper-bound search, or solver is run by Stage 2B.
+
 ## Stage 0: preflight
 
 The preflight workflow verifies the pinned Poland OSM PBF and records the
