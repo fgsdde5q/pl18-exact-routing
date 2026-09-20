@@ -18,7 +18,7 @@ readonly MANIFEST="${REPOSITORY_ROOT}/instance/pl_18_capitals_static_instance_v3
 readonly PROFILE="${REPOSITORY_ROOT}/profiles/pl18-car.lua"
 readonly EXPECTED_MANIFEST_SHA256="ee6964ee4c95f3f574a6e1234cb63e91999e64d53a5e5f7c7066114d4c067b9c"
 readonly EXPECTED_PBF_SHA256="f28f493c6cc280da1128b03be21ae2eb1973f443c14235dea36088bcbd3e83f3"
-readonly EXPECTED_PROFILE_SHA256="0caa3c72a43df86fc5f5df8fa039b1dce9e9584aed120857a4df8624c23f2839"
+readonly EXPECTED_PROFILE_SHA256="0b2dc359c4618b215efb512923a02471a2df208024e5d4d9f29e4a86a67f1001"
 readonly EXPECTED_OSRM_COMMIT="3c32a51bf58d12bf30efd0808d0b6ad51d334122"
 readonly JOBS="${JOBS:-1}"
 readonly LUA_PATH_VALUE="${OSRM_SOURCE}/profiles/?.lua;${OSRM_SOURCE}/profiles/?/init.lua;;"
@@ -76,7 +76,7 @@ Path(sys.argv[3]).write_text(
             "ready_graph_cache_restored": False,
             "frozen_pbf_sha256": "f28f493c6cc280da1128b03be21ae2eb1973f443c14235dea36088bcbd3e83f3",
             "manifest_v3_sha256": "ee6964ee4c95f3f574a6e1234cb63e91999e64d53a5e5f7c7066114d4c067b9c",
-            "profile_sha256": "0caa3c72a43df86fc5f5df8fa039b1dce9e9584aed120857a4df8624c23f2839",
+            "profile_sha256": "0b2dc359c4618b215efb512923a02471a2df208024e5d4d9f29e4a86a67f1001",
             "osrm_commit": "3c32a51bf58d12bf30efd0808d0b6ad51d334122",
         },
         indent=2,
