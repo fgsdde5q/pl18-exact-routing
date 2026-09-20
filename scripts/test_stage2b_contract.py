@@ -15,7 +15,7 @@ class Stage2BContractTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         result = subprocess.run(
-            ["ruby", str(ROOT / "scripts/manifest_json.rb"), str(ROOT / "instance/pl_18_capitals_static_instance_v2.yaml")],
+            ["ruby", str(ROOT / "scripts/manifest_json.rb"), str(ROOT / "instance/pl_18_capitals_static_instance_v3.yaml")],
             check=True,
             capture_output=True,
             text=True,

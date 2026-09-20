@@ -7,7 +7,7 @@ on:
     paths:
       - ".github/workflows/road-graph-stage.yml"
       - "instance/CURRENT"
-      - "instance/pl_18_capitals_static_instance_v2.yaml"
+      - "instance/pl_18_capitals_static_instance_v3.yaml"
       - "profiles/pl18-car.lua"
       - "scripts/certify_graph_stage.py"
       - "scripts/compare_canonical_builds.py"
@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 360
     env:
-      PBF_SHA256: 2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28
+      PBF_SHA256: f28f493c6cc280da1128b03be21ae2eb1973f443c14235dea36088bcbd3e83f3
       OSRM_COMMIT: 3c32a51bf58d12bf30efd0808d0b6ad51d334122
       VCPKG_COMMIT: c3867e714dd3a51c272826eea77267876517ed99
       PYOSMIUM_VERSION: 4.1.1
@@ -80,21 +80,32 @@ jobs:
 
       - name: Restore frozen PBF cache
         id: pbf-cache
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
         with:
-          path: ${{ env.PBF_CACHE_DIR }}/poland-260725.osm.pbf
+          path: ${{ env.PBF_CACHE_DIR }}/poland-260901.osm.pbf
           key: pl18-pbf-v2-${{ runner.os }}-${{ runner.arch }}-${{ env.PBF_SHA256 }}
           restore-keys: |
             pl18-pbf-v1-${{ env.PBF_SHA256 }}
 
-      - name: Require cached PBF and verify frozen bytes
+      - name: Restore or fetch exact frozen PBF
+        shell: bash
+        run: bash scripts/restore_frozen_pbf.sh "${PBF_CACHE_DIR}/poland-260901.osm.pbf"
+
+      - name: Save restored frozen PBF
+        if: steps.pbf-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ env.PBF_CACHE_DIR }}/poland-260901.osm.pbf
+          key: pl18-pbf-v2-${{ runner.os }}-${{ runner.arch }}-${{ env.PBF_SHA256 }}
+
+      - name: Verify frozen PBF bytes
         shell: bash
         run: |
           set -Eeuo pipefail
-          pbf="${PBF_CACHE_DIR}/poland-260725.osm.pbf"
+          pbf="${PBF_CACHE_DIR}/poland-260901.osm.pbf"
           test -f "$pbf"
-          test "$(stat --format='%s' "$pbf")" = "2078786520"
-          test "$(md5sum "$pbf" | awk '{print $1}')" = "eb188df5acafd002244ed84bb7b650ab"
+          test "$(stat --format='%s' "$pbf")" = "2091448485"
+          test "$(md5sum "$pbf" | awk '{print $1}')" = "0db66b478a3ed7c6f52d182e13c6fa27"
           test "$(sha256sum "$pbf" | awk '{print $1}')" = "$PBF_SHA256"
 
       - name: Free hosted-runner disk space
@@ -109,7 +120,7 @@ jobs:
         uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
         with:
           path: ${{ env.CERTIFIED_ARCHIVE }}
-          key: pl18-certified-v2-${{ runner.arch }}-${{ env.PBF_SHA256 }}-jobs${{ env.JOBS }}-${{ hashFiles('instance/pl_18_capitals_static_instance_v2.yaml', 'results/prg/prg-18-computational.gpkg') }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ env.VCPKG_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp', 'scripts/build_osrm_stage2a.sh', 'scripts/export_graph_metadata.py', 'scripts/compare_canonical_builds.py', 'scripts/validate_graph_metadata.py', 'scripts/certify_graph_stage.py', 'scripts/graph_stage.sh') }}
+          key: pl18-certified-v2-${{ runner.arch }}-${{ env.PBF_SHA256 }}-jobs${{ env.JOBS }}-${{ hashFiles('instance/pl_18_capitals_static_instance_v3.yaml', 'results/prg/prg-18-computational.gpkg') }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ env.VCPKG_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp', 'scripts/build_osrm_stage2a.sh', 'scripts/export_graph_metadata.py', 'scripts/compare_canonical_builds.py', 'scripts/validate_graph_metadata.py', 'scripts/certify_graph_stage.py', 'scripts/graph_stage.sh') }}
 
       - name: Restore frozen OSRM checkpoint
         id: osrm-checkpoint
@@ -137,7 +148,7 @@ jobs:
         uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
         with:
           path: ${{ env.METADATA_CHECKPOINT_ARCHIVE }}
-          key: pl18-metadata-checkpoint-v1-${{ runner.arch }}-${{ env.PBF_SHA256 }}-jobs${{ env.JOBS }}-${{ hashFiles('instance/pl_18_capitals_static_instance_v2.yaml') }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ env.VCPKG_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp', 'scripts/build_osrm_stage2a.sh', 'scripts/export_graph_metadata.py', 'scripts/compare_canonical_builds.py', 'scripts/validate_graph_metadata.py') }}
+          key: pl18-metadata-checkpoint-v1-${{ runner.arch }}-${{ env.PBF_SHA256 }}-jobs${{ env.JOBS }}-${{ hashFiles('instance/pl_18_capitals_static_instance_v3.yaml') }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ env.VCPKG_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp', 'scripts/build_osrm_stage2a.sh', 'scripts/export_graph_metadata.py', 'scripts/compare_canonical_builds.py', 'scripts/validate_graph_metadata.py') }}
 
       - name: Unpack canonical metadata checkpoint
         if: steps.certified-cache.outputs.cache-hit != 'true' && steps.metadata-checkpoint.outputs.cache-hit == 'true'
@@ -276,7 +287,7 @@ jobs:
           set -Eeuo pipefail
           mkdir -p "$GRAPH_WORK" "$CERTIFIED_CACHE" results/graph
           bash scripts/graph_stage.sh \
-            "${PBF_CACHE_DIR}/poland-260725.osm.pbf" \
+            "${PBF_CACHE_DIR}/poland-260901.osm.pbf" \
             "$OSRM_SOURCE" \
             "$OSRM_BUILD" \
             "$GRAPH_WORK" \
@@ -352,7 +363,7 @@ jobs:
         uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25
         with:
           path: ${{ env.METADATA_CHECKPOINT_ARCHIVE }}
-          key: pl18-metadata-checkpoint-v1-${{ runner.arch }}-${{ env.PBF_SHA256 }}-jobs${{ env.JOBS }}-${{ hashFiles('instance/pl_18_capitals_static_instance_v2.yaml') }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ env.VCPKG_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp', 'scripts/build_osrm_stage2a.sh', 'scripts/export_graph_metadata.py', 'scripts/compare_canonical_builds.py', 'scripts/validate_graph_metadata.py') }}
+          key: pl18-metadata-checkpoint-v1-${{ runner.arch }}-${{ env.PBF_SHA256 }}-jobs${{ env.JOBS }}-${{ hashFiles('instance/pl_18_capitals_static_instance_v3.yaml') }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ env.VCPKG_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp', 'scripts/build_osrm_stage2a.sh', 'scripts/export_graph_metadata.py', 'scripts/compare_canonical_builds.py', 'scripts/validate_graph_metadata.py') }}
 
       - name: Restore compact certificates from certified cache
         if: steps.certified-cache.outputs.cache-hit == 'true'
@@ -395,7 +406,7 @@ jobs:
         uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25
         with:
           path: ${{ env.CERTIFIED_ARCHIVE }}
-          key: pl18-certified-v2-${{ runner.arch }}-${{ env.PBF_SHA256 }}-jobs${{ env.JOBS }}-${{ hashFiles('instance/pl_18_capitals_static_instance_v2.yaml', 'results/prg/prg-18-computational.gpkg') }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ env.VCPKG_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp', 'scripts/build_osrm_stage2a.sh', 'scripts/export_graph_metadata.py', 'scripts/compare_canonical_builds.py', 'scripts/validate_graph_metadata.py', 'scripts/certify_graph_stage.py', 'scripts/graph_stage.sh') }}
+          key: pl18-certified-v2-${{ runner.arch }}-${{ env.PBF_SHA256 }}-jobs${{ env.JOBS }}-${{ hashFiles('instance/pl_18_capitals_static_instance_v3.yaml', 'results/prg/prg-18-computational.gpkg') }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ env.OSRM_COMMIT }}-${{ env.VCPKG_COMMIT }}-${{ hashFiles('tools/osrm_graph_dump.cpp', 'scripts/build_osrm_stage2a.sh', 'scripts/export_graph_metadata.py', 'scripts/compare_canonical_builds.py', 'scripts/validate_graph_metadata.py', 'scripts/certify_graph_stage.py', 'scripts/graph_stage.sh') }}
 
       - name: Publish validation summary
         if: always()

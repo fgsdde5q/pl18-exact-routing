@@ -13,7 +13,7 @@ REBUILD_WORKFLOW = (
     REPOSITORY_ROOT / ".github/workflows/road-graph-rebuild-check.yml"
 )
 REBUILD_STAGE = REPOSITORY_ROOT / "scripts/run_graph_rebuild_audit.sh"
-PBF_CACHE_ARCHIVE_BYTES = 2_078_836_070
+PBF_CACHE_ARCHIVE_BYTES = 2_091_448_485
 DEFAULT_REPOSITORY_CACHE_BYTES = 10_000_000_000
 CCACHE_MAX_BYTES = 750_000_000
 
@@ -76,7 +76,7 @@ class Stage2ACacheContractTests(unittest.TestCase):
         ):
             self.assertIn(semantic_input, key)
         for later_phase_input in (
-            "pl_18_capitals_static_instance_v2.yaml",
+            "pl_18_capitals_static_instance_v3.yaml",
             "scripts/export_graph_metadata.py",
             "scripts/certify_graph_stage.py",
             "scripts/graph_stage.sh",
@@ -91,7 +91,7 @@ class Stage2ACacheContractTests(unittest.TestCase):
         self.assertNotIn("github.sha", key)
         for semantic_input in (
             "PBF_SHA256",
-            "pl_18_capitals_static_instance_v2.yaml",
+            "pl_18_capitals_static_instance_v3.yaml",
             "profiles/pl18-car.lua",
             "OSRM_COMMIT",
             "VCPKG_COMMIT",
@@ -126,7 +126,7 @@ class Stage2ACacheContractTests(unittest.TestCase):
         key = key_lines[0]
         for semantic_input in (
             "PBF_SHA256",
-            "pl_18_capitals_static_instance_v2.yaml",
+            "pl_18_capitals_static_instance_v3.yaml",
             "prg-18-computational.gpkg",
             "profiles/pl18-car.lua",
             "OSRM_COMMIT",

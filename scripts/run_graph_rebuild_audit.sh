@@ -14,10 +14,10 @@ readonly WORK_ROOT="$4"
 readonly RESULTS_ROOT="$5"
 REPOSITORY_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly REPOSITORY_ROOT
-readonly MANIFEST="${REPOSITORY_ROOT}/instance/pl_18_capitals_static_instance_v2.yaml"
+readonly MANIFEST="${REPOSITORY_ROOT}/instance/pl_18_capitals_static_instance_v3.yaml"
 readonly PROFILE="${REPOSITORY_ROOT}/profiles/pl18-car.lua"
-readonly EXPECTED_MANIFEST_SHA256="f47d9a805defdb7e28005048d7ad9a7a76f666e75d508422a7edd239ce60f7ce"
-readonly EXPECTED_PBF_SHA256="2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28"
+readonly EXPECTED_MANIFEST_SHA256="ee6964ee4c95f3f574a6e1234cb63e91999e64d53a5e5f7c7066114d4c067b9c"
+readonly EXPECTED_PBF_SHA256="f28f493c6cc280da1128b03be21ae2eb1973f443c14235dea36088bcbd3e83f3"
 readonly EXPECTED_PROFILE_SHA256="0caa3c72a43df86fc5f5df8fa039b1dce9e9584aed120857a4df8624c23f2839"
 readonly EXPECTED_OSRM_COMMIT="3c32a51bf58d12bf30efd0808d0b6ad51d334122"
 readonly JOBS="${JOBS:-1}"
@@ -74,8 +74,8 @@ Path(sys.argv[3]).write_text(
             "build_id": sys.argv[1],
             "clean_graph_root": str(Path(sys.argv[2]).resolve()),
             "ready_graph_cache_restored": False,
-            "frozen_pbf_sha256": "2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28",
-            "manifest_v2_sha256": "f47d9a805defdb7e28005048d7ad9a7a76f666e75d508422a7edd239ce60f7ce",
+            "frozen_pbf_sha256": "f28f493c6cc280da1128b03be21ae2eb1973f443c14235dea36088bcbd3e83f3",
+            "manifest_v3_sha256": "ee6964ee4c95f3f574a6e1234cb63e91999e64d53a5e5f7c7066114d4c067b9c",
             "profile_sha256": "0caa3c72a43df86fc5f5df8fa039b1dce9e9584aed120857a4df8624c23f2839",
             "osrm_commit": "3c32a51bf58d12bf30efd0808d0b6ad51d334122",
         },

@@ -8,10 +8,10 @@ if (( $# != 1 )); then
 fi
 
 readonly OUTPUT_PATH="$1"
-readonly URL="https://download.geofabrik.de/europe/poland-260725.osm.pbf"
-readonly SIZE="2078786520"
-readonly MD5="eb188df5acafd002244ed84bb7b650ab"
-readonly SHA256="2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28"
+readonly URL="https://github.com/fgsdde5q/pl18-exact-routing/releases/download/frozen-osm-2026-09-01/poland-260901.osm.pbf"
+readonly SIZE="2091448485"
+readonly MD5="0db66b478a3ed7c6f52d182e13c6fa27"
+readonly SHA256="f28f493c6cc280da1128b03be21ae2eb1973f443c14235dea36088bcbd3e83f3"
 
 verify() {
   test -f "$OUTPUT_PATH"

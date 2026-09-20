@@ -9,7 +9,8 @@ from pathlib import Path
 
 EXPECTED_V1_SHA256 = "9b3508725f5e19a843235b931d8e37d7bd4fcba976bf6a71a905b6cb0630a3b4"
 EXPECTED_V2_SHA256 = "f47d9a805defdb7e28005048d7ad9a7a76f666e75d508422a7edd239ce60f7ce"
-EXPECTED_OSM_SHA256 = "2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28"
+EXPECTED_CURRENT_SHA256 = "ee6964ee4c95f3f574a6e1234cb63e91999e64d53a5e5f7c7066114d4c067b9c"
+EXPECTED_OSM_SHA256 = "f28f493c6cc280da1128b03be21ae2eb1973f443c14235dea36088bcbd3e83f3"
 EXPECTED_PRG_RAW_SHA256 = "adf261aae31257dd24843b6f6c0e694efb40041aae3913b1c27aa4801866974c"
 EXPECTED_PRG_COMPRESSED_SHA256 = "91bdab09b9fe77ea02add8cfdf88a41c03ae84587ff8fdfc1808fb340fa41684"
 EXPECTED_START = ("20.986450", "52.268850")
@@ -91,7 +92,7 @@ class Stage2AManifestContractTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.repository_root = Path(__file__).resolve().parent.parent
         cls.v1_path = cls.repository_root / "instance/pl_18_capitals_static_instance_v1.yaml"
-        cls.v2_path = cls.repository_root / "instance/pl_18_capitals_static_instance_v2.yaml"
+        cls.v2_path = cls.repository_root / "instance/pl_18_capitals_static_instance_v3.yaml"
         manifest_json = subprocess.run(
             [
                 "ruby",
@@ -113,11 +114,11 @@ class Stage2AManifestContractTests(unittest.TestCase):
         pointer = (
             self.repository_root / "instance/CURRENT"
         ).read_text(encoding="utf-8")
-        self.assertEqual(pointer, "pl_18_capitals_static_instance_v2.yaml\n")
+        self.assertEqual(pointer, "pl_18_capitals_static_instance_v3.yaml\n")
         self.assertEqual(sha256_file(self.v1_path), EXPECTED_V1_SHA256)
-        self.assertEqual(sha256_file(self.v2_path), EXPECTED_V2_SHA256)
+        self.assertEqual(sha256_file(self.v2_path), EXPECTED_CURRENT_SHA256)
         self.assertEqual(
-            self.v2["manifest"]["supersedes"]["sha256"], EXPECTED_V1_SHA256
+            self.v2["manifest"]["supersedes"]["sha256"], EXPECTED_V2_SHA256
         )
 
     def test_stage1_city_identity_and_order_are_unchanged(self) -> None:

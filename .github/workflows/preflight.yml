@@ -37,8 +37,8 @@ jobs:
       - name: Restore PBF cache
         uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25
         with:
-          path: ${{ runner.temp }}/pl18-pbf/poland-260725.osm.pbf
-          key: pl18-pbf-v1-2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28
+          path: ${{ runner.temp }}/pl18-pbf/poland-260901.osm.pbf
+          key: pl18-pbf-v1-f28f493c6cc280da1128b03be21ae2eb1973f443c14235dea36088bcbd3e83f3
 
       - name: Run preflight
         shell: bash

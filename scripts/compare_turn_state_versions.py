@@ -208,7 +208,7 @@ def main() -> int:
             "count": NEW_COUNT,
             "sha256": NEW_SHA256,
             "basis": (
-                "frozen manifest v2, frozen profile, frozen PBF, pinned OSRM commit, JOBS=1"
+                "frozen manifest v3, frozen profile, frozen PBF, pinned OSRM commit, JOBS=1"
             ),
             "history_retained": [expected["old"]],
         },

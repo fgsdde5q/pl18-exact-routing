@@ -2,12 +2,10 @@
 
 set -Eeuo pipefail
 
-readonly PBF_FILENAME="poland-260725.osm.pbf"
-readonly PBF_URL="https://download.geofabrik.de/europe/${PBF_FILENAME}"
-readonly PBF_MD5_URL="${PBF_URL}.md5"
-readonly EXPECTED_PBF_SIZE_BYTES="2078786520"
-readonly EXPECTED_PBF_MD5="eb188df5acafd002244ed84bb7b650ab"
-readonly EXPECTED_PBF_SHA256="2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28"
+readonly PBF_FILENAME="poland-260901.osm.pbf"
+readonly EXPECTED_PBF_SIZE_BYTES="2091448485"
+readonly EXPECTED_PBF_MD5="0db66b478a3ed7c6f52d182e13c6fa27"
+readonly EXPECTED_PBF_SHA256="f28f493c6cc280da1128b03be21ae2eb1973f443c14235dea36088bcbd3e83f3"
 readonly PRG_WFS_URL="https://mapy.geoportal.gov.pl/wss/service/PZGIK/PRG/WFS/AdministrativeBoundaries"
 
 if (( $# > 1 )); then
@@ -31,7 +29,6 @@ else
   PBF_PATH="${WORK_DIR}/${PBF_FILENAME}"
 fi
 readonly PBF_PATH
-readonly MD5_PATH="${WORK_DIR}/${PBF_FILENAME}.md5"
 readonly CAPABILITIES_PATH="${OUTPUT_DIR}/prg-capabilities.xml"
 readonly LAYERS_PATH="${OUTPUT_DIR}/prg-layers.txt"
 readonly SHA256SUMS_PATH="${OUTPUT_DIR}/SHA256SUMS"
@@ -40,52 +37,13 @@ readonly SUMMARY_PATH="${OUTPUT_DIR}/preflight-summary.md"
 
 mkdir -p -- "$OUTPUT_DIR"
 
-echo "Fetching the published Geofabrik MD5..."
-curl \
-  --fail \
-  --location \
-  --silent \
-  --show-error \
-  --retry 5 \
-  --retry-all-errors \
-  --retry-delay 5 \
-  --connect-timeout 30 \
-  --output "$MD5_PATH" \
-  "$PBF_MD5_URL"
-
-read -r published_md5 published_filename < "$MD5_PATH"
-published_md5="${published_md5,,}"
-if [[ ! "$published_md5" =~ ^[0-9a-f]{32}$ ]]; then
-  echo "Published MD5 is malformed: ${published_md5}" >&2
-  exit 1
-fi
-if [[ "$published_filename" != "$PBF_FILENAME" ]]; then
-  echo "Published MD5 names an unexpected file: ${published_filename}" >&2
-  exit 1
-fi
-if [[ "$published_md5" != "$EXPECTED_PBF_MD5" ]]; then
-  echo "Published MD5 changed: expected ${EXPECTED_PBF_MD5}, got ${published_md5}" >&2
-  exit 1
-fi
-
 if [[ -f "$PBF_PATH" ]]; then
   pbf_cache_status="hit"
   echo "Using cached ${PBF_FILENAME}..."
 else
   pbf_cache_status="miss"
-  echo "Downloading ${PBF_FILENAME} into runner temporary storage..."
-  curl \
-    --fail \
-    --location \
-    --silent \
-    --show-error \
-    --retry 5 \
-    --retry-all-errors \
-    --retry-delay 5 \
-    --connect-timeout 30 \
-    --continue-at - \
-    --output "$PBF_PATH" \
-    "$PBF_URL"
+  echo "Restoring ${PBF_FILENAME} into runner temporary storage..."
+  bash "${SCRIPT_DIR}/restore_frozen_pbf.sh" "$PBF_PATH"
 fi
 readonly pbf_cache_status
 
@@ -99,8 +57,8 @@ fi
 echo "Checking the PBF against the published MD5..."
 pbf_md5="$(md5sum "$PBF_PATH" | awk '{print $1}')"
 readonly pbf_md5
-if [[ "$pbf_md5" != "$published_md5" ]]; then
-  echo "PBF MD5 mismatch: expected ${published_md5}, got ${pbf_md5}" >&2
+if [[ "$pbf_md5" != "$EXPECTED_PBF_MD5" ]]; then
+  echo "PBF MD5 mismatch: expected ${EXPECTED_PBF_MD5}, got ${pbf_md5}" >&2
   exit 1
 fi
 
@@ -161,10 +119,10 @@ readonly capabilities_sha256
   printf -- "- PBF cache: \`%s\`\n" "$pbf_cache_status"
   printf -- "- OSM input: \`%s\`\n" "$PBF_FILENAME"
   printf -- "- Verified size: \`%s\` bytes\n" "$actual_size_bytes"
-  printf -- "- Verified published MD5: \`%s\`\n" "$published_md5"
+  printf -- "- Verified MD5: \`%s\`\n" "$pbf_md5"
   printf -- "- Computed PBF SHA-256: \`%s\`\n" "$pbf_sha256"
   printf -- "- PRG WFS FeatureType count: \`%s\`\n" "$layer_count"
-  printf -- '- PBF artifact policy: omitted; persistence is handled only by GitHub Actions cache.\n'
+  printf -- '- PBF artifact policy: omitted; durable persistence is the repository release asset.\n'
   printf '\nNo optimizer or solver was executed during this stage.\n'
 } > "$SUMMARY_PATH"
 

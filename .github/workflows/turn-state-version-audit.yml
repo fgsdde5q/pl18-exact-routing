@@ -47,15 +47,15 @@ jobs:
       - name: Restore frozen PBF
         uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
         with:
-          path: ${{ env.PBF_CACHE_DIR }}/poland-260725.osm.pbf
-          key: pl18-pbf-v2-Linux-X64-2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28
+          path: ${{ env.PBF_CACHE_DIR }}/poland-260901.osm.pbf
+          key: pl18-pbf-v2-Linux-X64-f28f493c6cc280da1128b03be21ae2eb1973f443c14235dea36088bcbd3e83f3
           fail-on-cache-miss: true
 
       - name: Restore authoritative canonical metadata
         uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
         with:
           path: ${{ env.CACHE_METADATA_ARCHIVE }}
-          key: pl18-metadata-checkpoint-v1-X64-2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28-jobs1-c1d50ad5833be538d84b3ccc764b1b762258bd27053b84e16d0319acd3cfb66a-e63ee4e6c461f152a6cbc114d441461b37211f4d4c5796da8065256e7c6ca952-3c32a51bf58d12bf30efd0808d0b6ad51d334122-c3867e714dd3a51c272826eea77267876517ed99-853a68ac93c3091f68dbc41af53726600db4ca51833e028f2e2e12ea95ac7505
+          key: pl18-metadata-checkpoint-v1-X64-f28f493c6cc280da1128b03be21ae2eb1973f443c14235dea36088bcbd3e83f3-jobs1-c1d50ad5833be538d84b3ccc764b1b762258bd27053b84e16d0319acd3cfb66a-e63ee4e6c461f152a6cbc114d441461b37211f4d4c5796da8065256e7c6ca952-3c32a51bf58d12bf30efd0808d0b6ad51d334122-c3867e714dd3a51c272826eea77267876517ed99-853a68ac93c3091f68dbc41af53726600db4ca51833e028f2e2e12ea95ac7505
           fail-on-cache-miss: true
 
       - name: Preserve authoritative metadata archive
@@ -121,13 +121,13 @@ jobs:
               --threads "$JOBS" \
               --profile profiles/pl18-car.lua \
               --output "$OLD_OSRM_ROOT/graph/poland.osrm" \
-              "${PBF_CACHE_DIR}/poland-260725.osm.pbf" \
+              "${PBF_CACHE_DIR}/poland-260901.osm.pbf" \
               2>&1 | tee "$OLD_OSRM_ROOT/extract.log"
           "$OSRM_BUILD/osrm-graph-dump" \
             "$OLD_OSRM_ROOT/graph/poland.osrm" "$OLD_OSRM_ROOT/dump"
           "${RUNNER_TEMP}/stage2a-python/bin/python" scripts/export_graph_metadata.py \
-            --manifest instance/pl_18_capitals_static_instance_v2.yaml \
-            --pbf "${PBF_CACHE_DIR}/poland-260725.osm.pbf" \
+            --manifest instance/pl_18_capitals_static_instance_v3.yaml \
+            --pbf "${PBF_CACHE_DIR}/poland-260901.osm.pbf" \
             --osrm-dump "${OLD_OSRM_ROOT}/dump" \
             --osrm-extract-log "${OLD_OSRM_ROOT}/extract.log" \
             --output "$old_root" \

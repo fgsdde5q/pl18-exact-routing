@@ -80,7 +80,7 @@ class GraphMetadataExportTests(unittest.TestCase):
                     "python3",
                     str(repository_root / "scripts/export_graph_metadata.py"),
                     "--manifest",
-                    str(repository_root / "instance/pl_18_capitals_static_instance_v2.yaml"),
+                    str(repository_root / "instance/pl_18_capitals_static_instance_v3.yaml"),
                     "--pbf",
                     str(osm),
                     "--osrm-dump",

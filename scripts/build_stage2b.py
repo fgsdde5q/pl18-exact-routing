@@ -41,7 +41,7 @@ EXPECTED_EDGE_COUNT = 33_473_569
 EXPECTED_TURN_COUNT = 15_654_641
 EXPECTED_EDGE_SHA256 = "f27449dfa026193831458712bcb97c1c8b07fdf9fe4f9d33c6c2f2f613a4406a"
 EXPECTED_TURN_SHA256 = "cb613a7ad6019181064b3f09ef36ccabd8a732ad50897f04da49468306e23bad"
-EXPECTED_MANIFEST_SHA256 = "f47d9a805defdb7e28005048d7ad9a7a76f666e75d508422a7edd239ce60f7ce"
+EXPECTED_MANIFEST_SHA256 = "ee6964ee4c95f3f574a6e1234cb63e91999e64d53a5e5f7c7066114d4c067b9c"
 EXPECTED_PRG_RAW_SHA256 = "adf261aae31257dd24843b6f6c0e694efb40041aae3913b1c27aa4801866974c"
 EXPECTED_PRG_COMPUTATIONAL_SHA256 = "ae8c1a6ac592434e48f0d1ae1db261da5c89ac82b482605bd9387eee36134a4c"
 EXPECTED_PRG_SOURCE_MANIFEST_SHA256 = "2d084b7fdc9c0048d83e7153ad5abff32f9184efa42a0bfbff29731ddabcc092"
@@ -84,9 +84,9 @@ def json_dump(path: Path, value) -> None:
 
 
 def load_manifest(repository: Path) -> dict:
-    path = repository / "instance/pl_18_capitals_static_instance_v2.yaml"
+    path = repository / "instance/pl_18_capitals_static_instance_v3.yaml"
     if digest(path) != EXPECTED_MANIFEST_SHA256:
-        raise ValueError("frozen manifest v2 SHA-256 mismatch")
+        raise ValueError("frozen manifest v3 SHA-256 mismatch")
     result = subprocess.run(
         ["ruby", str(repository / "scripts/manifest_json.rb"), str(path)],
         check=True,
@@ -362,7 +362,7 @@ def write_contract(repository: Path, output: Path, manifest: dict, prg_hash: str
         "contract_id": "pl18-stage2b-prg-road-graph-v1",
         "solver_execution": "forbidden",
         "frozen_inputs": {
-            "manifest_v2": {"path": "instance/pl_18_capitals_static_instance_v2.yaml", "sha256": EXPECTED_MANIFEST_SHA256},
+            "manifest_v3": {"path": "instance/pl_18_capitals_static_instance_v3.yaml", "sha256": EXPECTED_MANIFEST_SHA256},
             "prg_raw": {"path": "results/prg/prg-18-raw.gml", "sha256": EXPECTED_PRG_RAW_SHA256},
             "prg_computational": {"path": "results/prg/prg-18-computational.gpkg", "sha256": prg_hash},
             "prg_source_manifest": {"path": "input/prg/source-manifest.json", "sha256": EXPECTED_PRG_SOURCE_MANIFEST_SHA256},

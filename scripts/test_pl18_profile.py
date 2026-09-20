@@ -10,7 +10,7 @@ import unittest
 from pathlib import Path
 
 
-EXPECTED_MANIFEST_SHA256 = "f47d9a805defdb7e28005048d7ad9a7a76f666e75d508422a7edd239ce60f7ce"
+EXPECTED_MANIFEST_SHA256 = "ee6964ee4c95f3f574a6e1234cb63e91999e64d53a5e5f7c7066114d4c067b9c"
 EXPECTED_OSRM_COMMIT = "3c32a51"
 
 
@@ -19,7 +19,7 @@ class Pl18ProfileTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.repository_root = Path(__file__).resolve().parent.parent
         cls.manifest_path = (
-            cls.repository_root / "instance/pl_18_capitals_static_instance_v2.yaml"
+            cls.repository_root / "instance/pl_18_capitals_static_instance_v3.yaml"
         )
         cls.profile_path = cls.repository_root / "profiles/pl18-car.lua"
         cls.upstream_path = Path(os.environ["UPSTREAM_CAR_PROFILE"])

@@ -10,10 +10,10 @@ import subprocess
 from pathlib import Path
 
 
-EXPECTED_MANIFEST_SHA256 = "f47d9a805defdb7e28005048d7ad9a7a76f666e75d508422a7edd239ce60f7ce"
-EXPECTED_PBF_SIZE = 2078786520
-EXPECTED_PBF_MD5 = "eb188df5acafd002244ed84bb7b650ab"
-EXPECTED_PBF_SHA256 = "2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28"
+EXPECTED_MANIFEST_SHA256 = "ee6964ee4c95f3f574a6e1234cb63e91999e64d53a5e5f7c7066114d4c067b9c"
+EXPECTED_PBF_SIZE = 2091448485
+EXPECTED_PBF_MD5 = "0db66b478a3ed7c6f52d182e13c6fa27"
+EXPECTED_PBF_SHA256 = "f28f493c6cc280da1128b03be21ae2eb1973f443c14235dea36088bcbd3e83f3"
 EXPECTED_OSRM_COMMIT = "3c32a51bf58d12bf30efd0808d0b6ad51d334122"
 METADATA_CACHE_BUDGET_BYTES = 950_000_000
 LAST_OBSERVED_METADATA_CACHE_BYTES = 932_689_698
@@ -182,7 +182,7 @@ def main() -> int:
 
     manifest_sha256 = digest(args.manifest)
     if manifest_sha256 != EXPECTED_MANIFEST_SHA256:
-        raise ValueError("frozen manifest v2 SHA-256 mismatch")
+        raise ValueError("frozen manifest v3 SHA-256 mismatch")
     if args.pbf.stat().st_size != EXPECTED_PBF_SIZE:
         raise ValueError("PBF size mismatch")
     if digest(args.pbf, "md5") != EXPECTED_PBF_MD5:
@@ -394,7 +394,7 @@ def main() -> int:
         ],
         "explicit_project_overrides": [
             "duration weight",
-            "manifest v2 class speeds and static caps",
+            "manifest v3 class speeds and static caps",
             "private and non-motorcar access forbidden",
             "ferries and shuttle trains forbidden",
             "conditional restrictions ignored",
@@ -487,7 +487,7 @@ def main() -> int:
 
 ## Frozen inputs
 
-- Manifest v2 SHA-256: `{manifest_sha256}`
+- Manifest v3 SHA-256: `{manifest_sha256}`
 - OSM size: `{EXPECTED_PBF_SIZE}` bytes
 - OSM MD5: `{EXPECTED_PBF_MD5}`
 - OSM SHA-256: `{EXPECTED_PBF_SHA256}`
