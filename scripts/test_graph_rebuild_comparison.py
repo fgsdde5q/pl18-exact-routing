@@ -177,6 +177,7 @@ class GraphRebuildComparisonTests(unittest.TestCase):
                 (results / "graph-manifest.json").read_text(encoding="utf-8")
             )
             self.assertIn("GRAPH_REBUILD_REPRODUCIBLE", manifest["statuses"])
+            self.assertIn("EXPORT_REPRODUCIBILITY", manifest["statuses"])
             report = (results / "validation-report.md").read_text(
                 encoding="utf-8"
             )

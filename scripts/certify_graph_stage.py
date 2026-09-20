@@ -299,6 +299,7 @@ def main() -> int:
         "schema_version": 1,
         "statuses": [
             "ROAD_GRAPH_STAGE_OK",
+            "EXPORT_REPRODUCIBILITY",
             "CACHE_BUDGET_OK",
             "TURN_RESTRICTIONS_CERTIFIED",
             "START_DIRECTIONS_CERTIFIED",
