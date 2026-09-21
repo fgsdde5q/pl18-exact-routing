@@ -37,6 +37,18 @@ class Stage2BIntegrationTests(unittest.TestCase):
         self.assertEqual(kept, ["0.000000000000", "0.500000000000", "1.000000000000"])
         self.assertEqual(remap["0.500000000001"], "0.500000000000")
 
+    def test_coalesces_zero_length_parent_to_endpoints(self):
+        fractions = [
+            "0.000000000000",
+            "0.100000000000",
+            "0.900000000000",
+            "1.000000000000",
+        ]
+        kept, remap = build_stage2b.coalesce_zero_length_intervals(fractions, 0)
+        self.assertEqual(kept, ["0.000000000000", "1.000000000000"])
+        self.assertEqual(remap["0.100000000000"], "0.000000000000")
+        self.assertEqual(remap["0.900000000000"], "1.000000000000")
+
     def test_streaming_edge_and_turn_exports(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

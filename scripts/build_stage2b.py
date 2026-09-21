@@ -197,6 +197,18 @@ def coalesce_zero_length_intervals(fractions: list[str], length_nm: int) -> tupl
         raise ValueError("fractions must cover [0, 1]")
     if any(left >= right for left, right in zip(fractions, fractions[1:])):
         raise ValueError("fractions must be strictly increasing")
+    if length_nm <= 0:
+        return (
+            ["0.000000000000", "1.000000000000"],
+            {
+                fraction: (
+                    "0.000000000000"
+                    if Decimal(fraction) <= Decimal("0.500000000000")
+                    else "1.000000000000"
+                )
+                for fraction in fractions
+            },
+        )
     remap = {fraction: fraction for fraction in fractions}
     kept = list(fractions)
     while len(kept) > 2:
@@ -236,6 +248,7 @@ def build_edges(base_edges: Path, regions, cities, raw_hash: str, output: Path, 
     mask_counts = {model: Counter() for model in MODEL_ORDER}
     parent_length_nm = child_length_nm = parent_duration_ds = child_duration_ds = 0
     internal_turn_count = 0
+    zero_length_children = 0
     point_records = 0
     gate_records = 0
     city_names = {int(city["bit_index"]): city["city"] for city in cities}
@@ -308,7 +321,8 @@ def build_edges(base_edges: Path, regions, cities, raw_hash: str, output: Path, 
                             gate_records += 1
                 allocated_lengths = allocate_integer_total(length_nm, fractions)
                 allocated_durations = allocate_integer_total(duration_ds, fractions)
-                if any(length <= 0 for length in allocated_lengths):
+                zero_length_children += sum(1 for length in allocated_lengths if length <= 0)
+                if length_nm > 0 and any(length <= 0 for length in allocated_lengths):
                     raise ValueError(f"non-positive child length on {parent['id']}")
                 if sum(allocated_lengths) != length_nm or sum(allocated_durations) != duration_ds:
                     raise ValueError(f"per-parent cost preservation failed on {parent['id']}")
@@ -373,6 +387,7 @@ def build_edges(base_edges: Path, regions, cities, raw_hash: str, output: Path, 
         "parent_length_nm": parent_length_nm, "child_length_nm": child_length_nm,
         "parent_duration_ds": parent_duration_ds, "child_duration_ds": child_duration_ds,
         "internal_turn_count": internal_turn_count,
+        "zero_length_children": zero_length_children,
     }
 
 
@@ -464,7 +479,7 @@ def main() -> int:
     json_dump(args.output / "turn-states-summary.json", {"status": "TURN_SEMANTICS_PRESERVED", "inherited_stage2a_turns": inherited_count, "internal_split_continuations": edge_result["internal_turn_count"], "artifacts": {name: artifact_hashes[name] for name in ("internal-turn-states.tsv.zst", "inherited-turn-states.tsv.zst")}})
     json_dump(args.output / "city-bitmask-summary.json", {"status": "CITY_BITMASK_CERTIFIED", "model_mask_counts": edge_result["mask_counts"], "rule": "positive_length_inside_open_polygon_interior", "membership_evaluation": "open-interior midpoint of every canonical interval", "tangential_or_boundary_only_bits_set": 0})
     json_dump(args.output / "gates-summary.json", {"status": "GATE_INVENTORY_COMPLETE", "source_parent_count": edge_result["counts"]["parents"], "city_count": 18, "model_count": 3, "edge_city_model_pair_count": EXPECTED_EDGE_COUNT * 18 * 3, "spatial_index_role": "bbox rejection only; rejected pairs are certified fully_outside", "gate_event_count": edge_result["gate_records"], "city_model_classification_counts": edge_result["city_model_counts"], "city_model_gate_counts": edge_result["city_model_gate_counts"], "artifact": artifact_hashes["gates.tsv.zst"]})
-    json_dump(args.output / "topology-preservation.json", {"status": "TOPOLOGY_PRESERVED", "proof": "each parent directed edge is replaced by one directed child chain with identical endpoints; every adjacent child pair has one zero-cost internal continuation; every authoritative turn maps last incoming child to first outgoing child", "all_parents_represented": True, "parent_count": edge_result["counts"]["parents"], "split_edge_count": edge_result["counts"]["split_edges"], "split_parent_count": edge_result["counts"].get("split_parents", 0), "internal_continuation_count": edge_result["internal_turn_count"], "expected_internal_continuation_count": edge_result["counts"]["split_edges"] - edge_result["counts"]["parents"], "parent_endpoint_incidence_preserved": True, "weak_connected_components_preserved_by_constructive_bijection": True, "gaps": 0, "overlaps": 0, "zero_length_children": 0, "direction_preserved": True})
+    json_dump(args.output / "topology-preservation.json", {"status": "TOPOLOGY_PRESERVED", "proof": "each parent directed edge is replaced by one directed child chain with identical endpoints; every adjacent child pair has one zero-cost internal continuation; every authoritative turn maps last incoming child to first outgoing child", "all_parents_represented": True, "parent_count": edge_result["counts"]["parents"], "split_edge_count": edge_result["counts"]["split_edges"], "split_parent_count": edge_result["counts"].get("split_parents", 0), "internal_continuation_count": edge_result["internal_turn_count"], "expected_internal_continuation_count": edge_result["counts"]["split_edges"] - edge_result["counts"]["parents"], "parent_endpoint_incidence_preserved": True, "weak_connected_components_preserved_by_constructive_bijection": True, "gaps": 0, "overlaps": 0, "zero_length_children": edge_result["zero_length_children"], "direction_preserved": True})
     json_dump(args.output / "cost-preservation.json", {"status": "COSTS_PRESERVED", "proof": "child edge deciseconds sum exactly to each parent and inherited turn duration occurs exactly once; internal continuations cost zero", "parent_length_nm": edge_result["parent_length_nm"], "child_length_nm": edge_result["child_length_nm"], "parent_duration_ds": edge_result["parent_duration_ds"], "child_duration_ds": edge_result["child_duration_ds"], "internal_turn_cost_s": 0.0, "residual_distribution": "largest_remainder_then_interval_ordinal", "maximum_parent_duration_error_ds": 0, "maximum_parent_length_error_nm": 0, "declared_length_tolerance_m": 0.000000001})
     json_dump(args.output / "inherited-turn-certificate.json", {"status": "TURN_SEMANTICS_PRESERVED", "authoritative_legal_turns": EXPECTED_TURN_COUNT, "inherited_legal_turns": inherited_count, "turn_duration_applied_exactly_once": True, "prohibited_turns_added": 0, "ordinary_start_states": 0})
     start_parent = start["selected_stable_edge_id"]
