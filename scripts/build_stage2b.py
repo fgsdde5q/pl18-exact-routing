@@ -192,6 +192,35 @@ def candidate_bits(parent: dict, geographic_bounds: dict) -> list[int]:
     ]
 
 
+def coalesce_zero_length_intervals(fractions: list[str], length_nm: int) -> tuple[list[str], dict[str, str]]:
+    if not fractions or fractions[0] != "0.000000000000" or fractions[-1] != "1.000000000000":
+        raise ValueError("fractions must cover [0, 1]")
+    if any(left >= right for left, right in zip(fractions, fractions[1:])):
+        raise ValueError("fractions must be strictly increasing")
+    remap = {fraction: fraction for fraction in fractions}
+    kept = list(fractions)
+    while len(kept) > 2:
+        allocated = allocate_integer_total(length_nm, kept)
+        zero_index = next((index for index, length in enumerate(allocated) if length <= 0), None)
+        if zero_index is None:
+            return kept, remap
+        if zero_index + 1 < len(kept) - 1:
+            removed = kept.pop(zero_index + 1)
+            target = kept[zero_index]
+        elif zero_index > 0:
+            removed = kept.pop(zero_index)
+            target = kept[zero_index]
+        else:
+            break
+        for original, current in list(remap.items()):
+            if current == removed:
+                remap[original] = target
+    allocated = allocate_integer_total(length_nm, kept)
+    if any(length <= 0 for length in allocated):
+        raise ValueError("unable to coalesce zero-length split interval")
+    return kept, remap
+
+
 def build_edges(base_edges: Path, regions, cities, raw_hash: str, output: Path, start_snap: dict):
     to_2180 = Transformer.from_crs("EPSG:4326", "EPSG:2180", always_xy=True)
     to_4326 = Transformer.from_crs("EPSG:2180", "EPSG:4326", always_xy=True)
@@ -245,6 +274,14 @@ def build_edges(base_edges: Path, regions, cities, raw_hash: str, output: Path, 
                 fractions = sorted(all_fractions, key=Decimal)
                 if any(left == right for left, right in zip(fractions, fractions[1:])):
                     raise ValueError("zero-length split interval")
+                length_nm = int((parent["length_m"] * 1_000_000_000).to_integral_value())
+                duration_ds = int((parent["duration_s"] * 10).to_integral_value())
+                fractions, fraction_remap = coalesce_zero_length_intervals(fractions, length_nm)
+                if fraction_remap:
+                    remapped_events_at = defaultdict(list)
+                    for (model, fraction), event_list in events_at.items():
+                        remapped_events_at[(model, fraction_remap[fraction])].extend(event_list)
+                    events_at = remapped_events_at
                 point_ids_by_fraction = defaultdict(list)
                 wgs_by_fraction = {
                     "0.000000000000": (parent["from_lon"], parent["from_lat"]),
@@ -269,8 +306,6 @@ def build_edges(base_edges: Path, regions, cities, raw_hash: str, output: Path, 
                             gates.write(f"{model}\t{event['bit_index']}\t{event['city']}\t{event['category']}\t{identifier}\t{parent['id']}\t{incoming_child}\t{outgoing_child}\t{way}\t{fraction}\t{direction}\t{wgs.x:.9f}\t{wgs.y:.9f}\t{point.x:.3f}\t{point.y:.3f}\n")
                             city_model_gate_counts[(model, int(event["bit_index"]))][event["category"]] += 1
                             gate_records += 1
-                length_nm = int((parent["length_m"] * 1_000_000_000).to_integral_value())
-                duration_ds = int((parent["duration_s"] * 10).to_integral_value())
                 allocated_lengths = allocate_integer_total(length_nm, fractions)
                 allocated_durations = allocate_integer_total(duration_ds, fractions)
                 if any(length <= 0 for length in allocated_lengths):

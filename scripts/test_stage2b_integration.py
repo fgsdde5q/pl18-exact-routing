@@ -26,6 +26,17 @@ def projected_box(longitude: float, latitude: float, half_size: float):
 
 
 class Stage2BIntegrationTests(unittest.TestCase):
+    def test_coalesces_sub_nanometer_split_intervals(self):
+        fractions = [
+            "0.000000000000",
+            "0.500000000000",
+            "0.500000000001",
+            "1.000000000000",
+        ]
+        kept, remap = build_stage2b.coalesce_zero_length_intervals(fractions, 1_000_000)
+        self.assertEqual(kept, ["0.000000000000", "0.500000000000", "1.000000000000"])
+        self.assertEqual(remap["0.500000000001"], "0.500000000000")
+
     def test_streaming_edge_and_turn_exports(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
