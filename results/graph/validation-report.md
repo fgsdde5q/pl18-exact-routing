@@ -3,8 +3,6 @@
 ## Status
 
 - `ROAD_GRAPH_STAGE_OK`
-- `GRAPH_REBUILD_REPRODUCIBLE`
-- `EXPORT_REPRODUCIBILITY`
 - `CACHE_BUDGET_OK`
 - `TURN_RESTRICTIONS_CERTIFIED`
 - `START_DIRECTIONS_CERTIFIED`
@@ -13,24 +11,24 @@
 
 ## Frozen inputs
 
-- Manifest v2 SHA-256: `f47d9a805defdb7e28005048d7ad9a7a76f666e75d508422a7edd239ce60f7ce`
-- OSM size: `2078786520` bytes
-- OSM MD5: `eb188df5acafd002244ed84bb7b650ab`
-- OSM SHA-256: `2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28`
+- Manifest v3 SHA-256: `ee6964ee4c95f3f574a6e1234cb63e91999e64d53a5e5f7c7066114d4c067b9c`
+- OSM size: `2091448485` bytes
+- OSM MD5: `0db66b478a3ed7c6f52d182e13c6fa27`
+- OSM SHA-256: `f28f493c6cc280da1128b03be21ae2eb1973f443c14235dea36088bcbd3e83f3`
 - PRG raw GML SHA-256: `adf261aae31257dd24843b6f6c0e694efb40041aae3913b1c27aa4801866974c`
 - PRG compressed GML SHA-256: `91bdab09b9fe77ea02add8cfdf88a41c03ae84587ff8fdfc1808fb340fa41684`
-- Profile SHA-256: `0caa3c72a43df86fc5f5df8fa039b1dce9e9584aed120857a4df8624c23f2839`
+- Profile SHA-256: `0b2dc359c4618b215efb512923a02471a2df208024e5d4d9f29e4a86a67f1001`
 - OSRM source commit: `3c32a51bf58d12bf30efd0808d0b6ad51d334122`
 
 ## Graph counts
 
-- OSM ways read: `33321336`
-- Legal directed motorcar edges: `33473569`
-- Edge-based turn states: `15654641`
-- Enforced turn restrictions: `42627`
+- OSM ways read: `33478092`
+- Legal directed motorcar edges: `33615581`
+- Edge-based turn states: `15728284`
+- Enforced turn restrictions: `42849`
 - Restriction authority: OSRM's accepted restriction graph after invalid-restriction removal.
-- Forbidden ferry edges: `6612`
-- Rejected private/non-motorcar edges: `2401005`
+- Forbidden ferry edges: `6670`
+- Rejected private/non-motorcar edges: `2435460`
 
 ## Start snap
 
@@ -53,7 +51,7 @@
 ## explicit_project_overrides
 
 - Duration is the routing weight.
-- Manifest v2 class speeds, maxspeed reduction, surface, tracktype, smoothness and bridge caps.
+- Manifest v3 class speeds, maxspeed reduction, surface, tracktype, smoothness and bridge caps.
 - Private/non-motorcar roads, ferries and shuttle trains are forbidden.
 - Conditional time/day/date/season restrictions and all dynamic inputs are ignored.
 - Toll roads have no extra cost; gate/lift-gate penalties are 60 seconds.
@@ -62,19 +60,19 @@
 ## Audit status
 
 - `EXPORT_REPRODUCIBILITY`: `PASS`
-- `GRAPH_REBUILD_REPRODUCIBILITY`: `PASS`
+- `GRAPH_REBUILD_REPRODUCIBILITY`: `NOT_RUN`
 - `CACHE_BUDGET_STATUS`: `PASS` (`932689698` <= `950000000` bytes)
 - `TURN_RESTRICTION_CERTIFICATE_STATUS`: `PASS`
 - `START_DIRECTION_CERTIFICATE_STATUS`: `PASS`
 
 ## Export reproducibility
 
-- Directed base-edge canonical SHA-256: `f27449dfa026193831458712bcb97c1c8b07fdf9fe4f9d33c6c2f2f613a4406a`
-- Edge-based turn-state canonical SHA-256: `cb613a7ad6019181064b3f09ef36ccabd8a732ad50897f04da49468306e23bad`
+- Directed base-edge canonical SHA-256: `4cac4088cdc7f7c65966840816acf029a2143ec70639837f25c86f9850671cd6`
+- Edge-based turn-state canonical SHA-256: `e41c43e6d9f703b523b9cae39a4f2e8187b0c70bf84c1c77a67b6adc28238dce`
 - Two independent canonical metadata exporter runs: `PASS`
 - One frozen OSRM graph build was used for both clean metadata exports.
-- Two independent clean OSRM graph rebuilds from frozen inputs produced matching canonical exports and certificates.
+- Graph rebuild reproducibility is not asserted before the dispatch-only clean rebuild workflow succeeds.
 - Stable edge IDs unique, values non-negative, endpoints connected: `PASS`
-- Relation-derived expected prohibited transitions absent: `45363` checked, `0` observed.
-- Source-derived candidates not enforced by pinned OSRM: `25` transitions, retained with relation-ID provenance and not claimed prohibited.
+- Relation-derived expected prohibited transitions absent: `45629` checked, `0` observed.
+- Source-derived candidates not enforced by pinned OSRM: `33` transitions, retained with relation-ID provenance and not claimed prohibited.
 - Ferry/private rejection and 150 m snap bound: `PASS`

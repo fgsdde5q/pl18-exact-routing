@@ -527,7 +527,7 @@ def main() -> int:
 ## explicit_project_overrides
 
 - Duration is the routing weight.
-- Manifest v2 class speeds, maxspeed reduction, surface, tracktype, smoothness and bridge caps.
+- Manifest v3 class speeds, maxspeed reduction, surface, tracktype, smoothness and bridge caps.
 - Private/non-motorcar roads, ferries and shuttle trains are forbidden.
 - Conditional time/day/date/season restrictions and all dynamic inputs are ignored.
 - Toll roads have no extra cost; gate/lift-gate penalties are 60 seconds.

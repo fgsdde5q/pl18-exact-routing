@@ -52,7 +52,7 @@ class Stage2BContractTests(unittest.TestCase):
 
     def test_full_gate_inventory_uses_authoritative_count(self):
         source = (ROOT / "scripts/build_stage2b.py").read_text(encoding="utf-8")
-        self.assertIn("EXPECTED_EDGE_COUNT = 33_473_569", source)
+        self.assertIn("EXPECTED_EDGE_COUNT = 33_615_581", source)
         self.assertIn('"GATE_INVENTORY_COMPLETE"', source)
 
     def test_start_states_are_separate(self):

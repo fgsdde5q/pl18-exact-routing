@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "profile": "profiles/pl18-car.lua",
-  "sha256": "0caa3c72a43df86fc5f5df8fa039b1dce9e9584aed120857a4df8624c23f2839",
+  "sha256": "0b2dc359c4618b215efb512923a02471a2df208024e5d4d9f29e4a86a67f1001",
   "generated_from": {
-    "manifest_sha256": "f47d9a805defdb7e28005048d7ad9a7a76f666e75d508422a7edd239ce60f7ce",
+    "manifest_sha256": "ee6964ee4c95f3f574a6e1234cb63e91999e64d53a5e5f7c7066114d4c067b9c",
     "osrm_commit": "3c32a51bf58d12bf30efd0808d0b6ad51d334122",
     "upstream_profile": "profiles/car.lua",
     "generator": "scripts/generate_pl18_profile.py",
@@ -18,7 +18,7 @@
   ],
   "explicit_project_overrides": [
     "duration weight",
-    "manifest v2 class speeds and static caps",
+    "manifest v3 class speeds and static caps",
     "private and non-motorcar access forbidden",
     "ferries and shuttle trains forbidden",
     "conditional restrictions ignored",

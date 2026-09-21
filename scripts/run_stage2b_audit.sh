@@ -15,8 +15,8 @@ readonly MODE="$5"
 readonly PYTHON="$6"
 REPOSITORY_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly REPOSITORY_ROOT
-readonly EXPECTED_EDGE_SHA256="f27449dfa026193831458712bcb97c1c8b07fdf9fe4f9d33c6c2f2f613a4406a"
-readonly EXPECTED_TURN_SHA256="cb613a7ad6019181064b3f09ef36ccabd8a732ad50897f04da49468306e23bad"
+readonly EXPECTED_EDGE_SHA256="4cac4088cdc7f7c65966840816acf029a2143ec70639837f25c86f9850671cd6"
+readonly EXPECTED_TURN_SHA256="e41c43e6d9f703b523b9cae39a4f2e8187b0c70bf84c1c77a67b6adc28238dce"
 
 if [[ "$MODE" != export && "$MODE" != rebuild ]]; then
   echo "MODE must be export or rebuild" >&2

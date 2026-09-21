@@ -2,7 +2,6 @@
   "schema_version": 1,
   "statuses": [
     "ROAD_GRAPH_STAGE_OK",
-    "GRAPH_REBUILD_REPRODUCIBLE",
     "EXPORT_REPRODUCIBILITY",
     "CACHE_BUDGET_OK",
     "TURN_RESTRICTIONS_CERTIFIED",
@@ -11,15 +10,15 @@
     "SOLVER_NOT_STARTED"
   ],
   "semantic_manifest": {
-    "path": "instance/pl_18_capitals_static_instance_v2.yaml",
-    "sha256": "f47d9a805defdb7e28005048d7ad9a7a76f666e75d508422a7edd239ce60f7ce"
+    "path": "instance/pl_18_capitals_static_instance_v3.yaml",
+    "sha256": "ee6964ee4c95f3f574a6e1234cb63e91999e64d53a5e5f7c7066114d4c067b9c"
   },
   "inputs": {
     "osm": {
-      "file": "poland-260725.osm.pbf",
-      "size_bytes": 2078786520,
-      "md5": "eb188df5acafd002244ed84bb7b650ab",
-      "sha256": "2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28"
+      "file": "poland-260901.osm.pbf",
+      "size_bytes": 2091448485,
+      "md5": "0db66b478a3ed7c6f52d182e13c6fa27",
+      "sha256": "f28f493c6cc280da1128b03be21ae2eb1973f443c14235dea36088bcbd3e83f3"
     },
     "prg": {
       "authority": "GUGiK",
@@ -48,11 +47,11 @@
   "graph_exporter": {
     "source": "tools/osrm_graph_dump.cpp",
     "sha256": "d9e7249cc1bf75c22f82c31c33b76c53354c57b8e15689cca1c593d2690f32cd",
-    "repository_commit": "44434b3f2fc371c073006c0bc542252fe10e5818"
+    "repository_commit": "baa1ab2907e26d428af6e690b847e0e08c2d180e"
   },
   "canonical_exports": {
-    "directed_base_edges_sha256": "f27449dfa026193831458712bcb97c1c8b07fdf9fe4f9d33c6c2f2f613a4406a",
-    "edge_based_turn_states_sha256": "cb613a7ad6019181064b3f09ef36ccabd8a732ad50897f04da49468306e23bad",
+    "directed_base_edges_sha256": "4cac4088cdc7f7c65966840816acf029a2143ec70639837f25c86f9850671cd6",
+    "edge_based_turn_states_sha256": "e41c43e6d9f703b523b9cae39a4f2e8187b0c70bf84c1c77a67b6adc28238dce",
     "clean_metadata_build_count": 2,
     "second_clean_metadata_build_match": true
   },
@@ -65,10 +64,9 @@
     },
     "graph_rebuild": {
       "status": "GRAPH_REBUILD_REPRODUCIBILITY",
-      "result": "PASS",
-      "full_graph_build_count": 2,
-      "ready_graph_cache_restored": false,
-      "certificate": "graph-rebuild-reproducibility.json"
+      "result": "NOT_RUN",
+      "ready_graph_cache_allowed": false,
+      "workflow": ".github/workflows/road-graph-rebuild-check.yml"
     }
   },
   "cache_budget": {
@@ -77,28 +75,28 @@
     "last_observed_metadata_checkpoint_bytes": 932689698
   },
   "counts": {
-    "osm_ways_read": 33321336,
-    "legal_candidate_segments": 33474113,
-    "resolved_osrm_geometry_segments": 33477318,
-    "collapsed_duplicate_osrm_node_segments": 24837489,
-    "collapsed_duplicate_osrm_node_duration_ds": 101168400,
-    "legal_directed_motorcar_edges": 33473569,
-    "edge_based_turn_states": 15654641,
-    "source_restriction_relations": 46838,
-    "parsed_turn_restrictions": 45290,
-    "invalid_turn_restrictions": 442,
-    "unresolved_turn_restrictions": 2221,
-    "enforced_turn_restrictions": 42627,
-    "no_turn_relations": 33179,
-    "only_turn_relations": 13559,
-    "conditional_restriction_relations": 25,
-    "expected_prohibited_turn_transitions": 45363,
-    "source_candidate_turn_transitions": 45363,
-    "osrm_non_enforced_candidate_turn_transitions": 25,
-    "forbidden_ferry_edges": 6612,
-    "rejected_private_nonmotorcar_edges": 2401005,
+    "osm_ways_read": 33478092,
+    "legal_candidate_segments": 33615650,
+    "resolved_osrm_geometry_segments": 33619365,
+    "collapsed_duplicate_osrm_node_segments": 24937402,
+    "collapsed_duplicate_osrm_node_duration_ds": 102001800,
+    "legal_directed_motorcar_edges": 33615581,
+    "edge_based_turn_states": 15728284,
+    "source_restriction_relations": 47133,
+    "parsed_turn_restrictions": 45553,
+    "invalid_turn_restrictions": 459,
+    "unresolved_turn_restrictions": 2245,
+    "enforced_turn_restrictions": 42849,
+    "no_turn_relations": 33396,
+    "only_turn_relations": 13637,
+    "conditional_restriction_relations": 24,
+    "expected_prohibited_turn_transitions": 45629,
+    "source_candidate_turn_transitions": 45629,
+    "osrm_non_enforced_candidate_turn_transitions": 33,
+    "forbidden_ferry_edges": 6670,
+    "rejected_private_nonmotorcar_edges": 2435460,
     "prohibited_turn_violations": 0,
-    "osrm_turn_records_before_deduplication": 15657300
+    "osrm_turn_records_before_deduplication": 15730940
   },
   "start_snap": {
     "distance_m": 10.111,

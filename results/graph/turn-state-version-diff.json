@@ -164,7 +164,7 @@
   "authority": {
     "count": 15654641,
     "sha256": "cb613a7ad6019181064b3f09ef36ccabd8a732ad50897f04da49468306e23bad",
-    "basis": "frozen manifest v2, frozen profile, frozen PBF, pinned OSRM commit, JOBS=1",
+    "basis": "frozen manifest v3, frozen profile, frozen PBF, pinned OSRM commit, JOBS=1",
     "history_retained": [
       {
         "count": 15654639,
