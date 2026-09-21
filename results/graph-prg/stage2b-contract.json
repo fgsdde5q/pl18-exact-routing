@@ -1,0 +1,251 @@
+{
+  "boundary_event_categories": [
+    "fully_outside",
+    "fully_inside",
+    "entering",
+    "exiting",
+    "crossing",
+    "multiple_crossings",
+    "endpoint_on_boundary",
+    "tangential_touch",
+    "overlap_along_boundary",
+    "crossing_polygon_hole_boundary",
+    "degenerate_numerical_case"
+  ],
+  "cache_policy": {
+    "immutable_stage2a_metadata_allowed": true,
+    "stage2b_products_in_clean_rebuild": "forbidden"
+  },
+  "canonical_sorting": {
+    "split_edges": [
+      "parent_edge_id",
+      "ordinal"
+    ],
+    "split_points": [
+      "parent_edge_id",
+      "fraction",
+      "model_id"
+    ],
+    "turn_states": [
+      "incoming_split_edge_id",
+      "outgoing_split_edge_id"
+    ]
+  },
+  "city_order": [
+    {
+      "PRG_object_ID": "2799189",
+      "TERYT": "1465011",
+      "bit_index": 0,
+      "city": "Warszawa"
+    },
+    {
+      "PRG_object_ID": "10027506",
+      "TERYT": "1061011",
+      "bit_index": 1,
+      "city": "Łódź"
+    },
+    {
+      "PRG_object_ID": "2747998",
+      "TERYT": "2661011",
+      "bit_index": 2,
+      "city": "Kielce"
+    },
+    {
+      "PRG_object_ID": "10002086",
+      "TERYT": "0663011",
+      "bit_index": 3,
+      "city": "Lublin"
+    },
+    {
+      "PRG_object_ID": "10036131",
+      "TERYT": "1863011",
+      "bit_index": 4,
+      "city": "Rzeszów"
+    },
+    {
+      "PRG_object_ID": "10016301",
+      "TERYT": "1261011",
+      "bit_index": 5,
+      "city": "Kraków"
+    },
+    {
+      "PRG_object_ID": "10036150",
+      "TERYT": "2469011",
+      "bit_index": 6,
+      "city": "Katowice"
+    },
+    {
+      "PRG_object_ID": "10040196",
+      "TERYT": "1661011",
+      "bit_index": 7,
+      "city": "Opole"
+    },
+    {
+      "PRG_object_ID": "10027472",
+      "TERYT": "0264011",
+      "bit_index": 8,
+      "city": "Wrocław"
+    },
+    {
+      "PRG_object_ID": "10019236",
+      "TERYT": "0862011",
+      "bit_index": 9,
+      "city": "Zielona Góra"
+    },
+    {
+      "PRG_object_ID": "10019134",
+      "TERYT": "0861011",
+      "bit_index": 10,
+      "city": "Gorzów Wielkopolski"
+    },
+    {
+      "PRG_object_ID": "10004395",
+      "TERYT": "3262011",
+      "bit_index": 11,
+      "city": "Szczecin"
+    },
+    {
+      "PRG_object_ID": "10027538",
+      "TERYT": "3064011",
+      "bit_index": 12,
+      "city": "Poznań"
+    },
+    {
+      "PRG_object_ID": "10027391",
+      "TERYT": "0461011",
+      "bit_index": 13,
+      "city": "Bydgoszcz"
+    },
+    {
+      "PRG_object_ID": "2788878",
+      "TERYT": "0463011",
+      "bit_index": 14,
+      "city": "Toruń"
+    },
+    {
+      "PRG_object_ID": "10021887",
+      "TERYT": "2261011",
+      "bit_index": 15,
+      "city": "Gdańsk"
+    },
+    {
+      "PRG_object_ID": "2772685",
+      "TERYT": "2862011",
+      "bit_index": 16,
+      "city": "Olsztyn"
+    },
+    {
+      "PRG_object_ID": "2753749",
+      "TERYT": "2061011",
+      "bit_index": 17,
+      "city": "Białystok"
+    }
+  ],
+  "contract_id": "pl18-stage2b-prg-road-graph-v1",
+  "fraction": {
+    "directed": true,
+    "precision_decimal_places": 12,
+    "rounding": "ROUND_HALF_UP",
+    "unquantized_representation": "IEEE-754 binary64 shortest round-trip decimal"
+  },
+  "frozen_inputs": {
+    "manifest_v3": {
+      "path": "instance/pl_18_capitals_static_instance_v3.yaml",
+      "sha256": "ee6964ee4c95f3f574a6e1234cb63e91999e64d53a5e5f7c7066114d4c067b9c"
+    },
+    "osrm_commit": "3c32a51bf58d12bf30efd0808d0b6ad51d334122",
+    "prg_computational": {
+      "path": "results/prg/prg-18-computational.gpkg",
+      "sha256": "ae8c1a6ac592434e48f0d1ae1db261da5c89ac82b482605bd9387eee36134a4c"
+    },
+    "prg_raw": {
+      "path": "results/prg/prg-18-raw.gml",
+      "sha256": "adf261aae31257dd24843b6f6c0e694efb40041aae3913b1c27aa4801866974c"
+    },
+    "prg_source_manifest": {
+      "path": "input/prg/source-manifest.json",
+      "sha256": "2d084b7fdc9c0048d83e7153ad5abff32f9184efa42a0bfbff29731ddabcc092"
+    },
+    "profile": {
+      "path": "profiles/pl18-car.lua",
+      "sha256": "0b2dc359c4618b215efb512923a02471a2df208024e5d4d9f29e4a86a67f1001"
+    },
+    "stage2a_graph_manifest": {
+      "path": "results/graph/graph-manifest.json",
+      "sha256": "cc56426015116d0fe8c3c293d0c4374a04c6bd9efd074a4552ec69a95be05c79"
+    },
+    "stage2a_start_snap": {
+      "path": "results/graph/start-snap.json",
+      "sha256": "ce719e75151ed19a0e4f07d0b11f20164a4c49d0cae88d936c518a07473c648a"
+    },
+    "stage2a_turn_restriction_certificate": {
+      "path": "results/graph/turn-restriction-certificate.json",
+      "sha256": "1c39c8107f3abeddf84247f597fa9a9154c228031357e7945f93ab33dc03d2b8"
+    }
+  },
+  "geometry": {
+    "binding": "Shapely 2.1.2",
+    "buffer_join_style": "round",
+    "crs": "EPSG:2180",
+    "engine": "GEOS",
+    "holes_are_boundaries": true,
+    "quad_segs": 32,
+    "source_repair": "forbidden; use approved Stage 1 computational lineage unchanged",
+    "tolerance_m": 0.01,
+    "version": "3.13.1"
+  },
+  "models": [
+    {
+      "depth_m": 0.0,
+      "model_id": "M-boundary",
+      "presentation_alias": "A"
+    },
+    {
+      "depth_m": 300.0,
+      "model_id": "M-300",
+      "presentation_alias": "B"
+    },
+    {
+      "depth_m": 500.0,
+      "model_id": "M-500",
+      "presentation_alias": "C"
+    }
+  ],
+  "rebuild_policy": {
+    "all_counts_hashes_certificates_must_match": true,
+    "independent_builds": 2
+  },
+  "schema_version": 1,
+  "solver_execution": "forbidden",
+  "stable_ids": {
+    "split_edge": "base_directed_edge@ordered_split_interval",
+    "split_point": "SHA256(base_directed_edge|fraction_1e-12|PRG_raw_SHA256|model_depth)",
+    "turn_state": "incoming_split_edge->outgoing_split_edge"
+  },
+  "stage2a_authority": {
+    "directed_base_edges_sha256": "4cac4088cdc7f7c65966840816acf029a2143ec70639837f25c86f9850671cd6",
+    "edge_based_turn_states": 15728284,
+    "legal_directed_motorcar_edges": 33615581,
+    "turn_state_canonical_sha256": "e41c43e6d9f703b523b9cae39a4f2e8187b0c70bf84c1c77a67b6adc28238dce"
+  },
+  "subdivision": {
+    "bitmasks": [
+      "M-boundary",
+      "M-300",
+      "M-500"
+    ],
+    "length_precision_m": 1e-09,
+    "scope": "union_of_all_model_boundary_events",
+    "split_edge_geometry": "directed two-point WGS84 LineString represented by from/to coordinate columns"
+  },
+  "turn_semantics": {
+    "inherited_stage2a_turn_cost_occurrences": 1,
+    "internal_split_continuation_cost_s": 0.0,
+    "start_states_in_ordinary_turns": false
+  },
+  "visit_semantics": {
+    "bit_rule": "positive_length_inside_open_polygon_interior",
+    "boundary_overlap_counts": false,
+    "tangential_contact_counts": false
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "child_edge_id": "25857664/4/0/3069840595/611255856@0",
+  "distance_m": 10.111,
+  "initial_directions": [
+    {
+      "direction_bit": 0,
+      "stable_edge_id": "25857664/4/0/3069840595/611255856"
+    }
+  ],
+  "model_initial_visited_masks": {
+    "M-300": 1,
+    "M-500": 1,
+    "M-boundary": 1
+  },
+  "ordinary_turn_state_count_contribution": 0,
+  "parent_edge_id": "25857664/4/0/3069840595/611255856",
+  "snap_coordinate": {
+    "latitude": 52.268784436,
+    "longitude": 20.98634735
+  },
+  "snap_fraction": 0.922313075358,
+  "start_city_bit_index": 0,
+  "start_visit_condition_satisfied": {
+    "M-300": true,
+    "M-500": true,
+    "M-boundary": true
+  },
+  "status": "START_STATE_PRESERVED"
+}
