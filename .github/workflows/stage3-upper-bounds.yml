@@ -70,6 +70,12 @@ jobs:
           name: stage2b-canonical-export-${{ github.run_id }}
           path: ${{ runner.temp }}/stage2b-download
 
+      - name: Download Stage 2B compact certificates
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
+        with:
+          name: stage2b-certificates-export-${{ github.run_id }}
+          path: results/graph-prg
+
       - name: Unpack certified Stage 2B graph
         shell: bash
         run: |
