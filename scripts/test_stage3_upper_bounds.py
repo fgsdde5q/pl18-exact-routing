@@ -75,8 +75,8 @@ class Stage3UpperBoundTests(unittest.TestCase):
             "EXACT_GLOBAL_SOLVER_NOT_STARTED",
         ):
             self.assertIn(status, source)
-        self.assertIn("stage2b-${{ hashFiles", workflow)
-        self.assertIn("solver-${{ hashFiles('scripts/stage3_upper_bounds.py') }}", workflow)
+        self.assertIn("hashFiles('results/graph-prg/stage2b-manifest.json'", workflow)
+        self.assertIn("${{ hashFiles('scripts/stage3_upper_bounds.py') }}-${{ github.sha }}", workflow)
         for forbidden in ("OPTIMAL", "globally optimal", "GLOBAL_OPTIMUM", "GLOBAL_LOWER_BOUND_CERTIFIED"):
             self.assertNotIn(forbidden, source.replace("EXACT_GLOBAL_SOLVER_NOT_STARTED", ""))
 
