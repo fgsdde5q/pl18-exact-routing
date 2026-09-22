@@ -1,0 +1,117 @@
+name: Stage 3 upper bounds
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - codex/stage-3-upper-bounds
+    paths:
+      - ".github/workflows/stage3-upper-bounds.yml"
+      - "scripts/stage3_upper_bounds.py"
+      - "scripts/test_stage3_upper_bounds.py"
+      - "results/graph-prg/**"
+
+permissions:
+  actions: write
+  contents: write
+
+concurrency:
+  group: stage3-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  stage3:
+    name: Compute fixed-order upper bounds
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    env:
+      PBF_SHA256: f28f493c6cc280da1128b03be21ae2eb1973f443c14235dea36088bcbd3e83f3
+      PRG_RAW_SHA256: adf261aae31257dd24843b6f6c0e694efb40041aae3913b1c27aa4801866974c
+      MANIFEST_V2_SHA256: f47d9a805defdb7e28005048d7ad9a7a76f666e75d508422a7edd239ce60f7ce
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+
+      - name: Install runtime dependencies
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          echo "STAGE2B_ARCHIVE=${RUNNER_TEMP}/pl18-stage2b-canonical.tar.zst" >> "$GITHUB_ENV"
+          echo "STAGE2B_ARTIFACTS=${RUNNER_TEMP}/pl18-stage2b-artifacts" >> "$GITHUB_ENV"
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ruby zstd python3
+
+      - name: Run Stage 3 unit tests
+        shell: bash
+        run: PYTHONPATH=scripts python3 scripts/test_stage3_upper_bounds.py
+
+      - name: Restore certified Stage 2B graph
+        id: stage2b-cache
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ env.STAGE2B_ARCHIVE }}
+          key: s3-v1-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ env.PRG_RAW_SHA256 }}-${{ env.MANIFEST_V2_SHA256 }}-${{ hashFiles('results/graph/graph-manifest.json', 'results/graph/graph-binary-hashes.txt', 'results/graph/edge-counts.json') }}-${{ hashFiles('results/graph-prg/stage2b-manifest.json', 'results/graph-prg/split-edges-summary.json', 'results/graph-prg/turn-states-summary.json', 'results/graph-prg/gates-summary.json') }}-M0-M300-M500-${{ hashFiles('scripts/stage3_upper_bounds.py') }}-${{ github.sha }}
+          restore-keys: |
+            s3-v1-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ env.PRG_RAW_SHA256 }}-${{ env.MANIFEST_V2_SHA256 }}-${{ hashFiles('results/graph/graph-manifest.json', 'results/graph/graph-binary-hashes.txt', 'results/graph/edge-counts.json') }}-${{ hashFiles('results/graph-prg/stage2b-manifest.json', 'results/graph-prg/split-edges-summary.json', 'results/graph-prg/turn-states-summary.json', 'results/graph-prg/gates-summary.json') }}-M0-M300-M500-
+            pl18-stage2b-canonical-for-stage3-v1-${{ runner.arch }}-osm-${{ env.PBF_SHA256 }}-prg-${{ env.PRG_RAW_SHA256 }}-manifestv2-${{ env.MANIFEST_V2_SHA256 }}-
+
+      - name: Require certified Stage 2B graph cache
+        shell: bash
+        run: |
+          if [[ ! -s "$STAGE2B_ARCHIVE" ]]; then
+            echo "Certified Stage 2B canonical graph cache is required for Stage 3." >&2
+            exit 1
+          fi
+
+      - name: Unpack certified Stage 2B graph
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$STAGE2B_ARTIFACTS"
+          tar --extract --use-compress-program=unzstd \
+            --file="$STAGE2B_ARCHIVE" \
+            --directory="$STAGE2B_ARTIFACTS"
+          test -f "$STAGE2B_ARTIFACTS/split-edges.tsv.zst"
+          test -f "$STAGE2B_ARTIFACTS/internal-turn-states.tsv.zst"
+          test -f "$STAGE2B_ARTIFACTS/inherited-turn-states.tsv.zst"
+
+      - name: Run Stage 3 fixed-order and upper-bound search
+        shell: bash
+        run: |
+          PYTHONPATH=scripts python3 scripts/stage3_upper_bounds.py \
+            --stage2b-artifacts "$STAGE2B_ARTIFACTS" \
+            --stage2b-results results/graph-prg \
+            --output results/stage3
+
+      - name: Upload Stage 3 certificates
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: stage3-upper-bounds-${{ github.run_id }}
+          path: results/stage3/
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 9
+
+      - name: Commit compact Stage 3 certificates
+        if: github.event_name == 'push'
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/stage3
+          if ! git diff --cached --quiet; then
+            git commit -m "Add Stage 3 upper-bound certificates"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
+
+      - name: Publish validation report
+        if: always()
+        shell: bash
+        run: |
+          if [[ -f results/stage3/validation-report.md ]]; then
+            cat results/stage3/validation-report.md >> "$GITHUB_STEP_SUMMARY"
+          fi
