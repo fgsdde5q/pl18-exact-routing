@@ -1,0 +1,353 @@
+manifest:
+  schema_version: 2
+  id: pl-18-capitals-static-2026-07-26-v2
+  supersedes:
+    id: pl-18-capitals-static-2026-07-26-v1
+    sha256: 9b3508725f5e19a843235b931d8e37d7bd4fcba976bf6a71a905b6cb0630a3b4
+  change_scope:
+    - make_all_Stage_2A_speed_caps_and_penalties_numeric
+    - pin_OSM_and_PRG_provenance
+    - preserve_Stage_1_city_start_and_geometry_semantics
+  created_at: '2026-07-26T17:08:29Z'
+  timezone: Europe/Warsaw
+
+problem:
+  objective: minimum_static_travel_time
+  return_to_start: false
+  free_finish: true
+  start_city_visited: Warszawa
+  dynamic_factors: forbidden
+
+start:
+  name: Plac Wilsona, Warszawa
+  wgs84:
+    longitude: 20.986450
+    latitude: 52.268850
+  inside_city_bit_index: 0
+  snap:
+    crs: EPSG:2180
+    eligible: public_motorcar_directed_segments_only
+    method: nearest_orthogonal_projection
+    max_distance_m: 150.0
+    distance_rounding_m: 0.001
+    tie_break:
+      - distance_millimetres
+      - osm_way_id
+      - osm_segment_ordinal
+      - direction_bit
+  departure_heading:
+    policy: free_legal_departure
+    implementation: zero_cost_super_source_to_all_legal_directions_on_selected_physical_segment
+
+cities:
+  canonical_bit_order:
+    - {bit_index: 0, city: Warszawa, TERYT: '1465011', PRG_object_ID: '2799189'}
+    - {bit_index: 1, city: Łódź, TERYT: '1061011', PRG_object_ID: '10027506'}
+    - {bit_index: 2, city: Kielce, TERYT: '2661011', PRG_object_ID: '2747998'}
+    - {bit_index: 3, city: Lublin, TERYT: '0663011', PRG_object_ID: '10002086'}
+    - {bit_index: 4, city: Rzeszów, TERYT: '1863011', PRG_object_ID: '10036131'}
+    - {bit_index: 5, city: Kraków, TERYT: '1261011', PRG_object_ID: '10016301'}
+    - {bit_index: 6, city: Katowice, TERYT: '2469011', PRG_object_ID: '10036150'}
+    - {bit_index: 7, city: Opole, TERYT: '1661011', PRG_object_ID: '10040196'}
+    - {bit_index: 8, city: Wrocław, TERYT: '0264011', PRG_object_ID: '10027472'}
+    - {bit_index: 9, city: Zielona Góra, TERYT: '0862011', PRG_object_ID: '10019236'}
+    - {bit_index: 10, city: Gorzów Wielkopolski, TERYT: '0861011', PRG_object_ID: '10019134'}
+    - {bit_index: 11, city: Szczecin, TERYT: '3262011', PRG_object_ID: '10004395'}
+    - {bit_index: 12, city: Poznań, TERYT: '3064011', PRG_object_ID: '10027538'}
+    - {bit_index: 13, city: Bydgoszcz, TERYT: '0461011', PRG_object_ID: '10027391'}
+    - {bit_index: 14, city: Toruń, TERYT: '0463011', PRG_object_ID: '2788878'}
+    - {bit_index: 15, city: Gdańsk, TERYT: '2261011', PRG_object_ID: '10021887'}
+    - {bit_index: 16, city: Olsztyn, TERYT: '2862011', PRG_object_ID: '2772685'}
+    - {bit_index: 17, city: Białystok, TERYT: '2061011', PRG_object_ID: '2753749'}
+
+inputs:
+  osm:
+    provider: Geofabrik
+    file: poland-260725.osm.pbf
+    url: https://download.geofabrik.de/europe/poland-260725.osm.pbf
+    size_bytes: 2078786520
+    md5: eb188df5acafd002244ed84bb7b650ab
+    sha256: 2f49ae5a61fbd70de5a8696ffa1cd1ac177bcfc9fea1d69cad43fbf4e5af4f28
+  prg:
+    authority: GUGiK
+    feature_type: ms:A03_Granice_gmin
+    source_crs: EPSG:2180
+    pinned_file: input/prg/prg-18-raw.gml.zst
+    raw_gml_sha256: adf261aae31257dd24843b6f6c0e694efb40041aae3913b1c27aa4801866974c
+    compressed_gml_sha256: 91bdab09b9fe77ea02add8cfdf88a41c03ae84587ff8fdfc1808fb340fa41684
+    source_manifest_sha256: 2d084b7fdc9c0048d83e7153ad5abff32f9184efa42a0bfbff29731ddabcc092
+    describe_feature_type_sha256: cc81f378de423ad27c91e21ecfeab4e6765b4765140ca27953d6b8d69dfa884b
+
+vehicle:
+  type: ordinary_passenger_car
+  height_m: 2.0
+  width_m: 1.9
+  length_m: 4.8
+  weight_kg: 2000
+
+routing_engine:
+  project: Project-OSRM/osrm-backend
+  version: v26.5.0
+  commit: 3c32a51
+  profile_base: profiles/car.lua
+  api_version: 4
+  edge_based: true
+  weight_name: duration
+  weight_precision_decimals: 1
+  use_turn_restrictions: true
+  oneway_handling: true
+  left_hand_driving: false
+  continue_straight_at_waypoint: true
+
+access_model:
+  hierarchy:
+    - motorcar
+    - motor_vehicle
+    - vehicle
+    - access
+  allowed_values:
+    - 'yes'
+    - motorcar
+    - motor_vehicle
+    - vehicle
+    - permissive
+    - designated
+  forbidden_values:
+    - 'no'
+    - private
+    - agricultural
+    - forestry
+    - emergency
+    - psv
+    - taxi
+    - share_taxi
+    - minibus
+    - bus
+    - customers
+    - delivery
+    - destination
+    - hov
+  forbidden_highway_values:
+    - footway
+    - path
+    - cycleway
+    - bridleway
+    - steps
+    - construction
+    - proposed
+    - raceway
+    - emergency_bay
+  forbidden_service_values:
+    - emergency_access
+  ferries: forbidden
+  shuttle_trains: forbidden
+  toll_roads: allowed_without_extra_cost
+  conditional_restrictions: ignore_all_time_day_date_season_conditions
+  unknown_highway_class: forbidden
+
+speed_model:
+  units: km/h
+  default_speed_kmh: 10.0
+  minimum_positive_speed_kmh: 5.0
+  maxspeed_reduction_factor: 0.8
+  directional_maxspeed_precedence:
+    - maxspeed:forward_or_maxspeed:backward
+    - maxspeed
+    - source:maxspeed_symbolic
+  effective_speed_formula: >-
+    min(class_speed_kmh,
+        0.8 * parsed_static_directional_maxspeed_kmh_if_present,
+        surface_cap_kmh_if_present,
+        tracktype_cap_kmh_if_present,
+        smoothness_cap_kmh_if_present,
+        bridge_cap_kmh_if_present)
+  nonpositive_cap_policy: remove_directed_edge
+  class_speed_kmh:
+    motorway: 90.0
+    motorway_link: 45.0
+    trunk: 85.0
+    trunk_link: 40.0
+    primary: 65.0
+    primary_link: 30.0
+    secondary: 55.0
+    secondary_link: 25.0
+    tertiary: 40.0
+    tertiary_link: 20.0
+    unclassified: 25.0
+    residential: 25.0
+    living_street: 10.0
+    service: 15.0
+    winter_road: 20.0
+    ice_road: 15.0
+  surface_cap_kmh:
+    asphalt: null
+    concrete: null
+    concrete:plates: null
+    concrete:lanes: null
+    paved: null
+    cement: 80.0
+    compacted: 80.0
+    fine_gravel: 80.0
+    paving_stones: 60.0
+    metal: 60.0
+    bricks: 60.0
+    grass: 40.0
+    wood: 40.0
+    sett: 40.0
+    grass_paver: 40.0
+    gravel: 40.0
+    unpaved: 40.0
+    ground: 40.0
+    dirt: 40.0
+    pebblestone: 40.0
+    tartan: 40.0
+    cobblestone: 30.0
+    clay: 30.0
+    earth: 20.0
+    stone: 20.0
+    rocky: 20.0
+    sand: 20.0
+    mud: 10.0
+    ice: 20.0
+    snow: 30.0
+  tracktype_cap_kmh:
+    grade1: 60.0
+    grade2: 40.0
+    grade3: 30.0
+    grade4: 25.0
+    grade5: 20.0
+  smoothness_cap_kmh:
+    intermediate: 80.0
+    bad: 40.0
+    very_bad: 20.0
+    horrible: 10.0
+    very_horrible: 5.0
+    impassable: 0.0
+  bridge_cap_kmh:
+    movable: 5.0
+  symbolic_maxspeed_kmh:
+    pl:urban: 50.0
+    pl:rural: 100.0
+    pl:expressway: 120.0
+    pl:motorway: 140.0
+    none: 140.0
+  way_duration_multipliers:
+    side_road: 1.0
+    lane_markings_no: 1.0
+    service_alley: 1.0
+    service_parking: 1.0
+    service_parking_aisle: 1.0
+    service_driveway: 1.0
+    service_drive-through: 1.0
+    service_drive-thru: 1.0
+  rationale_for_unit_multipliers: >-
+    The objective is physical static duration. Upstream routability preferences
+    that do not represent elapsed time are disabled to avoid biasing the objective.
+
+turn_cost_model:
+  units: seconds
+  restriction_tags:
+    - restriction:motorcar
+    - restriction:motor_vehicle
+    - restriction:vehicle
+  prohibited_turn_cost: infinity
+  angle_penalty:
+    maximum_s: 7.5
+    right_hand_traffic_bias: 1.075
+    apply_when: number_of_roads_gt_2_or_mode_changes_or_u_turn
+    positive_angle_formula: >-
+      7.5 / (1 + exp(-((13 / 1.075) * angle_degrees / 180 - 6.5 * 1.075)))
+    negative_angle_formula: >-
+      7.5 / (1 + exp(-((13 * 1.075) * abs(angle_degrees) / 180 - 6.5 / 1.075)))
+  u_turn_extra_s: 20.0
+  barrier_penalty_s:
+    gate: 60.0
+    lift_gate: 60.0
+  other_node_obstacle_penalty_s: 0.0
+  traffic_signal_extra_s: 0.0
+  stop_sign_extra_s: 0.0
+  link_entry_extra_s: 0.0
+  link_exit_extra_s: 0.0
+  interchange_extra_s: 0.0
+  roundabout_entry_extra_s: 0.0
+  roundabout_exit_extra_s: 0.0
+  toll_extra_s: 0.0
+  rationale_for_zero_extras: >-
+    Ramp and interchange traversal time is already represented by link-edge length,
+    link-class speed and angle penalty. Extra constants are zero to prevent double counting.
+
+static_tag_policy:
+  include:
+    - highway_class
+    - static_maxspeed
+    - directional_maxspeed
+    - oneway
+    - access
+    - vehicle_dimensions_and_weight_limits
+    - turn_restrictions
+    - toll
+    - junctions
+    - ramps
+    - surface
+    - smoothness
+    - tracktype
+    - movable_bridge
+    - static_barriers
+  exclude:
+    - traffic
+    - weather
+    - incidents
+    - time_of_day
+    - day_of_week
+    - seasonal_changes
+    - dynamic_roadworks
+    - predicted_delays
+    - conditional_time_day_date_season_tags
+
+prg_geometry_model:
+  original_geometry: preserve_unchanged
+  computational_geometry:
+    source: results/prg/prg-18-computational.gpkg
+    crs: EPSG:2180
+    validity: 18_of_18_valid
+    make_valid_copies_created: 0
+  visit_regions:
+    M-boundary:
+      depth_m: 0.0
+      tangential_contact_counts: false
+      minimum_inside_measure: positive_length
+    M-300:
+      depth_m: 300.0
+      condition: distance_to_any_PRG_boundary_greater_or_equal
+    M-500:
+      depth_m: 500.0
+      condition: distance_to_any_PRG_boundary_greater_or_equal
+  boundary_distance:
+    crs: EPSG:2180
+    metric: Euclidean
+    polygon_holes_are_boundaries: true
+  negative_buffer:
+    engine: GEOS
+    version: 3.13.1
+    join_style: round
+    quad_segs: 32
+    tolerance_m: 0.01
+
+stable_ids:
+  base_directed_edge: osm_way_id/segment_ordinal/direction_bit/from_node_id/to_node_id
+  split_point: SHA256(base_directed_edge|fraction_1e-12|PRG_raw_SHA256|model_depth)
+  split_edge: base_directed_edge@ordered_split_interval
+  turn_state: incoming_split_edge->outgoing_split_edge
+
+solver_contract:
+  primary_method: admissible_A_star_label_setting
+  state: edge_based_turn_state_and_visited_city_bitmask
+  goal: any_state_with_all_18_bits
+  random_seed: 20260726
+  independent_check: MILP_or_independent_exact_solver
+  optimality_status: OPTIMAL
+  maximum_absolute_gap_s: 1.0
+  heuristics_role: upper_bound_only
+
+normalisation:
+  Rzeszzów: Rzeszów

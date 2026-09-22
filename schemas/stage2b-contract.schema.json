@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/fgsdde5q/pl18-exact-routing/schemas/stage2b-contract.schema.json",
+  "title": "Stage 2B PRG road-graph contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "contract_id",
+    "solver_execution",
+    "frozen_inputs",
+    "stage2a_authority",
+    "geometry",
+    "models",
+    "city_order",
+    "fraction",
+    "boundary_event_categories",
+    "visit_semantics",
+    "stable_ids",
+    "subdivision",
+    "turn_semantics",
+    "canonical_sorting",
+    "cache_policy",
+    "rebuild_policy"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "contract_id": {"const": "pl18-stage2b-prg-road-graph-v1"},
+    "solver_execution": {"const": "forbidden"},
+    "frozen_inputs": {"type": "object"},
+    "stage2a_authority": {
+      "type": "object",
+      "required": ["legal_directed_motorcar_edges", "edge_based_turn_states", "directed_base_edges_sha256", "turn_state_canonical_sha256"],
+      "properties": {
+        "legal_directed_motorcar_edges": {"const": 33473569},
+        "edge_based_turn_states": {"const": 15654641},
+        "directed_base_edges_sha256": {"const": "f27449dfa026193831458712bcb97c1c8b07fdf9fe4f9d33c6c2f2f613a4406a"},
+        "turn_state_canonical_sha256": {"const": "cb613a7ad6019181064b3f09ef36ccabd8a732ad50897f04da49468306e23bad"}
+      }
+    },
+    "geometry": {"type": "object"},
+    "models": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {"type": "object", "required": ["model_id", "presentation_alias", "depth_m"]}
+    },
+    "city_order": {
+      "type": "array",
+      "minItems": 18,
+      "maxItems": 18,
+      "items": {"type": "object", "required": ["bit_index", "city", "TERYT", "PRG_object_ID"]}
+    },
+    "fraction": {"type": "object"},
+    "boundary_event_categories": {"type": "array", "minItems": 11, "uniqueItems": true},
+    "visit_semantics": {"type": "object"},
+    "stable_ids": {"type": "object"},
+    "subdivision": {"type": "object"},
+    "turn_semantics": {"type": "object"},
+    "canonical_sorting": {"type": "object"},
+    "cache_policy": {"type": "object"},
+    "rebuild_policy": {"type": "object"}
+  }
+}

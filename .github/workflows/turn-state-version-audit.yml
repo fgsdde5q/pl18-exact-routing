@@ -1,0 +1,162 @@
+name: Stage 2A turn-state version audit
+
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: turn-state-version-audit-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  version-audit:
+    name: Compare certified canonical turn-state sets
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      OSRM_COMMIT: 3c32a51bf58d12bf30efd0808d0b6ad51d334122
+      VCPKG_COMMIT: c3867e714dd3a51c272826eea77267876517ed99
+      PYOSMIUM_VERSION: 4.1.1
+      JOBS: 4
+      CCACHE_MAXSIZE: 750M
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+
+      - name: Set isolated audit paths
+        shell: bash
+        run: |
+          {
+            echo "PBF_CACHE_DIR=${RUNNER_TEMP}/pl18-pbf"
+            echo "CACHE_METADATA_ARCHIVE=${RUNNER_TEMP}/pl18-metadata-checkpoint.tar.zst"
+            echo "OSRM_SOURCE=${RUNNER_TEMP}/osrm-backend"
+            echo "OSRM_BUILD=${RUNNER_TEMP}/osrm-build"
+            echo "OLD_OSRM_ROOT=${RUNNER_TEMP}/stage2a-old-osrm"
+            echo "NEW_METADATA_ARCHIVE=${RUNNER_TEMP}/stage2a-new-metadata.tar.zst"
+            echo "TURN_VERSION_AUDIT=${RUNNER_TEMP}/stage2a-turn-version-audit"
+            echo "VCPKG_ROOT=${RUNNER_TEMP}/vcpkg"
+            echo "VCPKG_DEFAULT_BINARY_CACHE=${RUNNER_TEMP}/vcpkg-bincache"
+            echo "CCACHE_DIR=${RUNNER_TEMP}/ccache"
+          } >> "$GITHUB_ENV"
+
+      - name: Restore frozen PBF
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ env.PBF_CACHE_DIR }}/poland-260901.osm.pbf
+          key: pl18-pbf-v2-Linux-X64-f28f493c6cc280da1128b03be21ae2eb1973f443c14235dea36088bcbd3e83f3
+          fail-on-cache-miss: true
+
+      - name: Restore authoritative canonical metadata
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ env.CACHE_METADATA_ARCHIVE }}
+          key: pl18-metadata-checkpoint-v1-X64-f28f493c6cc280da1128b03be21ae2eb1973f443c14235dea36088bcbd3e83f3-jobs1-c1d50ad5833be538d84b3ccc764b1b762258bd27053b84e16d0319acd3cfb66a-e63ee4e6c461f152a6cbc114d441461b37211f4d4c5796da8065256e7c6ca952-3c32a51bf58d12bf30efd0808d0b6ad51d334122-c3867e714dd3a51c272826eea77267876517ed99-853a68ac93c3091f68dbc41af53726600db4ca51833e028f2e2e12ea95ac7505
+          fail-on-cache-miss: true
+
+      - name: Preserve authoritative metadata archive
+        shell: bash
+        run: mv "$CACHE_METADATA_ARCHIVE" "$NEW_METADATA_ARCHIVE"
+
+      - name: Free hosted-runner disk space
+        shell: bash
+        run: sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup
+
+      - name: Install pinned-build dependencies
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            autoconf automake build-essential ca-certificates ccache cmake curl git \
+            libtool ninja-build pkg-config python3-gdal python3-pip python3-pyproj \
+            python3-venv ruby tar unzip zip zstd
+          python3 -m venv --system-site-packages "${RUNNER_TEMP}/stage2a-python"
+          "${RUNNER_TEMP}/stage2a-python/bin/python" -m pip install \
+            --disable-pip-version-check --only-binary=:all: "osmium==${PYOSMIUM_VERSION}"
+
+      - name: Restore build caches
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: |
+            ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
+            ${{ env.CCACHE_DIR }}
+          key: turn-version-build-v1-${{ runner.os }}-${{ runner.arch }}-${{ env.OSRM_COMMIT }}
+          restore-keys: |
+            turn-version-build-v1-
+            vcpkg-stage2a-v2-${{ runner.os }}-${{ runner.arch }}-${{ env.VCPKG_COMMIT }}-
+
+      - name: Check out pinned build sources
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git clone --filter=blob:none https://github.com/Project-OSRM/osrm-backend.git "$OSRM_SOURCE"
+          git -C "$OSRM_SOURCE" checkout "$OSRM_COMMIT"
+          git clone --filter=blob:none https://github.com/microsoft/vcpkg.git "$VCPKG_ROOT"
+          git -C "$VCPKG_ROOT" checkout "$VCPKG_COMMIT"
+          "$VCPKG_ROOT/bootstrap-vcpkg.sh" -disableMetrics
+          mkdir -p "$VCPKG_DEFAULT_BINARY_CACHE" "$CCACHE_DIR"
+          ccache --set-config "cache_dir=${CCACHE_DIR}"
+          ccache --set-config "max_size=${CCACHE_MAXSIZE}"
+          ccache --set-config compression=true
+
+      - name: Build pinned OSRM tools
+        shell: bash
+        run: bash scripts/build_osrm_stage2a.sh "$OSRM_SOURCE" "$OSRM_BUILD"
+
+      - name: Compare canonical exports as sets
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          old_root="${TURN_VERSION_AUDIT}/old"
+          new_root="${TURN_VERSION_AUDIT}/new"
+          mkdir -p "$OLD_OSRM_ROOT/graph" "$OLD_OSRM_ROOT/dump" "$old_root" "$new_root" "${TURN_VERSION_AUDIT}/sort-temp"
+          tar --extract --use-compress-program=unzstd --file="$NEW_METADATA_ARCHIVE" --directory="$new_root"
+          env "LUA_PATH=${OSRM_SOURCE}/profiles/?.lua;${OSRM_SOURCE}/profiles/?/init.lua;;" \
+            "$OSRM_BUILD/osrm-extract" \
+              --threads "$JOBS" \
+              --profile profiles/pl18-car.lua \
+              --output "$OLD_OSRM_ROOT/graph/poland.osrm" \
+              "${PBF_CACHE_DIR}/poland-260901.osm.pbf" \
+              2>&1 | tee "$OLD_OSRM_ROOT/extract.log"
+          "$OSRM_BUILD/osrm-graph-dump" \
+            "$OLD_OSRM_ROOT/graph/poland.osrm" "$OLD_OSRM_ROOT/dump"
+          "${RUNNER_TEMP}/stage2a-python/bin/python" scripts/export_graph_metadata.py \
+            --manifest instance/pl_18_capitals_static_instance_v3.yaml \
+            --pbf "${PBF_CACHE_DIR}/poland-260901.osm.pbf" \
+            --osrm-dump "${OLD_OSRM_ROOT}/dump" \
+            --osrm-extract-log "${OLD_OSRM_ROOT}/extract.log" \
+            --output "$old_root" \
+            --temp "${TURN_VERSION_AUDIT}/sort-temp"
+          mv "$old_root/edge-based-turn-states.tsv" "${TURN_VERSION_AUDIT}/old.tsv"
+          zstd -dc "$new_root/edge-based-turn-states.tsv.zst" > "${TURN_VERSION_AUDIT}/new.tsv"
+          python3 scripts/compare_turn_state_versions.py \
+            --old "${TURN_VERSION_AUDIT}/old.tsv" \
+            --new "${TURN_VERSION_AUDIT}/new.tsv" \
+            --restriction-certificate results/graph/turn-restriction-certificate.json \
+            --json results/graph/turn-state-version-diff.json \
+            --markdown results/graph/turn-state-version-diff.md
+
+      - name: Upload version diff
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: stage2a-turn-state-version-diff-${{ github.run_id }}
+          path: |
+            results/graph/turn-state-version-diff.json
+            results/graph/turn-state-version-diff.md
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Commit version diff
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/graph/turn-state-version-diff.json results/graph/turn-state-version-diff.md
+          git commit -m "Explain Stage 2A turn-state version change"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

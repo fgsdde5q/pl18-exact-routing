@@ -1,0 +1,11 @@
+{
+  "artifact": {
+    "sha256": "296990c8ff86a45f6780a5e1964aca153b1ecac2a3a20ad3a21dfef4688560a9",
+    "size_bytes": 747402805
+  },
+  "parents": 33615581,
+  "split_edges": 33640280,
+  "split_parents": 24425,
+  "start_child_ordinal": 0,
+  "status": "SPLIT_GRAPH_CERTIFIED"
+}

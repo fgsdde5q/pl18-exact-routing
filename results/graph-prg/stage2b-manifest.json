@@ -1,0 +1,43 @@
+{
+  "artifact_hashes": {
+    "gates.tsv.zst": {
+      "sha256": "d6e5f427cb69daa4921c82d155996df181941dfbc3af7212bad12622763a3f5a",
+      "size_bytes": 2085965
+    },
+    "geometry-models.tsv": {
+      "sha256": "04bfcb05680f4304cb426720fc9f7c48cbf2d656b47d3deeeb8db92d45564d50",
+      "size_bytes": 5818037
+    },
+    "inherited-turn-states.tsv.zst": {
+      "sha256": "4ddecfaf7c0fc0ae16d9ee42ebd871dcfe171c12e7add90b051eb51cbe6fbccf",
+      "size_bytes": 240210848
+    },
+    "internal-turn-states.tsv.zst": {
+      "sha256": "2db4b20d179789b267bda5863c3ea306a806d4be32f0df201b167d555f71f502",
+      "size_bytes": 343530
+    },
+    "split-edges.tsv.zst": {
+      "sha256": "296990c8ff86a45f6780a5e1964aca153b1ecac2a3a20ad3a21dfef4688560a9",
+      "size_bytes": 747402805
+    },
+    "split-points.tsv.zst": {
+      "sha256": "db348d6e6490bab5ffc58272c61c644e2e8430399d460fcb2182569be3672f17",
+      "size_bytes": 2179212
+    }
+  },
+  "contract_sha256": "4c56900505c694a6ce7f109e5af8e401d042c839c919c229e1d431ff70b51661",
+  "schema_version": 1,
+  "statuses": [
+    "ROAD_PRG_INTERSECTION_OK",
+    "VISIT_MODELS_CERTIFIED",
+    "SPLIT_GRAPH_CERTIFIED",
+    "GATE_INVENTORY_COMPLETE",
+    "CITY_BITMASK_CERTIFIED",
+    "TOPOLOGY_PRESERVED",
+    "COSTS_PRESERVED",
+    "TURN_SEMANTICS_PRESERVED",
+    "START_STATE_PRESERVED",
+    "STAGE2B_EXPORT_REPRODUCIBLE",
+    "SOLVER_NOT_STARTED"
+  ]
+}

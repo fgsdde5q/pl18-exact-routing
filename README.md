@@ -1,10 +1,49 @@
 # pl18-exact-routing
 
+## Frozen manifests
+
+- `instance/pl_18_capitals_static_instance_v1.yaml` preserves the Stage 1 contract and provenance.
+- `instance/pl_18_capitals_static_instance_v3.yaml` is the sole semantic source for Stage 2A.
+- `instance/CURRENT` is the machine-readable pointer to the current manifest.
+
+## Stage 2A
+
+`profiles/pl18-car.lua` is generated from the pinned OSRM v26.5.0 `car.lua` and frozen manifest v3. The `Stage 2A road graph` workflow restores the frozen PBF from Actions cache or the repository release asset, verifies all input hashes, builds the MLD edge-based graph twice, compares canonical sorted metadata, caches large graph products, and commits only compact certificates under `results/graph/`.
+
+Stage 2A uses a durable GitHub Release asset for the frozen PBF plus separate semantic caches for the PBF, pinned vcpkg binaries, ccache objects, and the certified graph. The dependency caches are saved even when a later build step fails. The graph key excludes the Git commit SHA and instead includes the PBF, manifest, profile, OSRM, exporter, and metadata-export semantics. Enforced cache ceilings reserve at least 500 MB below GitHub's default 10 GB repository cache limit.
+
+No PRG geometry refresh, city-region intersection, M-boundary construction, or route optimization is performed in Stage 2A.
+
+## Stage 2B
+
+Stage 2B intersects every authoritative Stage 2A directed edge with all 18
+official PRG city geometries under the frozen `M-boundary`, `M-300`, and
+`M-500` visit models. `A`, `B`, and `C` are report-only aliases; canonical
+model IDs never change. The canonical subdivision is the union of all model
+boundary events and every child edge carries three separate city bitmasks.
+
+`scripts/run_stage2b_audit.sh` performs two independent streaming builds from
+the immutable Stage 2A metadata export. Large split-edge, split-point, gate,
+geometry, and turn products are uploaded as Actions artifacts and are not
+committed. Compact contracts, hashes, counts, and preservation certificates
+are written under `results/graph-prg/`.
+
+The ordinary `Stage 2B PRG road graph` workflow certifies export
+reproducibility. The dispatch-only `Stage 2B clean rebuild audit` starts from
+empty Stage 2B work directories and certifies rebuild reproducibility. Both
+may restore only immutable Stage 2A metadata and dependencies. They never
+restore Stage 2B split products or metadata checkpoints. If the frozen PBF
+cache has expired, `scripts/restore_frozen_pbf.sh` downloads the same pinned
+file and verifies its size, MD5, and SHA-256 before any Stage 2A rebuild.
+
+No Stage 3 route search, upper-bound search, or solver is run by Stage 2B.
+
 ## Stage 0: preflight
 
 The preflight workflow verifies the pinned Poland OSM PBF and records the
-official PRG WFS capabilities. The PBF itself is retained only in the GitHub
-Actions cache and is not uploaded as an artifact.
+official PRG WFS capabilities. The PBF itself is retained in the repository
+release asset and may be cached by GitHub Actions; it is not uploaded as a
+workflow artifact.
 
 ## Stage 1: official PRG boundaries
 

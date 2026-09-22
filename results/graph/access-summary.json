@@ -1,0 +1,5 @@
+{
+  "forbidden_ferry_edges": 6670,
+  "rejected_private_nonmotorcar_edges": 2435460,
+  "toll_policy": "allowed_without_extra_cost"
+}

@@ -1,0 +1,19 @@
+name: Stage 2B clean rebuild audit
+
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: write
+
+concurrency:
+  group: stage2b-clean-rebuild-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  rebuild:
+    uses: ./.github/workflows/stage2b-engine.yml
+    with:
+      mode: rebuild
+    secrets: inherit

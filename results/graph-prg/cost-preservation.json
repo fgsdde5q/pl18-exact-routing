@@ -1,0 +1,13 @@
+{
+  "child_duration_ds": 1867774346,
+  "child_length_nm": 1127224576723000000,
+  "declared_length_tolerance_m": 1e-09,
+  "internal_turn_cost_s": 0.0,
+  "maximum_parent_duration_error_ds": 0,
+  "maximum_parent_length_error_nm": 0,
+  "parent_duration_ds": 1867774346,
+  "parent_length_nm": 1127224576723000000,
+  "proof": "child edge deciseconds sum exactly to each parent and inherited turn duration occurs exactly once; internal continuations cost zero",
+  "residual_distribution": "largest_remainder_then_interval_ordinal",
+  "status": "COSTS_PRESERVED"
+}

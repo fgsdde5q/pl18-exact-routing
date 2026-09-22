@@ -1,0 +1,16 @@
+{
+  "source_restriction_relations": 47133,
+  "parsed_turn_restrictions": 45553,
+  "invalid_turn_restrictions": 459,
+  "unresolved_turn_restrictions": 2245,
+  "enforced_turn_restrictions": 42849,
+  "no_turn_relations": 33396,
+  "only_turn_relations": 13637,
+  "conditional_restriction_relations": 24,
+  "expected_prohibited_turn_transitions": 45629,
+  "source_candidate_turn_transitions": 45629,
+  "osrm_non_enforced_candidate_turn_transitions": 33,
+  "prohibited_turn_violations": 0,
+  "enforcement_source": "OSRM v26.5.0 counters plus complete source-candidate comparison against exported allowed turn states",
+  "conditional_restrictions": "ignored"
+}

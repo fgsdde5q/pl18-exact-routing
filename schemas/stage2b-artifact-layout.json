@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "artifacts": {
+    "split-points.tsv.zst": {
+      "format": "UTF-8 TSV with LF line endings",
+      "header": ["split_point_id", "parent_edge_id", "unquantized_fractions_json", "fraction", "wgs84_x", "wgs84_y", "epsg2180_x", "epsg2180_y", "model_id", "city_mask", "events_json", "prg_raw_sha256"],
+      "canonical_sort": ["parent_edge_id", "fraction", "model_id"]
+    },
+    "split-edges.tsv.zst": {
+      "format": "UTF-8 TSV with LF line endings",
+      "header": ["split_edge_id", "parent_edge_id", "ordinal", "start_fraction", "end_fraction", "from_lon", "from_lat", "to_lon", "to_lat", "length_m", "duration_s", "M_boundary_mask", "M_300_mask", "M_500_mask", "boundary_event_ids"],
+      "canonical_sort": ["parent_edge_id", "ordinal"]
+    },
+    "internal-turn-states.tsv.zst": {
+      "format": "UTF-8 TSV with LF line endings",
+      "header": ["incoming_split_edge_id", "outgoing_split_edge_id", "turn_duration_s", "transition_category"],
+      "canonical_sort": ["incoming_split_edge_id", "outgoing_split_edge_id"]
+    },
+    "inherited-turn-states.tsv.zst": {
+      "format": "UTF-8 TSV with LF line endings",
+      "header": ["incoming_split_edge_id", "outgoing_split_edge_id", "turn_duration_s", "transition_category"],
+      "canonical_sort": ["incoming_split_edge_id", "outgoing_split_edge_id"]
+    },
+    "gates.tsv.zst": {
+      "format": "UTF-8 TSV with LF line endings",
+      "header": ["model_id", "bit_index", "city", "event_category", "split_point_id", "parent_edge_id", "incoming_split_edge_id", "outgoing_split_edge_id", "osm_way_id", "fraction", "direction_bit", "wgs84_x", "wgs84_y", "epsg2180_x", "epsg2180_y"],
+      "canonical_sort": ["parent_edge_id", "fraction", "model_id", "bit_index"]
+    },
+    "geometry-models.tsv": {
+      "format": "UTF-8 TSV with LF line endings",
+      "header": ["model_id", "bit_index", "city", "teryt", "geometry_wkb_hex"],
+      "canonical_sort": ["bit_index", "model_id"]
+    }
+  }
+}
