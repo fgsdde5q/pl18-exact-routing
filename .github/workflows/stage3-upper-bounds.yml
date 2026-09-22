@@ -59,11 +59,12 @@ jobs:
             pl18-stage2b-canonical-for-stage3-v1-${{ runner.arch }}-osm-${{ env.PBF_SHA256 }}-prg-${{ env.PRG_RAW_SHA256 }}-manifestv2-${{ env.MANIFEST_V2_SHA256 }}-
 
       - name: Require certified Stage 2B graph cache
-        if: steps.stage2b-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
-          echo "Certified Stage 2B canonical graph cache is required for Stage 3." >&2
-          exit 1
+          if [[ ! -s "$STAGE2B_ARCHIVE" ]]; then
+            echo "Certified Stage 2B canonical graph cache is required for Stage 3." >&2
+            exit 1
+          fi
 
       - name: Unpack certified Stage 2B graph
         shell: bash
