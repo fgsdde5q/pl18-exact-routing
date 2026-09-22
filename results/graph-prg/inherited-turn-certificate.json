@@ -1,0 +1,8 @@
+{
+  "authoritative_legal_turns": 15728284,
+  "inherited_legal_turns": 15728284,
+  "ordinary_start_states": 0,
+  "prohibited_turns_added": 0,
+  "status": "TURN_SEMANTICS_PRESERVED",
+  "turn_duration_applied_exactly_once": true
+}

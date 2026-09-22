@@ -1,0 +1,16 @@
+{
+  "all_parents_represented": true,
+  "direction_preserved": true,
+  "expected_internal_continuation_count": 24699,
+  "gaps": 0,
+  "internal_continuation_count": 24699,
+  "overlaps": 0,
+  "parent_count": 33615581,
+  "parent_endpoint_incidence_preserved": true,
+  "proof": "each parent directed edge is replaced by one directed child chain with identical endpoints; every adjacent child pair has one zero-cost internal continuation; every authoritative turn maps last incoming child to first outgoing child",
+  "split_edge_count": 33640280,
+  "split_parent_count": 24425,
+  "status": "TOPOLOGY_PRESERVED",
+  "weak_connected_components_preserved_by_constructive_bijection": true,
+  "zero_length_children": 230
+}

@@ -1,0 +1,626 @@
+{
+  "artifact": {
+    "sha256": "d6e5f427cb69daa4921c82d155996df181941dfbc3af7212bad12622763a3f5a",
+    "size_bytes": 2085965
+  },
+  "city_count": 18,
+  "city_model_classification_counts": {
+    "M-300:0": {
+      "crossing": 1,
+      "degenerate_numerical_case": 7,
+      "entering": 481,
+      "exiting": 493,
+      "fully_inside": 541923,
+      "fully_outside": 33072676
+    },
+    "M-300:1": {
+      "crossing": 4,
+      "entering": 291,
+      "exiting": 287,
+      "fully_inside": 337903,
+      "fully_outside": 33277096
+    },
+    "M-300:10": {
+      "crossing": 4,
+      "degenerate_numerical_case": 2,
+      "entering": 135,
+      "exiting": 138,
+      "fully_inside": 60232,
+      "fully_outside": 33555070
+    },
+    "M-300:11": {
+      "crossing": 2,
+      "degenerate_numerical_case": 5,
+      "entering": 272,
+      "exiting": 280,
+      "fully_inside": 202703,
+      "fully_outside": 33412319
+    },
+    "M-300:12": {
+      "crossing": 4,
+      "entering": 256,
+      "exiting": 258,
+      "fully_inside": 188362,
+      "fully_outside": 33426701
+    },
+    "M-300:13": {
+      "crossing": 4,
+      "entering": 282,
+      "exiting": 280,
+      "fully_inside": 133983,
+      "fully_outside": 33481032
+    },
+    "M-300:14": {
+      "degenerate_numerical_case": 2,
+      "entering": 178,
+      "exiting": 177,
+      "fully_inside": 158941,
+      "fully_outside": 33456283
+    },
+    "M-300:15": {
+      "crossing": 2,
+      "degenerate_numerical_case": 6,
+      "entering": 345,
+      "exiting": 345,
+      "fully_inside": 199547,
+      "fully_outside": 33415336
+    },
+    "M-300:16": {
+      "entering": 112,
+      "exiting": 108,
+      "fully_inside": 54126,
+      "fully_outside": 33561235
+    },
+    "M-300:17": {
+      "degenerate_numerical_case": 2,
+      "entering": 206,
+      "exiting": 204,
+      "fully_inside": 93177,
+      "fully_outside": 33521992
+    },
+    "M-300:2": {
+      "entering": 239,
+      "exiting": 240,
+      "fully_inside": 122049,
+      "fully_outside": 33493053
+    },
+    "M-300:3": {
+      "entering": 333,
+      "exiting": 334,
+      "fully_inside": 149899,
+      "fully_outside": 33465015
+    },
+    "M-300:4": {
+      "crossing": 2,
+      "entering": 261,
+      "exiting": 261,
+      "fully_inside": 139912,
+      "fully_outside": 33475145
+    },
+    "M-300:5": {
+      "crossing": 2,
+      "degenerate_numerical_case": 4,
+      "entering": 427,
+      "exiting": 429,
+      "fully_inside": 352017,
+      "fully_outside": 33262702
+    },
+    "M-300:6": {
+      "crossing": 3,
+      "degenerate_numerical_case": 1,
+      "entering": 281,
+      "exiting": 288,
+      "fully_inside": 116389,
+      "fully_outside": 33498619
+    },
+    "M-300:7": {
+      "crossing": 2,
+      "entering": 167,
+      "exiting": 166,
+      "fully_inside": 63604,
+      "fully_outside": 33551642
+    },
+    "M-300:8": {
+      "crossing": 5,
+      "degenerate_numerical_case": 4,
+      "entering": 214,
+      "exiting": 214,
+      "fully_inside": 306378,
+      "fully_outside": 33308766
+    },
+    "M-300:9": {
+      "degenerate_numerical_case": 2,
+      "entering": 41,
+      "exiting": 41,
+      "fully_inside": 110397,
+      "fully_outside": 33505100
+    },
+    "M-500:0": {
+      "crossing": 4,
+      "degenerate_numerical_case": 7,
+      "entering": 490,
+      "exiting": 489,
+      "fully_inside": 527313,
+      "fully_outside": 33087278
+    },
+    "M-500:1": {
+      "crossing": 2,
+      "entering": 298,
+      "exiting": 297,
+      "fully_inside": 331058,
+      "fully_outside": 33283926
+    },
+    "M-500:10": {
+      "degenerate_numerical_case": 2,
+      "entering": 133,
+      "exiting": 134,
+      "fully_inside": 56899,
+      "fully_outside": 33558413
+    },
+    "M-500:11": {
+      "crossing": 2,
+      "degenerate_numerical_case": 5,
+      "entering": 289,
+      "exiting": 291,
+      "fully_inside": 192966,
+      "fully_outside": 33422028
+    },
+    "M-500:12": {
+      "entering": 271,
+      "exiting": 269,
+      "fully_inside": 181683,
+      "fully_outside": 33433358
+    },
+    "M-500:13": {
+      "entering": 318,
+      "exiting": 319,
+      "fully_inside": 125461,
+      "fully_outside": 33489483
+    },
+    "M-500:14": {
+      "degenerate_numerical_case": 2,
+      "entering": 143,
+      "exiting": 143,
+      "fully_inside": 151615,
+      "fully_outside": 33463678
+    },
+    "M-500:15": {
+      "crossing": 2,
+      "degenerate_numerical_case": 6,
+      "entering": 280,
+      "exiting": 279,
+      "fully_inside": 190718,
+      "fully_outside": 33424296
+    },
+    "M-500:16": {
+      "crossing": 1,
+      "entering": 115,
+      "exiting": 115,
+      "fully_inside": 51049,
+      "fully_outside": 33564301
+    },
+    "M-500:17": {
+      "degenerate_numerical_case": 2,
+      "entering": 193,
+      "exiting": 193,
+      "fully_inside": 88303,
+      "fully_outside": 33526890
+    },
+    "M-500:2": {
+      "entering": 187,
+      "exiting": 184,
+      "fully_inside": 114462,
+      "fully_outside": 33500748
+    },
+    "M-500:3": {
+      "crossing": 4,
+      "entering": 310,
+      "exiting": 309,
+      "fully_inside": 139471,
+      "fully_outside": 33475487
+    },
+    "M-500:4": {
+      "entering": 252,
+      "exiting": 253,
+      "fully_inside": 132212,
+      "fully_outside": 33482864
+    },
+    "M-500:5": {
+      "degenerate_numerical_case": 4,
+      "entering": 435,
+      "exiting": 437,
+      "fully_inside": 338085,
+      "fully_outside": 33276620
+    },
+    "M-500:6": {
+      "crossing": 2,
+      "degenerate_numerical_case": 1,
+      "entering": 241,
+      "exiting": 243,
+      "fully_inside": 108228,
+      "fully_outside": 33506866
+    },
+    "M-500:7": {
+      "crossing": 2,
+      "entering": 191,
+      "exiting": 193,
+      "fully_inside": 59026,
+      "fully_outside": 33556169
+    },
+    "M-500:8": {
+      "degenerate_numerical_case": 4,
+      "entering": 284,
+      "exiting": 281,
+      "fully_inside": 297883,
+      "fully_outside": 33317129
+    },
+    "M-500:9": {
+      "degenerate_numerical_case": 2,
+      "entering": 71,
+      "exiting": 73,
+      "fully_inside": 109099,
+      "fully_outside": 33506336
+    },
+    "M-boundary:0": {
+      "crossing": 15,
+      "degenerate_numerical_case": 7,
+      "entering": 367,
+      "exiting": 373,
+      "fully_inside": 565033,
+      "fully_outside": 33049786
+    },
+    "M-boundary:1": {
+      "crossing": 7,
+      "entering": 284,
+      "exiting": 285,
+      "fully_inside": 349724,
+      "fully_outside": 33265281
+    },
+    "M-boundary:10": {
+      "crossing": 4,
+      "degenerate_numerical_case": 2,
+      "entering": 79,
+      "exiting": 80,
+      "fully_inside": 63911,
+      "fully_outside": 33551505
+    },
+    "M-boundary:11": {
+      "crossing": 4,
+      "degenerate_numerical_case": 5,
+      "entering": 164,
+      "exiting": 163,
+      "fully_inside": 219155,
+      "fully_outside": 33396090
+    },
+    "M-boundary:12": {
+      "crossing": 8,
+      "entering": 221,
+      "exiting": 216,
+      "fully_inside": 198587,
+      "fully_outside": 33416549
+    },
+    "M-boundary:13": {
+      "entering": 126,
+      "exiting": 124,
+      "fully_inside": 144907,
+      "fully_outside": 33470424
+    },
+    "M-boundary:14": {
+      "crossing": 7,
+      "degenerate_numerical_case": 2,
+      "entering": 98,
+      "exiting": 98,
+      "fully_inside": 170190,
+      "fully_outside": 33445186
+    },
+    "M-boundary:15": {
+      "crossing": 6,
+      "degenerate_numerical_case": 6,
+      "entering": 134,
+      "exiting": 133,
+      "fully_inside": 213196,
+      "fully_outside": 33402106
+    },
+    "M-boundary:16": {
+      "crossing": 4,
+      "entering": 107,
+      "exiting": 109,
+      "fully_inside": 59533,
+      "fully_outside": 33555828
+    },
+    "M-boundary:17": {
+      "crossing": 6,
+      "degenerate_numerical_case": 2,
+      "entering": 113,
+      "exiting": 115,
+      "fully_inside": 99458,
+      "fully_outside": 33515885,
+      "multiple_crossings": 2
+    },
+    "M-boundary:2": {
+      "crossing": 8,
+      "entering": 142,
+      "exiting": 143,
+      "fully_inside": 135223,
+      "fully_outside": 33480065
+    },
+    "M-boundary:3": {
+      "crossing": 4,
+      "entering": 286,
+      "exiting": 287,
+      "fully_inside": 167376,
+      "fully_outside": 33447628
+    },
+    "M-boundary:4": {
+      "crossing": 14,
+      "entering": 219,
+      "exiting": 219,
+      "fully_inside": 151738,
+      "fully_outside": 33463391
+    },
+    "M-boundary:5": {
+      "crossing": 10,
+      "degenerate_numerical_case": 4,
+      "entering": 340,
+      "exiting": 344,
+      "fully_inside": 372042,
+      "fully_outside": 33242838,
+      "multiple_crossings": 3
+    },
+    "M-boundary:6": {
+      "crossing": 14,
+      "degenerate_numerical_case": 1,
+      "entering": 161,
+      "exiting": 159,
+      "fully_inside": 130462,
+      "fully_outside": 33484784
+    },
+    "M-boundary:7": {
+      "crossing": 2,
+      "entering": 78,
+      "exiting": 78,
+      "fully_inside": 69644,
+      "fully_outside": 33545777,
+      "multiple_crossings": 2
+    },
+    "M-boundary:8": {
+      "degenerate_numerical_case": 4,
+      "entering": 180,
+      "exiting": 184,
+      "fully_inside": 317013,
+      "fully_outside": 33298200
+    },
+    "M-boundary:9": {
+      "crossing": 2,
+      "degenerate_numerical_case": 2,
+      "entering": 32,
+      "exiting": 32,
+      "fully_inside": 111594,
+      "fully_outside": 33503919
+    }
+  },
+  "city_model_gate_counts": {
+    "M-300:0": {
+      "entering": 482,
+      "exiting": 494
+    },
+    "M-300:1": {
+      "entering": 295,
+      "exiting": 291
+    },
+    "M-300:10": {
+      "entering": 139,
+      "exiting": 142
+    },
+    "M-300:11": {
+      "entering": 274,
+      "exiting": 282
+    },
+    "M-300:12": {
+      "entering": 260,
+      "exiting": 262
+    },
+    "M-300:13": {
+      "entering": 286,
+      "exiting": 284
+    },
+    "M-300:14": {
+      "entering": 178,
+      "exiting": 177
+    },
+    "M-300:15": {
+      "entering": 347,
+      "exiting": 347
+    },
+    "M-300:16": {
+      "entering": 112,
+      "exiting": 108
+    },
+    "M-300:17": {
+      "entering": 206,
+      "exiting": 204
+    },
+    "M-300:2": {
+      "entering": 239,
+      "exiting": 240
+    },
+    "M-300:3": {
+      "entering": 333,
+      "exiting": 334
+    },
+    "M-300:4": {
+      "entering": 263,
+      "exiting": 263
+    },
+    "M-300:5": {
+      "entering": 429,
+      "exiting": 431
+    },
+    "M-300:6": {
+      "entering": 284,
+      "exiting": 291
+    },
+    "M-300:7": {
+      "entering": 169,
+      "exiting": 168
+    },
+    "M-300:8": {
+      "entering": 219,
+      "exiting": 219
+    },
+    "M-300:9": {
+      "entering": 41,
+      "exiting": 41
+    },
+    "M-500:0": {
+      "entering": 494,
+      "exiting": 493
+    },
+    "M-500:1": {
+      "entering": 300,
+      "exiting": 299
+    },
+    "M-500:10": {
+      "entering": 133,
+      "exiting": 134
+    },
+    "M-500:11": {
+      "entering": 291,
+      "exiting": 293
+    },
+    "M-500:12": {
+      "entering": 271,
+      "exiting": 269
+    },
+    "M-500:13": {
+      "entering": 318,
+      "exiting": 319
+    },
+    "M-500:14": {
+      "entering": 143,
+      "exiting": 143
+    },
+    "M-500:15": {
+      "entering": 282,
+      "exiting": 281
+    },
+    "M-500:16": {
+      "entering": 116,
+      "exiting": 116
+    },
+    "M-500:17": {
+      "entering": 193,
+      "exiting": 193
+    },
+    "M-500:2": {
+      "entering": 187,
+      "exiting": 184
+    },
+    "M-500:3": {
+      "entering": 314,
+      "exiting": 313
+    },
+    "M-500:4": {
+      "entering": 252,
+      "exiting": 253
+    },
+    "M-500:5": {
+      "entering": 435,
+      "exiting": 437
+    },
+    "M-500:6": {
+      "entering": 243,
+      "exiting": 245
+    },
+    "M-500:7": {
+      "entering": 193,
+      "exiting": 195
+    },
+    "M-500:8": {
+      "entering": 284,
+      "exiting": 281
+    },
+    "M-500:9": {
+      "entering": 71,
+      "exiting": 73
+    },
+    "M-boundary:0": {
+      "entering": 382,
+      "exiting": 388
+    },
+    "M-boundary:1": {
+      "entering": 291,
+      "exiting": 292
+    },
+    "M-boundary:10": {
+      "entering": 83,
+      "exiting": 84
+    },
+    "M-boundary:11": {
+      "entering": 168,
+      "exiting": 167
+    },
+    "M-boundary:12": {
+      "entering": 229,
+      "exiting": 224
+    },
+    "M-boundary:13": {
+      "entering": 126,
+      "exiting": 124
+    },
+    "M-boundary:14": {
+      "entering": 105,
+      "exiting": 105
+    },
+    "M-boundary:15": {
+      "entering": 140,
+      "exiting": 139
+    },
+    "M-boundary:16": {
+      "entering": 111,
+      "exiting": 113
+    },
+    "M-boundary:17": {
+      "entering": 122,
+      "exiting": 124
+    },
+    "M-boundary:2": {
+      "entering": 150,
+      "exiting": 151
+    },
+    "M-boundary:3": {
+      "entering": 290,
+      "exiting": 291
+    },
+    "M-boundary:4": {
+      "entering": 233,
+      "exiting": 233
+    },
+    "M-boundary:5": {
+      "entering": 355,
+      "exiting": 358
+    },
+    "M-boundary:6": {
+      "entering": 175,
+      "exiting": 173
+    },
+    "M-boundary:7": {
+      "entering": 83,
+      "exiting": 83
+    },
+    "M-boundary:8": {
+      "entering": 180,
+      "exiting": 184
+    },
+    "M-boundary:9": {
+      "entering": 34,
+      "exiting": 34
+    }
+  },
+  "edge_city_model_pair_count": 1815241374,
+  "gate_event_count": 24699,
+  "model_count": 3,
+  "source_parent_count": 33615581,
+  "spatial_index_role": "bbox rejection only; rejected pairs are certified fully_outside",
+  "status": "GATE_INVENTORY_COMPLETE"
+}

@@ -1,0 +1,15 @@
+{
+  "artifacts": {
+    "inherited-turn-states.tsv.zst": {
+      "sha256": "4ddecfaf7c0fc0ae16d9ee42ebd871dcfe171c12e7add90b051eb51cbe6fbccf",
+      "size_bytes": 240210848
+    },
+    "internal-turn-states.tsv.zst": {
+      "sha256": "2db4b20d179789b267bda5863c3ea306a806d4be32f0df201b167d555f71f502",
+      "size_bytes": 343530
+    }
+  },
+  "inherited_stage2a_turns": 15728284,
+  "internal_split_continuations": 24699,
+  "status": "TURN_SEMANTICS_PRESERVED"
+}

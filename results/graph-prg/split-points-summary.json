@@ -1,0 +1,35 @@
+{
+  "artifact": {
+    "sha256": "db348d6e6490bab5ffc58272c61c644e2e8430399d460fcb2182569be3672f17",
+    "size_bytes": 2179212
+  },
+  "classification_counts": {
+    "M-300": {
+      "crossing": 35,
+      "degenerate_numerical_case": 35,
+      "entering": 4521,
+      "exiting": 4543,
+      "fully_inside": 3331542,
+      "fully_outside": 601739782
+    },
+    "M-500": {
+      "crossing": 19,
+      "degenerate_numerical_case": 35,
+      "entering": 4501,
+      "exiting": 4502,
+      "fully_inside": 3195531,
+      "fully_outside": 601875870
+    },
+    "M-boundary": {
+      "crossing": 115,
+      "degenerate_numerical_case": 35,
+      "entering": 3131,
+      "exiting": 3142,
+      "fully_inside": 3538786,
+      "fully_outside": 601535242,
+      "multiple_crossings": 7
+    }
+  },
+  "count": 24699,
+  "status": "ROAD_PRG_INTERSECTION_OK"
+}
