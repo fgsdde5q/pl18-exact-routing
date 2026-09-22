@@ -20,16 +20,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  stage2b:
-    name: Provide certified Stage 2B graph
-    uses: ./.github/workflows/stage2b-engine.yml
-    with:
-      mode: export
-    secrets: inherit
-
   stage3:
     name: Compute fixed-order upper bounds
-    needs: stage2b
     runs-on: ubuntu-24.04
     timeout-minutes: 360
     env:
@@ -62,29 +54,21 @@ jobs:
         with:
           path: ${{ env.STAGE2B_ARCHIVE }}
           key: pl18-stage2b-canonical-for-stage3-v1-${{ runner.arch }}-osm-${{ env.PBF_SHA256 }}-prg-${{ env.PRG_RAW_SHA256 }}-manifestv2-${{ env.MANIFEST_V2_SHA256 }}-graph-${{ hashFiles('results/graph/graph-manifest.json', 'results/graph/graph-binary-hashes.txt', 'results/graph/edge-counts.json') }}-stage2b-${{ hashFiles('results/graph-prg/stage2b-manifest.json', 'results/graph-prg/split-edges-summary.json', 'results/graph-prg/turn-states-summary.json', 'results/graph-prg/gates-summary.json') }}-models-M-boundary-M-300-M-500-solver-${{ hashFiles('scripts/stage3_upper_bounds.py') }}-commit-${{ github.sha }}
+          restore-keys: |
+            pl18-stage2b-canonical-for-stage3-v1-${{ runner.arch }}-osm-${{ env.PBF_SHA256 }}-prg-${{ env.PRG_RAW_SHA256 }}-manifestv2-${{ env.MANIFEST_V2_SHA256 }}-graph-${{ hashFiles('results/graph/graph-manifest.json', 'results/graph/graph-binary-hashes.txt', 'results/graph/edge-counts.json') }}-stage2b-${{ hashFiles('results/graph-prg/stage2b-manifest.json', 'results/graph-prg/split-edges-summary.json', 'results/graph-prg/turn-states-summary.json', 'results/graph-prg/gates-summary.json') }}-models-M-boundary-M-300-M-500-solver-${{ hashFiles('scripts/stage3_upper_bounds.py') }}-
+            pl18-stage2b-canonical-for-stage3-v1-${{ runner.arch }}-osm-${{ env.PBF_SHA256 }}-prg-${{ env.PRG_RAW_SHA256 }}-manifestv2-${{ env.MANIFEST_V2_SHA256 }}-
 
-      - name: Download Stage 2B graph from this workflow
+      - name: Require certified Stage 2B graph cache
         if: steps.stage2b-cache.outputs.cache-hit != 'true'
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
-        with:
-          name: stage2b-canonical-export-${{ github.run_id }}
-          path: ${{ runner.temp }}/stage2b-download
-
-      - name: Download Stage 2B compact certificates
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
-        with:
-          name: stage2b-certificates-export-${{ github.run_id }}
-          path: results/graph-prg
+        shell: bash
+        run: |
+          echo "Certified Stage 2B canonical graph cache is required for Stage 3." >&2
+          exit 1
 
       - name: Unpack certified Stage 2B graph
         shell: bash
         run: |
           set -Eeuo pipefail
-          if [[ "${{ steps.stage2b-cache.outputs.cache-hit }}" != "true" ]]; then
-            downloaded="$(find "${RUNNER_TEMP}/stage2b-download" -name '*.tar.zst' -print -quit)"
-            test -n "$downloaded"
-            cp "$downloaded" "$STAGE2B_ARCHIVE"
-          fi
           mkdir -p "$STAGE2B_ARTIFACTS"
           tar --extract --use-compress-program=unzstd \
             --file="$STAGE2B_ARCHIVE" \
@@ -92,13 +76,6 @@ jobs:
           test -f "$STAGE2B_ARTIFACTS/split-edges.tsv.zst"
           test -f "$STAGE2B_ARTIFACTS/internal-turn-states.tsv.zst"
           test -f "$STAGE2B_ARTIFACTS/inherited-turn-states.tsv.zst"
-
-      - name: Save Stage 2B graph for Stage 3
-        if: steps.stage2b-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25
-        with:
-          path: ${{ env.STAGE2B_ARCHIVE }}
-          key: pl18-stage2b-canonical-for-stage3-v1-${{ runner.arch }}-osm-${{ env.PBF_SHA256 }}-prg-${{ env.PRG_RAW_SHA256 }}-manifestv2-${{ env.MANIFEST_V2_SHA256 }}-graph-${{ hashFiles('results/graph/graph-manifest.json', 'results/graph/graph-binary-hashes.txt', 'results/graph/edge-counts.json') }}-stage2b-${{ hashFiles('results/graph-prg/stage2b-manifest.json', 'results/graph-prg/split-edges-summary.json', 'results/graph-prg/turn-states-summary.json', 'results/graph-prg/gates-summary.json') }}-models-M-boundary-M-300-M-500-solver-${{ hashFiles('scripts/stage3_upper_bounds.py') }}-commit-${{ github.sha }}
 
       - name: Run Stage 3 fixed-order and upper-bound search
         shell: bash
