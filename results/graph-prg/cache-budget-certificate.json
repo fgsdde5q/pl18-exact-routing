@@ -1,7 +1,7 @@
 {
   "budget_bytes": 7000000000,
-  "canonical_archive_bytes": 994969932,
-  "canonical_archive_sha256": "d3f24de4e0e07954676c8e227434ea73dd25a999651af9dee72cfa261f9a2569",
+  "canonical_archive_bytes": 994969928,
+  "canonical_archive_sha256": "ad3980b55a36b42e531c38887c898ea847df02ae610b0788334ee7ed74beceeb",
   "canonical_artifact_bytes": 998040397,
   "status": "CACHE_BUDGET_OK",
   "within_budget": true
