@@ -6,6 +6,10 @@ on:
       mode:
         required: true
         type: string
+      commit_certificates:
+        required: false
+        type: boolean
+        default: true
 
 permissions:
   actions: write
@@ -201,7 +205,28 @@ jobs:
           PYTHONPATH=scripts "$STAGE2B_PYTHON/bin/python" scripts/test_stage2b_integration.py
           "$STAGE2B_PYTHON/bin/python" scripts/test_stage2b_comparison.py
 
+      - name: Restore certified Stage 2B export
+        id: stage2b-export-cache
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: |
+            ${{ env.STAGE2B_ARCHIVE }}
+            results/graph-prg
+          key: pl18-stage2b-export-v1-${{ runner.arch }}-${{ inputs.mode }}-osm-${{ env.PBF_SHA256 }}-jobs${{ env.JOBS }}-${{ hashFiles('instance/pl_18_capitals_static_instance_v3.yaml') }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ hashFiles('scripts/build_stage2b.py', 'scripts/compare_stage2b_builds.py', 'scripts/run_stage2b_audit.sh', 'scripts/stage2b_core.py', 'scripts/apply_stage2b_cache_certificate.py') }}-M0-M300-M500
+
+      - name: Validate restored Stage 2B export
+        if: steps.stage2b-export-cache.outputs.cache-hit == 'true'
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -s "$STAGE2B_ARCHIVE"
+          test -f results/graph-prg/stage2b-manifest.json
+          test -f results/graph-prg/SHA256SUMS
+          tar --list --use-compress-program=unzstd --file="$STAGE2B_ARCHIVE" >/dev/null
+          (cd results/graph-prg && sha256sum --check SHA256SUMS)
+
       - name: Build and compare two independent Stage 2B exports
+        if: steps.stage2b-export-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
           bash scripts/run_stage2b_audit.sh \
@@ -210,6 +235,7 @@ jobs:
             "${{ inputs.mode }}" "$STAGE2B_PYTHON/bin/python"
 
       - name: Pack canonical Stage 2B artifacts
+        if: steps.stage2b-export-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
           tar --create --use-compress-program="zstd -T0 -6" \
@@ -217,6 +243,15 @@ jobs:
           "$STAGE2B_PYTHON/bin/python" scripts/apply_stage2b_cache_certificate.py \
             --results results/graph-prg --archive "$STAGE2B_ARCHIVE" \
             --budget-bytes "$STAGE2B_ARCHIVE_BUDGET_BYTES"
+
+      - name: Save certified Stage 2B export
+        if: steps.stage2b-export-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: |
+            ${{ env.STAGE2B_ARCHIVE }}
+            results/graph-prg
+          key: pl18-stage2b-export-v1-${{ runner.arch }}-${{ inputs.mode }}-osm-${{ env.PBF_SHA256 }}-jobs${{ env.JOBS }}-${{ hashFiles('instance/pl_18_capitals_static_instance_v3.yaml') }}-${{ hashFiles('profiles/pl18-car.lua') }}-${{ hashFiles('scripts/build_stage2b.py', 'scripts/compare_stage2b_builds.py', 'scripts/run_stage2b_audit.sh', 'scripts/stage2b_core.py', 'scripts/apply_stage2b_cache_certificate.py') }}-M0-M300-M500
 
       - name: Upload canonical Stage 2B graph
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -237,6 +272,7 @@ jobs:
           compression-level: 9
 
       - name: Commit compact Stage 2B certificates
+        if: inputs.commit_certificates
         shell: bash
         run: |
           set -Eeuo pipefail

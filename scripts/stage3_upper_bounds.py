@@ -10,6 +10,7 @@ import json
 import random
 import resource
 import subprocess
+import sys
 import time
 from collections import defaultdict
 from contextlib import contextmanager
@@ -65,7 +66,7 @@ LOCAL_CHECKS = {
 }
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Edge:
     edge_id: str
     duration_s: float
@@ -77,14 +78,14 @@ class Edge:
     to_lat: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Turn:
     outgoing: str
     duration_s: float
     category: str
 
 
-@dataclass
+@dataclass(slots=True)
 class RouteResult:
     model_id: str
     route_id: str
@@ -156,6 +157,7 @@ def load_manifest(repository: Path) -> dict:
 
 
 def load_stage2b_graph(artifact_dir: Path, model_id: str) -> tuple[dict[str, Edge], dict[str, list[Turn]]]:
+    started = time.perf_counter()
     edges_path = artifact_dir / "split-edges.tsv.zst"
     if not edges_path.exists():
         edges_path = artifact_dir / "split-edges.tsv"
@@ -167,8 +169,8 @@ def load_stage2b_graph(artifact_dir: Path, model_id: str) -> tuple[dict[str, Edg
         raise FileNotFoundError(f"missing Stage 2B split edge table: {edges_path}")
     edges: dict[str, Edge] = {}
     mask_column = MODEL_MASK_COLUMN[model_id]
-    for row in read_tsv(edges_path):
-        edge_id = row["split_edge_id"]
+    for count, row in enumerate(read_tsv(edges_path), start=1):
+        edge_id = sys.intern(row["split_edge_id"])
         edges[edge_id] = Edge(
             edge_id=edge_id,
             duration_s=float(row["duration_s"]),
@@ -179,6 +181,8 @@ def load_stage2b_graph(artifact_dir: Path, model_id: str) -> tuple[dict[str, Edg
             to_lon=row["to_lon"],
             to_lat=row["to_lat"],
         )
+        if count % 1_000_000 == 0:
+            print(f"stage3: loaded {count:,} split edges for {model_id}", flush=True)
     adjacency: dict[str, list[Turn]] = defaultdict(list)
     for path in turn_paths:
         if not path.exists():
@@ -187,10 +191,20 @@ def load_stage2b_graph(artifact_dir: Path, model_id: str) -> tuple[dict[str, Edg
                 path = alternate
         if not path.exists():
             raise FileNotFoundError(f"missing Stage 2B turn table: {path}")
-        for row in read_tsv(path):
-            adjacency[row["incoming_split_edge_id"]].append(
-                Turn(row["outgoing_split_edge_id"], float(row["turn_duration_s"]), row["transition_category"])
+        for count, row in enumerate(read_tsv(path), start=1):
+            incoming = sys.intern(row["incoming_split_edge_id"])
+            outgoing = sys.intern(row["outgoing_split_edge_id"])
+            adjacency[incoming].append(
+                Turn(outgoing, float(row["turn_duration_s"]), row["transition_category"])
             )
+            if count % 1_000_000 == 0:
+                print(f"stage3: loaded {count:,} turn rows from {path.name}", flush=True)
+    print(
+        f"stage3: graph ready for {model_id}: {len(edges):,} edges, "
+        f"{sum(len(values) for values in adjacency.values()):,} turns, "
+        f"{time.perf_counter() - started:.1f}s",
+        flush=True,
+    )
     return edges, dict(adjacency)
 
 

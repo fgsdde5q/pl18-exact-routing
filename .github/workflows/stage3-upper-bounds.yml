@@ -25,6 +25,7 @@ jobs:
     uses: ./.github/workflows/stage2b-engine.yml
     with:
       mode: export
+      commit_certificates: false
     secrets: inherit
 
   stage3:
@@ -51,6 +52,13 @@ jobs:
           echo "STAGE2B_ARTIFACTS=${RUNNER_TEMP}/pl18-stage2b-artifacts" >> "$GITHUB_ENV"
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends ruby zstd python3
+
+      - name: Restore Stage 3 results cache
+        id: stage3-results-cache
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: results/stage3
+          key: stage3-results-v1-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ env.PRG_RAW_SHA256 }}-${{ env.MANIFEST_V2_SHA256 }}-${{ hashFiles('results/graph/graph-manifest.json', 'results/graph/graph-binary-hashes.txt', 'results/graph/edge-counts.json') }}-${{ hashFiles('results/graph-prg/stage2b-manifest.json', 'results/graph-prg/split-edges-summary.json', 'results/graph-prg/turn-states-summary.json', 'results/graph-prg/gates-summary.json') }}-M0-M300-M500-${{ hashFiles('scripts/stage3_upper_bounds.py') }}
 
       - name: Run Stage 3 unit tests
         shell: bash
@@ -108,12 +116,29 @@ jobs:
           key: s3-v1-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ env.PRG_RAW_SHA256 }}-${{ env.MANIFEST_V2_SHA256 }}-${{ hashFiles('results/graph/graph-manifest.json', 'results/graph/graph-binary-hashes.txt', 'results/graph/edge-counts.json') }}-${{ hashFiles('results/graph-prg/stage2b-manifest.json', 'results/graph-prg/split-edges-summary.json', 'results/graph-prg/turn-states-summary.json', 'results/graph-prg/gates-summary.json') }}-M0-M300-M500-${{ hashFiles('scripts/stage3_upper_bounds.py') }}-${{ github.sha }}
 
       - name: Run Stage 3 fixed-order and upper-bound search
+        if: steps.stage3-results-cache.outputs.cache-hit != 'true'
         shell: bash
+        env:
+          PYTHONUNBUFFERED: "1"
         run: |
           PYTHONPATH=scripts python3 scripts/stage3_upper_bounds.py \
             --stage2b-artifacts "$STAGE2B_ARTIFACTS" \
             --stage2b-results results/graph-prg \
             --output results/stage3
+
+      - name: Validate restored Stage 3 results
+        if: steps.stage3-results-cache.outputs.cache-hit == 'true'
+        shell: bash
+        run: |
+          test -f results/stage3/stage3-manifest.json
+          test -f results/stage3/validation-report.md
+
+      - name: Save Stage 3 results cache
+        if: steps.stage3-results-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: results/stage3
+          key: stage3-results-v1-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ env.PRG_RAW_SHA256 }}-${{ env.MANIFEST_V2_SHA256 }}-${{ hashFiles('results/graph/graph-manifest.json', 'results/graph/graph-binary-hashes.txt', 'results/graph/edge-counts.json') }}-${{ hashFiles('results/graph-prg/stage2b-manifest.json', 'results/graph-prg/split-edges-summary.json', 'results/graph-prg/turn-states-summary.json', 'results/graph-prg/gates-summary.json') }}-M0-M300-M500-${{ hashFiles('scripts/stage3_upper_bounds.py') }}
 
       - name: Upload Stage 3 certificates
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
