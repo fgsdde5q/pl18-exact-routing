@@ -9,14 +9,14 @@ import heapq
 import json
 import random
 import resource
+import sqlite3
 import subprocess
-import sys
 import time
-from collections import defaultdict
 from contextlib import contextmanager
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
-from typing import Iterable, Iterator
+from typing import Iterable, Iterator, Protocol
 
 MODEL_ORDER = ("M-boundary", "M-300", "M-500")
 MODEL_ALIASES = {"A": "M-boundary", "B": "M-300", "C": "M-500"}
@@ -105,6 +105,90 @@ class RouteResult:
     provenance: dict
 
 
+class Graph(Protocol):
+    def get_edge(self, edge_id: str) -> Edge | None:
+        ...
+
+    def outgoing_turns(self, edge_id: str) -> Iterable[Turn]:
+        ...
+
+    def first_edge_with_mask(self, mask: int) -> str | None:
+        ...
+
+    def close(self) -> None:
+        ...
+
+
+class DictGraph:
+    def __init__(self, edges: dict[str, Edge], adjacency: dict[str, list[Turn]]):
+        self.edges = edges
+        self.adjacency = adjacency
+
+    def get_edge(self, edge_id: str) -> Edge | None:
+        return self.edges.get(edge_id)
+
+    def outgoing_turns(self, edge_id: str) -> Iterable[Turn]:
+        return self.adjacency.get(edge_id, [])
+
+    def first_edge_with_mask(self, mask: int) -> str | None:
+        for edge_id in sorted(self.edges):
+            edge = self.edges[edge_id]
+            if edge.city_mask & mask:
+                return edge_id
+        return None
+
+    def close(self) -> None:
+        return None
+
+
+class SQLiteGraph:
+    def __init__(self, path: Path):
+        self.path = path
+        self.connection = sqlite3.connect(path)
+
+    @lru_cache(maxsize=500_000)
+    def get_edge(self, edge_id: str) -> Edge | None:
+        row = self.connection.execute(
+            """
+            SELECT edge_id, duration_s, distance_m, city_mask, from_lon, from_lat, to_lon, to_lat
+            FROM edges WHERE edge_id = ?
+            """,
+            (edge_id,),
+        ).fetchone()
+        if row is None:
+            return None
+        return Edge(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+
+    def outgoing_turns(self, edge_id: str) -> Iterable[Turn]:
+        cursor = self.connection.execute(
+            "SELECT outgoing, duration_s, category FROM turns WHERE incoming = ?",
+            (edge_id,),
+        )
+        for outgoing, duration_s, category in cursor:
+            yield Turn(outgoing, duration_s, category)
+
+    def first_edge_with_mask(self, mask: int) -> str | None:
+        bit = mask.bit_length() - 1
+        row = self.connection.execute("SELECT edge_id FROM city_start_edges WHERE bit = ?", (bit,)).fetchone()
+        return None if row is None else row[0]
+
+    def close(self) -> None:
+        type(self).get_edge.cache_clear()
+        self.connection.close()
+
+
+def get_edge(edges: dict[str, Edge] | Graph, edge_id: str) -> Edge | None:
+    if isinstance(edges, dict):
+        return edges.get(edge_id)
+    return edges.get_edge(edge_id)
+
+
+def outgoing_turns(adjacency: dict[str, list[Turn]] | Graph, edge_id: str) -> Iterable[Turn]:
+    if isinstance(adjacency, dict):
+        return adjacency.get(edge_id, [])
+    return adjacency.outgoing_turns(edge_id)
+
+
 def digest(path: Path) -> str:
     value = hashlib.sha256()
     with path.open("rb") as source:
@@ -156,7 +240,24 @@ def load_manifest(repository: Path) -> dict:
     return json.loads(result.stdout)
 
 
-def load_stage2b_graph(artifact_dir: Path, model_id: str) -> tuple[dict[str, Edge], dict[str, list[Turn]]]:
+def configure_sqlite(connection: sqlite3.Connection) -> None:
+    connection.executescript(
+        """
+        PRAGMA journal_mode = OFF;
+        PRAGMA synchronous = OFF;
+        PRAGMA temp_store = MEMORY;
+        PRAGMA cache_size = -200000;
+        """
+    )
+
+
+def batch_insert(connection: sqlite3.Connection, statement: str, rows: list[tuple]) -> None:
+    if rows:
+        connection.executemany(statement, rows)
+        rows.clear()
+
+
+def build_sqlite_graph(artifact_dir: Path, model_id: str, database_path: Path) -> SQLiteGraph:
     started = time.perf_counter()
     edges_path = artifact_dir / "split-edges.tsv.zst"
     if not edges_path.exists():
@@ -167,23 +268,70 @@ def load_stage2b_graph(artifact_dir: Path, model_id: str) -> tuple[dict[str, Edg
     ]
     if not edges_path.exists():
         raise FileNotFoundError(f"missing Stage 2B split edge table: {edges_path}")
-    edges: dict[str, Edge] = {}
+    if database_path.exists():
+        database_path.unlink()
+    database_path.parent.mkdir(parents=True, exist_ok=True)
+    connection = sqlite3.connect(database_path)
+    configure_sqlite(connection)
+    connection.executescript(
+        """
+        CREATE TABLE edges (
+            edge_id TEXT PRIMARY KEY,
+            duration_s REAL NOT NULL,
+            distance_m REAL NOT NULL,
+            city_mask INTEGER NOT NULL,
+            from_lon TEXT NOT NULL,
+            from_lat TEXT NOT NULL,
+            to_lon TEXT NOT NULL,
+            to_lat TEXT NOT NULL
+        ) WITHOUT ROWID;
+        CREATE TABLE turns (
+            incoming TEXT NOT NULL,
+            outgoing TEXT NOT NULL,
+            duration_s REAL NOT NULL,
+            category TEXT NOT NULL
+        );
+        CREATE TABLE city_start_edges (
+            bit INTEGER PRIMARY KEY,
+            edge_id TEXT NOT NULL
+        );
+        """
+    )
     mask_column = MODEL_MASK_COLUMN[model_id]
+    edge_rows: list[tuple] = []
+    city_starts: dict[int, str] = {}
     for count, row in enumerate(read_tsv(edges_path), start=1):
-        edge_id = sys.intern(row["split_edge_id"])
-        edges[edge_id] = Edge(
-            edge_id=edge_id,
-            duration_s=float(row["duration_s"]),
-            distance_m=float(row["length_m"]),
-            city_mask=int(row[mask_column]),
-            from_lon=row["from_lon"],
-            from_lat=row["from_lat"],
-            to_lon=row["to_lon"],
-            to_lat=row["to_lat"],
+        edge_id = row["split_edge_id"]
+        city_mask = int(row[mask_column])
+        edge_rows.append(
+            (
+                edge_id,
+                float(row["duration_s"]),
+                float(row["length_m"]),
+                city_mask,
+                row["from_lon"],
+                row["from_lat"],
+                row["to_lon"],
+                row["to_lat"],
+            )
         )
+        remaining_mask = city_mask
+        while remaining_mask:
+            bit_mask = remaining_mask & -remaining_mask
+            bit = bit_mask.bit_length() - 1
+            previous_edge_id = city_starts.get(bit)
+            if previous_edge_id is None or edge_id < previous_edge_id:
+                city_starts[bit] = edge_id
+            remaining_mask ^= bit_mask
+        if len(edge_rows) >= 100_000:
+            batch_insert(connection, "INSERT INTO edges VALUES (?, ?, ?, ?, ?, ?, ?, ?)", edge_rows)
         if count % 1_000_000 == 0:
-            print(f"stage3: loaded {count:,} split edges for {model_id}", flush=True)
-    adjacency: dict[str, list[Turn]] = defaultdict(list)
+            print(f"stage3: indexed {count:,} split edges for {model_id}", flush=True)
+    batch_insert(connection, "INSERT INTO edges VALUES (?, ?, ?, ?, ?, ?, ?, ?)", edge_rows)
+    connection.executemany("INSERT INTO city_start_edges VALUES (?, ?)", sorted(city_starts.items()))
+    connection.commit()
+    total_turns = 0
+    turn_rows: list[tuple] = []
     for path in turn_paths:
         if not path.exists():
             alternate = path.with_suffix("")
@@ -191,21 +339,36 @@ def load_stage2b_graph(artifact_dir: Path, model_id: str) -> tuple[dict[str, Edg
                 path = alternate
         if not path.exists():
             raise FileNotFoundError(f"missing Stage 2B turn table: {path}")
+        rows_in_path = 0
         for count, row in enumerate(read_tsv(path), start=1):
-            incoming = sys.intern(row["incoming_split_edge_id"])
-            outgoing = sys.intern(row["outgoing_split_edge_id"])
-            adjacency[incoming].append(
-                Turn(outgoing, float(row["turn_duration_s"]), row["transition_category"])
+            rows_in_path = count
+            turn_rows.append(
+                (
+                    row["incoming_split_edge_id"],
+                    row["outgoing_split_edge_id"],
+                    float(row["turn_duration_s"]),
+                    row["transition_category"],
+                )
             )
+            if len(turn_rows) >= 100_000:
+                batch_insert(connection, "INSERT INTO turns VALUES (?, ?, ?, ?)", turn_rows)
             if count % 1_000_000 == 0:
-                print(f"stage3: loaded {count:,} turn rows from {path.name}", flush=True)
+                print(f"stage3: indexed {count:,} turn rows from {path.name}", flush=True)
+        total_turns += rows_in_path
+    batch_insert(connection, "INSERT INTO turns VALUES (?, ?, ?, ?)", turn_rows)
+    connection.commit()
+    print(f"stage3: creating turn index for {model_id}", flush=True)
+    connection.execute("CREATE INDEX turns_incoming_idx ON turns(incoming)")
+    connection.commit()
+    edge_total = connection.execute("SELECT COUNT(*) FROM edges").fetchone()[0]
     print(
-        f"stage3: graph ready for {model_id}: {len(edges):,} edges, "
-        f"{sum(len(values) for values in adjacency.values()):,} turns, "
+        f"stage3: sqlite graph ready for {model_id}: {edge_total:,} edges, "
+        f"{total_turns:,} turns, "
         f"{time.perf_counter() - started:.1f}s",
         flush=True,
     )
-    return edges, dict(adjacency)
+    connection.close()
+    return SQLiteGraph(database_path)
 
 
 def names_from_mask(mask: int, bit_to_city: dict[int, str]) -> list[str]:
@@ -234,10 +397,12 @@ def path_hash(path: list[str]) -> str:
     return hashlib.sha256("\n".join(path).encode("utf-8")).hexdigest()
 
 
-def geometry_hash(path: list[str], edges: dict[str, Edge]) -> str:
+def geometry_hash(path: list[str], edges: dict[str, Edge] | Graph) -> str:
     h = hashlib.sha256()
     for edge_id in path:
-        edge = edges[edge_id]
+        edge = get_edge(edges, edge_id)
+        if edge is None:
+            raise ValueError(f"path points to missing split edge {edge_id}")
         h.update(f"{edge.from_lon},{edge.from_lat}>{edge.to_lon},{edge.to_lat}\n".encode("ascii"))
     return h.hexdigest()
 
@@ -252,8 +417,8 @@ def reconstruct_path(previous: dict[tuple[str, int], tuple[tuple[str, int], Turn
 
 def evaluate_fixed_order(
     *,
-    edges: dict[str, Edge],
-    adjacency: dict[str, list[Turn]],
+    edges: dict[str, Edge] | Graph,
+    adjacency: dict[str, list[Turn]] | Graph,
     model_id: str,
     route_id: str,
     nominal_order: list[str],
@@ -268,7 +433,9 @@ def evaluate_fixed_order(
     target_mask = 0
     for city in nominal_order:
         target_mask |= 1 << city_to_bit[city]
-    start_edge = edges[start_edge_id]
+    start_edge = get_edge(edges, start_edge_id)
+    if start_edge is None:
+        raise ValueError(f"start edge missing from split graph: {start_edge_id}")
     start_order, start_mask = update_order((), 0, start_edge.city_mask, bit_to_city)
     start_city = nominal_order[0]
     if start_city not in start_order:
@@ -294,8 +461,8 @@ def evaluate_fixed_order(
         if visited_mask & target_mask == target_mask and list(actual_order) == nominal_order:
             best_goal = state
             break
-        for turn in adjacency.get(edge_id, []):
-            outgoing = edges.get(turn.outgoing)
+        for turn in outgoing_turns(adjacency, edge_id):
+            outgoing = get_edge(edges, turn.outgoing)
             if outgoing is None:
                 raise ValueError(f"turn points to missing split edge {turn.outgoing}")
             next_order, next_mask = update_order(actual_order, visited_mask, outgoing.city_mask, bit_to_city)
@@ -367,10 +534,12 @@ def invalid_result(model_id: str, route_id: str, source_heuristic: str, seed: in
     )
 
 
-def build_state_sequence(path: list[str], edges: dict[str, Edge], bit_to_city: dict[int, str]) -> list[dict]:
+def build_state_sequence(path: list[str], edges: dict[str, Edge] | Graph, bit_to_city: dict[int, str]) -> list[dict]:
     sequence = []
     for edge_id in path:
-        edge = edges[edge_id]
+        edge = get_edge(edges, edge_id)
+        if edge is None:
+            raise ValueError(f"path points to missing split edge {edge_id}")
         cities = names_from_mask(edge.city_mask, bit_to_city)
         if cities:
             sequence.append({"split_edge_id": edge_id, "cities": cities})
@@ -381,7 +550,7 @@ def build_segments(
     path: list[str],
     previous: dict[tuple[str, int], tuple[tuple[str, int], Turn]],
     goal: tuple[str, int],
-    edges: dict[str, Edge],
+    edges: dict[str, Edge] | Graph,
     distances: dict[tuple[str, int], float],
     lengths: dict[tuple[str, int], float],
     nominal_order: list[str],
@@ -390,8 +559,14 @@ def build_segments(
     del previous, city_to_bit
     if not path:
         return []
-    total_duration = sum(edges[edge_id].duration_s for edge_id in path)
-    total_distance = sum(edges[edge_id].distance_m for edge_id in path)
+    path_edges = []
+    for edge_id in path:
+        edge = get_edge(edges, edge_id)
+        if edge is None:
+            raise ValueError(f"path points to missing split edge {edge_id}")
+        path_edges.append(edge)
+    total_duration = sum(edge.duration_s for edge in path_edges)
+    total_distance = sum(edge.distance_m for edge in path_edges)
     return [
         {
             "from_city": nominal_order[0],
@@ -406,11 +581,16 @@ def build_segments(
     ]
 
 
-def find_city_start_edge(edges: dict[str, Edge], city: str, city_to_bit: dict[str, int]) -> str:
+def find_city_start_edge(edges: dict[str, Edge] | Graph, city: str, city_to_bit: dict[str, int]) -> str:
     bit = city_to_bit[city]
     mask = 1 << bit
-    for edge_id in sorted(edges):
-        if edges[edge_id].city_mask & mask:
+    if isinstance(edges, dict):
+        for edge_id in sorted(edges):
+            if edges[edge_id].city_mask & mask:
+                return edge_id
+    else:
+        edge_id = edges.first_edge_with_mask(mask)
+        if edge_id is not None:
             return edge_id
     raise ValueError(f"no split edge found inside required local-check start city: {city}")
 
@@ -594,70 +774,77 @@ def main() -> int:
 
     for model_id in MODEL_ORDER:
         model_started = time.perf_counter()
-        edges, adjacency = load_stage2b_graph(args.stage2b_artifacts, model_id)
+        graph_path = args.output / "work" / f"{model_id}.sqlite"
+        graph = build_sqlite_graph(args.stage2b_artifacts, model_id, graph_path)
+        edges: dict[str, Edge] | Graph = graph
+        adjacency: dict[str, list[Turn]] | Graph = graph
         start_edge_id = start_certificate["child_edge_id"]
-        if start_edge_id not in edges:
+        if get_edge(edges, start_edge_id) is None:
             raise ValueError(f"Stage 2B start state differs from split graph: {start_edge_id}")
-        fixed: dict[str, RouteResult] = {}
-        for route_id, order in ROUTES.items():
-            result = evaluate_with_checker(
-                edges=edges, adjacency=adjacency, model_id=model_id, route_id=route_id,
-                nominal_order=order, city_to_bit=city_to_bit, bit_to_city=bit_to_city,
-                start_edge_id=start_edge_id, source_heuristic=f"fixed-route-{route_id}", seed=SEED,
-            )
-            fixed[route_id] = result
-            json_dump(args.output / "fixed-orders" / f"{model_id}-{route_id}.json", route_to_json(result))
-            if result.feasibility == "INDEPENDENT_CHECK_FAILED":
-                raise ValueError(f"{model_id} route {route_id} independent check failed")
-        fixed_by_model[model_id] = fixed
+        try:
+            fixed: dict[str, RouteResult] = {}
+            for route_id, order in ROUTES.items():
+                result = evaluate_with_checker(
+                    edges=edges, adjacency=adjacency, model_id=model_id, route_id=route_id,
+                    nominal_order=order, city_to_bit=city_to_bit, bit_to_city=bit_to_city,
+                    start_edge_id=start_edge_id, source_heuristic=f"fixed-route-{route_id}", seed=SEED,
+                )
+                fixed[route_id] = result
+                json_dump(args.output / "fixed-orders" / f"{model_id}-{route_id}.json", route_to_json(result))
+                if result.feasibility == "INDEPENDENT_CHECK_FAILED":
+                    raise ValueError(f"{model_id} route {route_id} independent check failed")
+            fixed_by_model[model_id] = fixed
 
-        evaluations = list(fixed.values())
-        candidates = candidate_orders(cities)
-        for source, order in candidates:
-            evaluations.append(evaluate_fixed_order(
-                edges=edges, adjacency=adjacency, model_id=model_id, route_id=source,
-                nominal_order=order, city_to_bit=city_to_bit, bit_to_city=bit_to_city,
-                start_edge_id=start_edge_id, source_heuristic=source, seed=SEED,
-            ))
-        finishes: dict[str, RouteResult | None] = {}
-        for terminal in cities[1:]:
-            best: RouteResult | None = None
-            for source, order in terminal_orders(candidates, terminal)[:8]:
-                result = evaluate_fixed_order(
-                    edges=edges, adjacency=adjacency, model_id=model_id, route_id=f"{source}-finish",
+            evaluations = list(fixed.values())
+            candidates = candidate_orders(cities)
+            for source, order in candidates:
+                evaluations.append(evaluate_fixed_order(
+                    edges=edges, adjacency=adjacency, model_id=model_id, route_id=source,
                     nominal_order=order, city_to_bit=city_to_bit, bit_to_city=bit_to_city,
                     start_edge_id=start_edge_id, source_heuristic=source, seed=SEED,
-                )
-                evaluations.append(result)
-                if result.feasibility == "FEASIBLE_FIXED_ORDER" and (
-                    best is None or (result.total_duration_s or float("inf")) < (best.total_duration_s or float("inf"))
-                ):
-                    best = result
-            finishes[terminal] = best
-        write_finishes(args.output / "finishes" / f"{model_id}-finishes.csv", finishes)
-        top_summaries[model_id] = write_top_candidates(args.output / "candidates" / f"{model_id}-top.json", evaluations, fixed)
+                ))
+            finishes: dict[str, RouteResult | None] = {}
+            for terminal in cities[1:]:
+                best: RouteResult | None = None
+                for source, order in terminal_orders(candidates, terminal)[:8]:
+                    result = evaluate_fixed_order(
+                        edges=edges, adjacency=adjacency, model_id=model_id, route_id=f"{source}-finish",
+                        nominal_order=order, city_to_bit=city_to_bit, bit_to_city=bit_to_city,
+                        start_edge_id=start_edge_id, source_heuristic=source, seed=SEED,
+                    )
+                    evaluations.append(result)
+                    if result.feasibility == "FEASIBLE_FIXED_ORDER" and (
+                        best is None or (result.total_duration_s or float("inf")) < (best.total_duration_s or float("inf"))
+                    ):
+                        best = result
+                finishes[terminal] = best
+            write_finishes(args.output / "finishes" / f"{model_id}-finishes.csv", finishes)
+            top_summaries[model_id] = write_top_candidates(args.output / "candidates" / f"{model_id}-top.json", evaluations, fixed)
 
-        terminal_rank = sorted(
-            (value for value in finishes.values() if value is not None),
-            key=lambda value: value.total_duration_s or float("inf"),
-        )
-        performance[model_id] = {
-            "wall_time_s": round(time.perf_counter() - model_started, 3),
-            "cpu_time_s": round(time.process_time(), 3),
-            "peak_rss_kb": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
-            "cache_hit_rates": {"fixed_order_solver": None},
-            "best_terminal_city": terminal_rank[0].nominal_order[-1] if terminal_rank else None,
-            "second_terminal_city": terminal_rank[1].nominal_order[-1] if len(terminal_rank) > 1 else None,
-        }
-
-        for check_id, order in LOCAL_CHECKS.items():
-            local_start_edge_id = find_city_start_edge(edges, normalise_city(order[0]), city_to_bit)
-            local = evaluate_fixed_order(
-                edges=edges, adjacency=adjacency, model_id=model_id, route_id=check_id,
-                nominal_order=order, city_to_bit=city_to_bit, bit_to_city=bit_to_city,
-                start_edge_id=local_start_edge_id, source_heuristic="mandatory-local-check", seed=SEED,
+            terminal_rank = sorted(
+                (value for value in finishes.values() if value is not None),
+                key=lambda value: value.total_duration_s or float("inf"),
             )
-            local_checks[f"{model_id}:{check_id}"] = route_to_json(local)
+            performance[model_id] = {
+                "wall_time_s": round(time.perf_counter() - model_started, 3),
+                "cpu_time_s": round(time.process_time(), 3),
+                "peak_rss_kb": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
+                "cache_hit_rates": {"fixed_order_solver": None},
+                "best_terminal_city": terminal_rank[0].nominal_order[-1] if terminal_rank else None,
+                "second_terminal_city": terminal_rank[1].nominal_order[-1] if len(terminal_rank) > 1 else None,
+            }
+
+            for check_id, order in LOCAL_CHECKS.items():
+                local_start_edge_id = find_city_start_edge(edges, normalise_city(order[0]), city_to_bit)
+                local = evaluate_fixed_order(
+                    edges=edges, adjacency=adjacency, model_id=model_id, route_id=check_id,
+                    nominal_order=order, city_to_bit=city_to_bit, bit_to_city=bit_to_city,
+                    start_edge_id=local_start_edge_id, source_heuristic="mandatory-local-check", seed=SEED,
+                )
+                local_checks[f"{model_id}:{check_id}"] = route_to_json(local)
+        finally:
+            graph.close()
+            graph_path.unlink(missing_ok=True)
 
     stage2b_manifest = args.stage2b_results / "stage2b-manifest.json"
     stage3_manifest = {
