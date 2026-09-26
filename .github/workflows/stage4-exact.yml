@@ -83,9 +83,9 @@ jobs:
     env:
       MODEL: ${{ inputs.model }}
       CHUNK_SECONDS: ${{ inputs.chunk_seconds }}
-      STAGE2B_ARCHIVE: ${{ runner.temp }}/pl18-stage2b-canonical.tar.zst
-      STAGE2B_ARTIFACTS: ${{ runner.temp }}/pl18-stage2b-artifacts
-      STAGE4_WORK: ${{ runner.temp }}/stage4-${{ inputs.model }}
+      STAGE2B_ARCHIVE: /tmp/pl18-stage2b-canonical-${{ github.run_id }}.tar.zst
+      STAGE2B_ARTIFACTS: /tmp/pl18-stage2b-artifacts-${{ github.run_id }}
+      STAGE4_WORK: /tmp/stage4-${{ inputs.model }}-${{ github.run_id }}
       PBF_SHA256: f28f493c6cc280da1128b03be21ae2eb1973f443c14235dea36088bcbd3e83f3
       PRG_RAW_SHA256: adf261aae31257dd24843b6f6c0e694efb40041aae3913b1c27aa4801866974c
       MANIFEST_V2_SHA256: f47d9a805defdb7e28005048d7ad9a7a76f666e75d508422a7edd239ce60f7ce
