@@ -169,7 +169,11 @@ jobs:
           fi
           incumbent="results/stage4/input-validation/$MODEL-incumbent-replay.json"
           incumbent_args=()
-          if [[ -s "$incumbent" ]]; then incumbent_args=(--incumbent-replay "$incumbent"); fi
+          if [[ -s "$incumbent" ]] && python3 -c \
+            'import json,sys; d=json.load(open(sys.argv[1])); raise SystemExit(0 if d.get("status")=="INCUMBENT_REPLAY_VALID" and d.get("incumbent_enabled") is True else 1)' \
+            "$incumbent"; then
+            incumbent_args=(--incumbent-replay "$incumbent")
+          fi
           mkdir -p "results/stage4/$MODEL"
           PYTHONPATH=scripts python3 scripts/stage4_disk_solver.py run-chunk \
             --graph "$graph" --checkpoint "$STAGE4_WORK/$MODEL-checkpoint.sqlite" \
