@@ -26,6 +26,10 @@ on:
         description: Explicit workflow run id containing a checkpoint artifact (optional)
         type: string
         default: ""
+      stage2b_run_id:
+        description: Explicit run id containing canonical Stage 2B export
+        type: string
+        default: "35958794470"
 
 permissions:
   actions: read
@@ -67,17 +71,9 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
-  stage2b:
-    if: inputs.operation != 'validate'
-    uses: ./.github/workflows/stage2b-engine.yml
-    with:
-      mode: export
-      commit_certificates: false
-    secrets: inherit
-
   exact-model-chunk:
     if: inputs.operation != 'validate'
-    needs: [validate-small-instances, stage2b]
+    needs: [validate-small-instances]
     runs-on: ${{ inputs.runner == 'self-hosted' && 'self-hosted' || 'ubuntu-24.04' }}
     timeout-minutes: 355
     env:
@@ -118,12 +114,14 @@ jobs:
           restore-keys: |
             s3-v1-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ env.PRG_RAW_SHA256 }}-${{ env.MANIFEST_V2_SHA256 }}-${{ hashFiles('results/graph/graph-manifest.json', 'results/graph/graph-binary-hashes.txt', 'results/graph/edge-counts.json') }}-${{ hashFiles('results/graph-prg/stage2b-manifest.json', 'results/graph-prg/split-edges-summary.json', 'results/graph-prg/turn-states-summary.json', 'results/graph-prg/gates-summary.json') }}-M0-M300-M500-
             pl18-stage2b-canonical-for-stage3-v1-${{ runner.arch }}-osm-${{ env.PBF_SHA256 }}-prg-${{ env.PRG_RAW_SHA256 }}-manifestv2-${{ env.MANIFEST_V2_SHA256 }}-
-      - name: Download Stage 2B export from this exact workflow run
+      - name: Download Stage 2B export from an explicit source run
         if: steps.stage2b-cache.outputs.cache-hit != 'true'
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
         with:
-          name: stage2b-canonical-export-${{ github.run_id }}
+          name: stage2b-canonical-export-${{ inputs.stage2b_run_id }}
           path: ${{ runner.temp }}/stage2b-download
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.stage2b_run_id }}
       - name: Unpack and hash-check canonical graph
         shell: bash
         run: |
