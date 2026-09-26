@@ -1,0 +1,32 @@
+{
+  "M-300": {
+    "best_terminal_city": "Szczecin",
+    "cache_hit_rates": {
+      "fixed_order_solver": null
+    },
+    "cpu_time_s": 2831.241,
+    "peak_rss_kb": 3509408,
+    "second_terminal_city": "Białystok",
+    "wall_time_s": 2464.009
+  },
+  "M-500": {
+    "best_terminal_city": "Białystok",
+    "cache_hit_rates": {
+      "fixed_order_solver": null
+    },
+    "cpu_time_s": 4269.741,
+    "peak_rss_kb": 3511488,
+    "second_terminal_city": "Szczecin",
+    "wall_time_s": 2576.719
+  },
+  "M-boundary": {
+    "best_terminal_city": "Szczecin",
+    "cache_hit_rates": {
+      "fixed_order_solver": null
+    },
+    "cpu_time_s": 1423.394,
+    "peak_rss_kb": 3506720,
+    "second_terminal_city": "Białystok",
+    "wall_time_s": 2513.522
+  }
+}

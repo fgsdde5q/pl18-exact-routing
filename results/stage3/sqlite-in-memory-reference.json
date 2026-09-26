@@ -1,0 +1,353 @@
+{
+  "M-300": {
+    "in_memory": {
+      "actual_first_hit_order": [
+        "Warszawa"
+      ],
+      "checker_duration_s": null,
+      "entry_exit_state_sequence": [
+        {
+          "cities": [
+            "Warszawa"
+          ],
+          "split_edge_id": "25857664/4/0/3069840595/611255856@0"
+        }
+      ],
+      "exception_text": "",
+      "failing_transition_or_state": "",
+      "failure_reason": "",
+      "feasibility": "FEASIBLE_FIXED_ORDER",
+      "fixed_order_check_delta_s": null,
+      "full_split_edge_path_hash": "b1992b93e94430b2b468d8a2cffeec60bd869cf9d07210f04b4289bf1cbc2332",
+      "geometry_hash": "6228ad63014346739a2391f3be472415ccd831c3d83062cb2899ef2376710354",
+      "model_id": "M-300",
+      "nominal_order": [
+        "Warszawa"
+      ],
+      "provenance": {
+        "algorithm": "exact_fixed_order_astar",
+        "expanded_labels": 1,
+        "heuristic": "visit_region_bbox_gap_at_frozen_90_kmh",
+        "heuristic_weight": 1.0,
+        "stage": "Stage 3 upper-bound fixed-order evaluation"
+      },
+      "result_category": "FEASIBLE",
+      "route_id": "deterministic-reference-subgraph",
+      "seed": 20260726,
+      "segment_costs": [
+        {
+          "entry_stable_edge": "25857664/4/0/3069840595/611255856@0",
+          "exit_stable_edge": "25857664/4/0/3069840595/611255856@0",
+          "from_city": "Warszawa",
+          "internal_city_distance_m": 5.3,
+          "internal_city_time_s": 0.3,
+          "to_city": "Warszawa",
+          "transition_distance_m": 0.0,
+          "transition_time_s": 0.0
+        }
+      ],
+      "source_heuristic": "stage3.1-reference",
+      "total_distance_m": 5.3,
+      "total_duration_s": 0.3
+    },
+    "nominal_order": [
+      "Warszawa"
+    ],
+    "path": [
+      "25857664/4/0/3069840595/611255856@0",
+      "25857664/5/0/611255856/3069840597@0",
+      "25857664/6/0/3069840597/611255860@0",
+      "25857664/7/0/611255860/3001894556@0",
+      "25857664/8/0/3001894556/9707570375@0",
+      "25857664/9/0/9707570375/86681117@0",
+      "18967241/0/0/86681117/3660547119@0",
+      "18967241/1/0/3660547119/86681120@0"
+    ],
+    "same_feasibility_and_cost": true,
+    "sqlite": {
+      "actual_first_hit_order": [
+        "Warszawa"
+      ],
+      "checker_duration_s": null,
+      "entry_exit_state_sequence": [
+        {
+          "cities": [
+            "Warszawa"
+          ],
+          "split_edge_id": "25857664/4/0/3069840595/611255856@0"
+        }
+      ],
+      "exception_text": "",
+      "failing_transition_or_state": "",
+      "failure_reason": "",
+      "feasibility": "FEASIBLE_FIXED_ORDER",
+      "fixed_order_check_delta_s": null,
+      "full_split_edge_path_hash": "b1992b93e94430b2b468d8a2cffeec60bd869cf9d07210f04b4289bf1cbc2332",
+      "geometry_hash": "6228ad63014346739a2391f3be472415ccd831c3d83062cb2899ef2376710354",
+      "model_id": "M-300",
+      "nominal_order": [
+        "Warszawa"
+      ],
+      "provenance": {
+        "algorithm": "exact_fixed_order_astar",
+        "expanded_labels": 1,
+        "heuristic": "visit_region_bbox_gap_at_frozen_90_kmh",
+        "heuristic_weight": 1.0,
+        "stage": "Stage 3 upper-bound fixed-order evaluation"
+      },
+      "result_category": "FEASIBLE",
+      "route_id": "deterministic-reference-subgraph",
+      "seed": 20260726,
+      "segment_costs": [
+        {
+          "entry_stable_edge": "25857664/4/0/3069840595/611255856@0",
+          "exit_stable_edge": "25857664/4/0/3069840595/611255856@0",
+          "from_city": "Warszawa",
+          "internal_city_distance_m": 5.3,
+          "internal_city_time_s": 0.3,
+          "to_city": "Warszawa",
+          "transition_distance_m": 0.0,
+          "transition_time_s": 0.0
+        }
+      ],
+      "source_heuristic": "stage3.1-reference",
+      "total_distance_m": 5.3,
+      "total_duration_s": 0.3
+    },
+    "status": "SQLITE_IN_MEMORY_REFERENCE_AGREES"
+  },
+  "M-500": {
+    "in_memory": {
+      "actual_first_hit_order": [
+        "Warszawa"
+      ],
+      "checker_duration_s": null,
+      "entry_exit_state_sequence": [
+        {
+          "cities": [
+            "Warszawa"
+          ],
+          "split_edge_id": "25857664/4/0/3069840595/611255856@0"
+        }
+      ],
+      "exception_text": "",
+      "failing_transition_or_state": "",
+      "failure_reason": "",
+      "feasibility": "FEASIBLE_FIXED_ORDER",
+      "fixed_order_check_delta_s": null,
+      "full_split_edge_path_hash": "b1992b93e94430b2b468d8a2cffeec60bd869cf9d07210f04b4289bf1cbc2332",
+      "geometry_hash": "6228ad63014346739a2391f3be472415ccd831c3d83062cb2899ef2376710354",
+      "model_id": "M-500",
+      "nominal_order": [
+        "Warszawa"
+      ],
+      "provenance": {
+        "algorithm": "exact_fixed_order_astar",
+        "expanded_labels": 1,
+        "heuristic": "visit_region_bbox_gap_at_frozen_90_kmh",
+        "heuristic_weight": 1.0,
+        "stage": "Stage 3 upper-bound fixed-order evaluation"
+      },
+      "result_category": "FEASIBLE",
+      "route_id": "deterministic-reference-subgraph",
+      "seed": 20260726,
+      "segment_costs": [
+        {
+          "entry_stable_edge": "25857664/4/0/3069840595/611255856@0",
+          "exit_stable_edge": "25857664/4/0/3069840595/611255856@0",
+          "from_city": "Warszawa",
+          "internal_city_distance_m": 5.3,
+          "internal_city_time_s": 0.3,
+          "to_city": "Warszawa",
+          "transition_distance_m": 0.0,
+          "transition_time_s": 0.0
+        }
+      ],
+      "source_heuristic": "stage3.1-reference",
+      "total_distance_m": 5.3,
+      "total_duration_s": 0.3
+    },
+    "nominal_order": [
+      "Warszawa"
+    ],
+    "path": [
+      "25857664/4/0/3069840595/611255856@0",
+      "25857664/5/0/611255856/3069840597@0",
+      "25857664/6/0/3069840597/611255860@0",
+      "25857664/7/0/611255860/3001894556@0",
+      "25857664/8/0/3001894556/9707570375@0",
+      "25857664/9/0/9707570375/86681117@0",
+      "18967241/0/0/86681117/3660547119@0",
+      "18967241/1/0/3660547119/86681120@0"
+    ],
+    "same_feasibility_and_cost": true,
+    "sqlite": {
+      "actual_first_hit_order": [
+        "Warszawa"
+      ],
+      "checker_duration_s": null,
+      "entry_exit_state_sequence": [
+        {
+          "cities": [
+            "Warszawa"
+          ],
+          "split_edge_id": "25857664/4/0/3069840595/611255856@0"
+        }
+      ],
+      "exception_text": "",
+      "failing_transition_or_state": "",
+      "failure_reason": "",
+      "feasibility": "FEASIBLE_FIXED_ORDER",
+      "fixed_order_check_delta_s": null,
+      "full_split_edge_path_hash": "b1992b93e94430b2b468d8a2cffeec60bd869cf9d07210f04b4289bf1cbc2332",
+      "geometry_hash": "6228ad63014346739a2391f3be472415ccd831c3d83062cb2899ef2376710354",
+      "model_id": "M-500",
+      "nominal_order": [
+        "Warszawa"
+      ],
+      "provenance": {
+        "algorithm": "exact_fixed_order_astar",
+        "expanded_labels": 1,
+        "heuristic": "visit_region_bbox_gap_at_frozen_90_kmh",
+        "heuristic_weight": 1.0,
+        "stage": "Stage 3 upper-bound fixed-order evaluation"
+      },
+      "result_category": "FEASIBLE",
+      "route_id": "deterministic-reference-subgraph",
+      "seed": 20260726,
+      "segment_costs": [
+        {
+          "entry_stable_edge": "25857664/4/0/3069840595/611255856@0",
+          "exit_stable_edge": "25857664/4/0/3069840595/611255856@0",
+          "from_city": "Warszawa",
+          "internal_city_distance_m": 5.3,
+          "internal_city_time_s": 0.3,
+          "to_city": "Warszawa",
+          "transition_distance_m": 0.0,
+          "transition_time_s": 0.0
+        }
+      ],
+      "source_heuristic": "stage3.1-reference",
+      "total_distance_m": 5.3,
+      "total_duration_s": 0.3
+    },
+    "status": "SQLITE_IN_MEMORY_REFERENCE_AGREES"
+  },
+  "M-boundary": {
+    "in_memory": {
+      "actual_first_hit_order": [
+        "Warszawa"
+      ],
+      "checker_duration_s": null,
+      "entry_exit_state_sequence": [
+        {
+          "cities": [
+            "Warszawa"
+          ],
+          "split_edge_id": "25857664/4/0/3069840595/611255856@0"
+        }
+      ],
+      "exception_text": "",
+      "failing_transition_or_state": "",
+      "failure_reason": "",
+      "feasibility": "FEASIBLE_FIXED_ORDER",
+      "fixed_order_check_delta_s": null,
+      "full_split_edge_path_hash": "b1992b93e94430b2b468d8a2cffeec60bd869cf9d07210f04b4289bf1cbc2332",
+      "geometry_hash": "6228ad63014346739a2391f3be472415ccd831c3d83062cb2899ef2376710354",
+      "model_id": "M-boundary",
+      "nominal_order": [
+        "Warszawa"
+      ],
+      "provenance": {
+        "algorithm": "exact_fixed_order_astar",
+        "expanded_labels": 1,
+        "heuristic": "visit_region_bbox_gap_at_frozen_90_kmh",
+        "heuristic_weight": 1.0,
+        "stage": "Stage 3 upper-bound fixed-order evaluation"
+      },
+      "result_category": "FEASIBLE",
+      "route_id": "deterministic-reference-subgraph",
+      "seed": 20260726,
+      "segment_costs": [
+        {
+          "entry_stable_edge": "25857664/4/0/3069840595/611255856@0",
+          "exit_stable_edge": "25857664/4/0/3069840595/611255856@0",
+          "from_city": "Warszawa",
+          "internal_city_distance_m": 5.3,
+          "internal_city_time_s": 0.3,
+          "to_city": "Warszawa",
+          "transition_distance_m": 0.0,
+          "transition_time_s": 0.0
+        }
+      ],
+      "source_heuristic": "stage3.1-reference",
+      "total_distance_m": 5.3,
+      "total_duration_s": 0.3
+    },
+    "nominal_order": [
+      "Warszawa"
+    ],
+    "path": [
+      "25857664/4/0/3069840595/611255856@0",
+      "25857664/5/0/611255856/3069840597@0",
+      "25857664/6/0/3069840597/611255860@0",
+      "25857664/7/0/611255860/3001894556@0",
+      "25857664/8/0/3001894556/9707570375@0",
+      "25857664/9/0/9707570375/86681117@0",
+      "18967241/0/0/86681117/3660547119@0",
+      "18967241/1/0/3660547119/86681120@0"
+    ],
+    "same_feasibility_and_cost": true,
+    "sqlite": {
+      "actual_first_hit_order": [
+        "Warszawa"
+      ],
+      "checker_duration_s": null,
+      "entry_exit_state_sequence": [
+        {
+          "cities": [
+            "Warszawa"
+          ],
+          "split_edge_id": "25857664/4/0/3069840595/611255856@0"
+        }
+      ],
+      "exception_text": "",
+      "failing_transition_or_state": "",
+      "failure_reason": "",
+      "feasibility": "FEASIBLE_FIXED_ORDER",
+      "fixed_order_check_delta_s": null,
+      "full_split_edge_path_hash": "b1992b93e94430b2b468d8a2cffeec60bd869cf9d07210f04b4289bf1cbc2332",
+      "geometry_hash": "6228ad63014346739a2391f3be472415ccd831c3d83062cb2899ef2376710354",
+      "model_id": "M-boundary",
+      "nominal_order": [
+        "Warszawa"
+      ],
+      "provenance": {
+        "algorithm": "exact_fixed_order_astar",
+        "expanded_labels": 1,
+        "heuristic": "visit_region_bbox_gap_at_frozen_90_kmh",
+        "heuristic_weight": 1.0,
+        "stage": "Stage 3 upper-bound fixed-order evaluation"
+      },
+      "result_category": "FEASIBLE",
+      "route_id": "deterministic-reference-subgraph",
+      "seed": 20260726,
+      "segment_costs": [
+        {
+          "entry_stable_edge": "25857664/4/0/3069840595/611255856@0",
+          "exit_stable_edge": "25857664/4/0/3069840595/611255856@0",
+          "from_city": "Warszawa",
+          "internal_city_distance_m": 5.3,
+          "internal_city_time_s": 0.3,
+          "to_city": "Warszawa",
+          "transition_distance_m": 0.0,
+          "transition_time_s": 0.0
+        }
+      ],
+      "source_heuristic": "stage3.1-reference",
+      "total_distance_m": 5.3,
+      "total_duration_s": 0.3
+    },
+    "status": "SQLITE_IN_MEMORY_REFERENCE_AGREES"
+  }
+}

@@ -1,0 +1,182 @@
+{
+  "M-300": {
+    "accumulated_cities": [
+      "Warszawa"
+    ],
+    "accumulated_mask": 1,
+    "continuous_topology": true,
+    "distance_m": 89.06,
+    "duration_s": 5.7,
+    "finite_nonnegative_cost": true,
+    "initial_mask": 1,
+    "legal_turns": true,
+    "path": [
+      "25857664/4/0/3069840595/611255856@0",
+      "25857664/5/0/611255856/3069840597@0",
+      "25857664/6/0/3069840597/611255860@0",
+      "25857664/7/0/611255860/3001894556@0",
+      "25857664/8/0/3001894556/9707570375@0",
+      "25857664/9/0/9707570375/86681117@0",
+      "18967241/0/0/86681117/3660547119@0",
+      "18967241/1/0/3660547119/86681120@0"
+    ],
+    "status": "KNOWN_PATH_CERTIFIED",
+    "transitions": [
+      {
+        "category": "implicit_edge_based_geometry_continuation",
+        "incoming": "25857664/4/0/3069840595/611255856@0",
+        "outgoing": "25857664/5/0/611255856/3069840597@0"
+      },
+      {
+        "category": "implicit_edge_based_geometry_continuation",
+        "incoming": "25857664/5/0/611255856/3069840597@0",
+        "outgoing": "25857664/6/0/3069840597/611255860@0"
+      },
+      {
+        "category": "implicit_edge_based_geometry_continuation",
+        "incoming": "25857664/6/0/3069840597/611255860@0",
+        "outgoing": "25857664/7/0/611255860/3001894556@0"
+      },
+      {
+        "category": "implicit_edge_based_geometry_continuation",
+        "incoming": "25857664/7/0/611255860/3001894556@0",
+        "outgoing": "25857664/8/0/3001894556/9707570375@0"
+      },
+      {
+        "category": "implicit_edge_based_geometry_continuation",
+        "incoming": "25857664/8/0/3001894556/9707570375@0",
+        "outgoing": "25857664/9/0/9707570375/86681117@0"
+      },
+      {
+        "category": "inherited_stage2a_turn",
+        "incoming": "25857664/9/0/9707570375/86681117@0",
+        "outgoing": "18967241/0/0/86681117/3660547119@0"
+      },
+      {
+        "category": "implicit_edge_based_geometry_continuation",
+        "incoming": "18967241/0/0/86681117/3660547119@0",
+        "outgoing": "18967241/1/0/3660547119/86681120@0"
+      }
+    ]
+  },
+  "M-500": {
+    "accumulated_cities": [
+      "Warszawa"
+    ],
+    "accumulated_mask": 1,
+    "continuous_topology": true,
+    "distance_m": 89.06,
+    "duration_s": 5.7,
+    "finite_nonnegative_cost": true,
+    "initial_mask": 1,
+    "legal_turns": true,
+    "path": [
+      "25857664/4/0/3069840595/611255856@0",
+      "25857664/5/0/611255856/3069840597@0",
+      "25857664/6/0/3069840597/611255860@0",
+      "25857664/7/0/611255860/3001894556@0",
+      "25857664/8/0/3001894556/9707570375@0",
+      "25857664/9/0/9707570375/86681117@0",
+      "18967241/0/0/86681117/3660547119@0",
+      "18967241/1/0/3660547119/86681120@0"
+    ],
+    "status": "KNOWN_PATH_CERTIFIED",
+    "transitions": [
+      {
+        "category": "implicit_edge_based_geometry_continuation",
+        "incoming": "25857664/4/0/3069840595/611255856@0",
+        "outgoing": "25857664/5/0/611255856/3069840597@0"
+      },
+      {
+        "category": "implicit_edge_based_geometry_continuation",
+        "incoming": "25857664/5/0/611255856/3069840597@0",
+        "outgoing": "25857664/6/0/3069840597/611255860@0"
+      },
+      {
+        "category": "implicit_edge_based_geometry_continuation",
+        "incoming": "25857664/6/0/3069840597/611255860@0",
+        "outgoing": "25857664/7/0/611255860/3001894556@0"
+      },
+      {
+        "category": "implicit_edge_based_geometry_continuation",
+        "incoming": "25857664/7/0/611255860/3001894556@0",
+        "outgoing": "25857664/8/0/3001894556/9707570375@0"
+      },
+      {
+        "category": "implicit_edge_based_geometry_continuation",
+        "incoming": "25857664/8/0/3001894556/9707570375@0",
+        "outgoing": "25857664/9/0/9707570375/86681117@0"
+      },
+      {
+        "category": "inherited_stage2a_turn",
+        "incoming": "25857664/9/0/9707570375/86681117@0",
+        "outgoing": "18967241/0/0/86681117/3660547119@0"
+      },
+      {
+        "category": "implicit_edge_based_geometry_continuation",
+        "incoming": "18967241/0/0/86681117/3660547119@0",
+        "outgoing": "18967241/1/0/3660547119/86681120@0"
+      }
+    ]
+  },
+  "M-boundary": {
+    "accumulated_cities": [
+      "Warszawa"
+    ],
+    "accumulated_mask": 1,
+    "continuous_topology": true,
+    "distance_m": 89.06,
+    "duration_s": 5.7,
+    "finite_nonnegative_cost": true,
+    "initial_mask": 1,
+    "legal_turns": true,
+    "path": [
+      "25857664/4/0/3069840595/611255856@0",
+      "25857664/5/0/611255856/3069840597@0",
+      "25857664/6/0/3069840597/611255860@0",
+      "25857664/7/0/611255860/3001894556@0",
+      "25857664/8/0/3001894556/9707570375@0",
+      "25857664/9/0/9707570375/86681117@0",
+      "18967241/0/0/86681117/3660547119@0",
+      "18967241/1/0/3660547119/86681120@0"
+    ],
+    "status": "KNOWN_PATH_CERTIFIED",
+    "transitions": [
+      {
+        "category": "implicit_edge_based_geometry_continuation",
+        "incoming": "25857664/4/0/3069840595/611255856@0",
+        "outgoing": "25857664/5/0/611255856/3069840597@0"
+      },
+      {
+        "category": "implicit_edge_based_geometry_continuation",
+        "incoming": "25857664/5/0/611255856/3069840597@0",
+        "outgoing": "25857664/6/0/3069840597/611255860@0"
+      },
+      {
+        "category": "implicit_edge_based_geometry_continuation",
+        "incoming": "25857664/6/0/3069840597/611255860@0",
+        "outgoing": "25857664/7/0/611255860/3001894556@0"
+      },
+      {
+        "category": "implicit_edge_based_geometry_continuation",
+        "incoming": "25857664/7/0/611255860/3001894556@0",
+        "outgoing": "25857664/8/0/3001894556/9707570375@0"
+      },
+      {
+        "category": "implicit_edge_based_geometry_continuation",
+        "incoming": "25857664/8/0/3001894556/9707570375@0",
+        "outgoing": "25857664/9/0/9707570375/86681117@0"
+      },
+      {
+        "category": "inherited_stage2a_turn",
+        "incoming": "25857664/9/0/9707570375/86681117@0",
+        "outgoing": "18967241/0/0/86681117/3660547119@0"
+      },
+      {
+        "category": "implicit_edge_based_geometry_continuation",
+        "incoming": "18967241/0/0/86681117/3660547119@0",
+        "outgoing": "18967241/1/0/3660547119/86681120@0"
+      }
+    ]
+  }
+}

@@ -1,0 +1,269 @@
+{
+  "M-300": {
+    "city_bitmasks": {
+      "bits": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "ok": true
+    },
+    "dangling_turn_endpoints": {
+      "incoming": 0,
+      "ok": true,
+      "outgoing": 0
+    },
+    "failed_checks": [],
+    "finite_nonnegative_costs": {
+      "edges_invalid": 0,
+      "ok": true,
+      "turns_invalid": 0
+    },
+    "gate_states": {
+      "bits": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "ok": true
+    },
+    "implicit_geometry_transitions": {
+      "actual": 24936692,
+      "ok": true,
+      "start_out_degree": 1
+    },
+    "model": "M-300",
+    "model_depth_membership": {
+      "loaded_model": "M-300",
+      "ok": true
+    },
+    "split_edges": {
+      "actual": 33640280,
+      "expected": 33640280,
+      "ok": true
+    },
+    "start_state": {
+      "edge_id": "25857664/4/0/3069840595/611255856@0",
+      "ok": true
+    },
+    "status": "SQLITE_LOADER_CERTIFIED",
+    "terminal_labels": {
+      "count": 18,
+      "free_road_state_after_all_visits": true,
+      "ok": true
+    },
+    "turn_transitions": {
+      "actual": 15752983,
+      "expected": 15752983,
+      "ok": true
+    }
+  },
+  "M-500": {
+    "city_bitmasks": {
+      "bits": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "ok": true
+    },
+    "dangling_turn_endpoints": {
+      "incoming": 0,
+      "ok": true,
+      "outgoing": 0
+    },
+    "failed_checks": [],
+    "finite_nonnegative_costs": {
+      "edges_invalid": 0,
+      "ok": true,
+      "turns_invalid": 0
+    },
+    "gate_states": {
+      "bits": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "ok": true
+    },
+    "implicit_geometry_transitions": {
+      "actual": 24936692,
+      "ok": true,
+      "start_out_degree": 1
+    },
+    "model": "M-500",
+    "model_depth_membership": {
+      "loaded_model": "M-500",
+      "ok": true
+    },
+    "split_edges": {
+      "actual": 33640280,
+      "expected": 33640280,
+      "ok": true
+    },
+    "start_state": {
+      "edge_id": "25857664/4/0/3069840595/611255856@0",
+      "ok": true
+    },
+    "status": "SQLITE_LOADER_CERTIFIED",
+    "terminal_labels": {
+      "count": 18,
+      "free_road_state_after_all_visits": true,
+      "ok": true
+    },
+    "turn_transitions": {
+      "actual": 15752983,
+      "expected": 15752983,
+      "ok": true
+    }
+  },
+  "M-boundary": {
+    "city_bitmasks": {
+      "bits": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "ok": true
+    },
+    "dangling_turn_endpoints": {
+      "incoming": 0,
+      "ok": true,
+      "outgoing": 0
+    },
+    "failed_checks": [],
+    "finite_nonnegative_costs": {
+      "edges_invalid": 0,
+      "ok": true,
+      "turns_invalid": 0
+    },
+    "gate_states": {
+      "bits": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "ok": true
+    },
+    "implicit_geometry_transitions": {
+      "actual": 24936692,
+      "ok": true,
+      "start_out_degree": 1
+    },
+    "model": "M-boundary",
+    "model_depth_membership": {
+      "loaded_model": "M-boundary",
+      "ok": true
+    },
+    "split_edges": {
+      "actual": 33640280,
+      "expected": 33640280,
+      "ok": true
+    },
+    "start_state": {
+      "edge_id": "25857664/4/0/3069840595/611255856@0",
+      "ok": true
+    },
+    "status": "SQLITE_LOADER_CERTIFIED",
+    "terminal_labels": {
+      "count": 18,
+      "free_road_state_after_all_visits": true,
+      "ok": true
+    },
+    "turn_transitions": {
+      "actual": 15752983,
+      "expected": 15752983,
+      "ok": true
+    }
+  }
+}

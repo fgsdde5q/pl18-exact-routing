@@ -58,7 +58,7 @@ jobs:
         uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
         with:
           path: results/stage3
-          key: stage3-results-v1-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ env.PRG_RAW_SHA256 }}-${{ env.MANIFEST_V2_SHA256 }}-${{ hashFiles('results/graph/graph-manifest.json', 'results/graph/graph-binary-hashes.txt', 'results/graph/edge-counts.json') }}-${{ hashFiles('results/graph-prg/stage2b-manifest.json', 'results/graph-prg/split-edges-summary.json', 'results/graph-prg/turn-states-summary.json', 'results/graph-prg/gates-summary.json') }}-M0-M300-M500-${{ hashFiles('scripts/stage3_upper_bounds.py') }}
+          key: stage3-results-v2-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ env.PRG_RAW_SHA256 }}-${{ env.MANIFEST_V2_SHA256 }}-${{ hashFiles('results/graph/graph-manifest.json', 'results/graph/graph-binary-hashes.txt', 'results/graph/edge-counts.json') }}-${{ hashFiles('results/graph-prg/stage2b-manifest.json', 'results/graph-prg/split-edges-summary.json', 'results/graph-prg/turn-states-summary.json', 'results/graph-prg/gates-summary.json') }}-M0-M300-M500-${{ hashFiles('scripts/stage3_upper_bounds.py', 'scripts/validate_stage3_results.py') }}
 
       - name: Run Stage 3 unit tests
         shell: bash
@@ -130,17 +130,17 @@ jobs:
         if: steps.stage3-results-cache.outputs.cache-hit == 'true'
         shell: bash
         run: |
-          test -f results/stage3/stage3-manifest.json
-          test -f results/stage3/validation-report.md
+          PYTHONPATH=scripts python3 scripts/validate_stage3_results.py results/stage3
 
       - name: Save Stage 3 results cache
         if: steps.stage3-results-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25
         with:
           path: results/stage3
-          key: stage3-results-v1-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ env.PRG_RAW_SHA256 }}-${{ env.MANIFEST_V2_SHA256 }}-${{ hashFiles('results/graph/graph-manifest.json', 'results/graph/graph-binary-hashes.txt', 'results/graph/edge-counts.json') }}-${{ hashFiles('results/graph-prg/stage2b-manifest.json', 'results/graph-prg/split-edges-summary.json', 'results/graph-prg/turn-states-summary.json', 'results/graph-prg/gates-summary.json') }}-M0-M300-M500-${{ hashFiles('scripts/stage3_upper_bounds.py') }}
+          key: stage3-results-v2-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ env.PRG_RAW_SHA256 }}-${{ env.MANIFEST_V2_SHA256 }}-${{ hashFiles('results/graph/graph-manifest.json', 'results/graph/graph-binary-hashes.txt', 'results/graph/edge-counts.json') }}-${{ hashFiles('results/graph-prg/stage2b-manifest.json', 'results/graph-prg/split-edges-summary.json', 'results/graph-prg/turn-states-summary.json', 'results/graph-prg/gates-summary.json') }}-M0-M300-M500-${{ hashFiles('scripts/stage3_upper_bounds.py', 'scripts/validate_stage3_results.py') }}
 
       - name: Upload Stage 3 certificates
+        if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: stage3-upper-bounds-${{ github.run_id }}

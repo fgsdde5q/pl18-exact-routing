@@ -1,0 +1,87 @@
+{
+  "evaluation_outcome_counts": {
+    "M-300": {
+      "FEASIBLE": 11,
+      "MISSING_STATE": 0,
+      "ORDER_INVALID_BY_FIRST_HIT": 0,
+      "OTHER_FAILURE": 0,
+      "SOLVER_ERROR": 0,
+      "TIMEOUT": 186,
+      "UNREACHABLE": 0
+    },
+    "M-500": {
+      "FEASIBLE": 11,
+      "MISSING_STATE": 0,
+      "ORDER_INVALID_BY_FIRST_HIT": 0,
+      "OTHER_FAILURE": 0,
+      "SOLVER_ERROR": 0,
+      "TIMEOUT": 186,
+      "UNREACHABLE": 0
+    },
+    "M-boundary": {
+      "FEASIBLE": 11,
+      "MISSING_STATE": 0,
+      "ORDER_INVALID_BY_FIRST_HIT": 0,
+      "OTHER_FAILURE": 0,
+      "SOLVER_ERROR": 0,
+      "TIMEOUT": 186,
+      "UNREACHABLE": 0
+    }
+  },
+  "model_aliases": {
+    "A": "M-boundary",
+    "B": "M-300",
+    "C": "M-500"
+  },
+  "models": [
+    "M-boundary",
+    "M-300",
+    "M-500"
+  ],
+  "per_model_feasible": {
+    "M-300": true,
+    "M-500": true,
+    "M-boundary": true
+  },
+  "schema_version": 1,
+  "seed": 20260726,
+  "stage2b_artifact_hashes": {
+    "gates.tsv.zst": {
+      "sha256": "d6e5f427cb69daa4921c82d155996df181941dfbc3af7212bad12622763a3f5a",
+      "size_bytes": 2085965
+    },
+    "geometry-models.tsv": {
+      "sha256": "04bfcb05680f4304cb426720fc9f7c48cbf2d656b47d3deeeb8db92d45564d50",
+      "size_bytes": 5818037
+    },
+    "inherited-turn-states.tsv.zst": {
+      "sha256": "4ddecfaf7c0fc0ae16d9ee42ebd871dcfe171c12e7add90b051eb51cbe6fbccf",
+      "size_bytes": 240210848
+    },
+    "internal-turn-states.tsv.zst": {
+      "sha256": "2db4b20d179789b267bda5863c3ea306a806d4be32f0df201b167d555f71f502",
+      "size_bytes": 343530
+    },
+    "split-edges.tsv.zst": {
+      "sha256": "296990c8ff86a45f6780a5e1964aca153b1ecac2a3a20ad3a21dfef4688560a9",
+      "size_bytes": 747402805
+    },
+    "split-points.tsv.zst": {
+      "sha256": "db348d6e6490bab5ffc58272c61c644e2e8430399d460fcb2182569be3672f17",
+      "size_bytes": 2179212
+    }
+  },
+  "stage2b_manifest_sha256": "8be2f4390bb9b8454f9cedcdd7c509adf773ebd1e8194c114017f799eb137803",
+  "stage4_exact_claim": "forbidden",
+  "statuses": [
+    "UPPER_BOUND_STAGE_OK",
+    "MANDATORY_ROUTES_EVALUATED",
+    "ALL_FINISHES_EVALUATED",
+    "TOP_K_FEASIBLE_CANDIDATES_READY",
+    "LOCAL_CHECKS_COMPLETE",
+    "FIXED_ORDER_SOLVER_CERTIFIED",
+    "FIRST_HIT_ORDER_CERTIFIED",
+    "EXACT_GLOBAL_SOLVER_NOT_STARTED"
+  ],
+  "wall_time_s": 7696.807
+}
