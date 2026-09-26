@@ -1,0 +1,201 @@
+name: Stage 4 exact solve
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Gate, recover one incumbent, or run one resumable exact chunk
+        type: choice
+        options: [validate, recover-incumbent, exact-chunk]
+        default: validate
+      model:
+        description: Model for recovery/chunk
+        type: choice
+        options: [M-boundary, M-300, M-500]
+        default: M-boundary
+      runner:
+        description: Full exact chunks require the persistent self-hosted runner
+        type: choice
+        options: [github-hosted, self-hosted]
+        default: github-hosted
+      chunk_seconds:
+        description: Exact search wall-clock budget (<= 18000)
+        type: number
+        default: 14400
+      prior_run_id:
+        description: Explicit workflow run id containing a checkpoint artifact (optional)
+        type: string
+        default: ""
+      stage2b_run_id:
+        description: Explicit run id containing canonical Stage 2B export
+        type: string
+        default: "35958794470"
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: stage4-exact-${{ inputs.model }}
+  cancel-in-progress: false
+
+jobs:
+  validate-small-instances:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+      - name: Stage 3.1 frozen lineage preflight
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git merge-base --is-ancestor 341c2230f48c1638abb55d93178efb1eaf5f8ab6 HEAD
+          PYTHONPATH=scripts python3 scripts/validate_stage3_results.py results/stage3
+          (cd results/stage3 && sha256sum -c SHA256SUMS)
+          PYTHONPATH=scripts python3 scripts/stage4_exact.py validate-lineage \
+            --output /tmp/stage3-lineage.json
+      - name: Deterministic exact proof gates
+        run: |
+          set -Eeuo pipefail
+          PYTHONPATH=scripts python3 scripts/test_stage4_exact.py
+          PYTHONPATH=scripts python3 scripts/stage4_exact.py validate-small \
+            --output results/stage4/small-instance-validation
+          PYTHONPATH=scripts python3 scripts/stage4_exact.py smoke \
+            --cities 10 --max-expansions 5 | tee results/stage4/bounded-smoke.json
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: stage4-proof-gates-${{ github.run_id }}
+          path: results/stage4/
+          if-no-files-found: error
+          retention-days: 90
+
+  exact-model-chunk:
+    if: inputs.operation != 'validate'
+    needs: [validate-small-instances]
+    runs-on: ${{ inputs.runner == 'self-hosted' && 'self-hosted' || 'ubuntu-24.04' }}
+    timeout-minutes: 355
+    env:
+      MODEL: ${{ inputs.model }}
+      CHUNK_SECONDS: ${{ inputs.chunk_seconds }}
+      STAGE2B_ARCHIVE: /tmp/pl18-stage2b-canonical-${{ github.run_id }}.tar.zst
+      STAGE2B_ARTIFACTS: /tmp/pl18-stage2b-artifacts-${{ github.run_id }}
+      STAGE4_WORK: /tmp/stage4-${{ inputs.model }}-${{ github.run_id }}
+      PBF_SHA256: f28f493c6cc280da1128b03be21ae2eb1973f443c14235dea36088bcbd3e83f3
+      PRG_RAW_SHA256: adf261aae31257dd24843b6f6c0e694efb40041aae3913b1c27aa4801866974c
+      MANIFEST_V2_SHA256: f47d9a805defdb7e28005048d7ad9a7a76f666e75d508422a7edd239ce60f7ce
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+      - name: Enforce resource-safe execution mode
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$CHUNK_SECONDS" -gt 0
+          test "$CHUNK_SECONDS" -le 18000
+          if [[ "${{ inputs.operation }}" == exact-chunk && "${{ inputs.runner }}" != self-hosted ]]; then
+            echo 'Full product search is not feasible on a 360-minute ephemeral GitHub runner.' >&2
+            echo 'Select self-hosted (>=32 CPU, >=128 GiB RAM, >=500 GiB persistent NVMe).' >&2
+            exit 2
+          fi
+      - name: Install runtime tools
+        if: inputs.runner == 'github-hosted'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ruby zstd python3 sqlite3
+      - name: Restore hash-keyed canonical Stage 2B archive
+        id: stage2b-cache
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ env.STAGE2B_ARCHIVE }}
+          key: s3-v1-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ env.PRG_RAW_SHA256 }}-${{ env.MANIFEST_V2_SHA256 }}-${{ hashFiles('results/graph/graph-manifest.json', 'results/graph/graph-binary-hashes.txt', 'results/graph/edge-counts.json') }}-${{ hashFiles('results/graph-prg/stage2b-manifest.json', 'results/graph-prg/split-edges-summary.json', 'results/graph-prg/turn-states-summary.json', 'results/graph-prg/gates-summary.json') }}-M0-M300-M500-${{ hashFiles('scripts/stage3_upper_bounds.py') }}-${{ github.sha }}
+          restore-keys: |
+            s3-v1-${{ runner.arch }}-${{ env.PBF_SHA256 }}-${{ env.PRG_RAW_SHA256 }}-${{ env.MANIFEST_V2_SHA256 }}-${{ hashFiles('results/graph/graph-manifest.json', 'results/graph/graph-binary-hashes.txt', 'results/graph/edge-counts.json') }}-${{ hashFiles('results/graph-prg/stage2b-manifest.json', 'results/graph-prg/split-edges-summary.json', 'results/graph-prg/turn-states-summary.json', 'results/graph-prg/gates-summary.json') }}-M0-M300-M500-
+            pl18-stage2b-canonical-for-stage3-v1-${{ runner.arch }}-osm-${{ env.PBF_SHA256 }}-prg-${{ env.PRG_RAW_SHA256 }}-manifestv2-${{ env.MANIFEST_V2_SHA256 }}-
+      - name: Download Stage 2B export from an explicit source run
+        if: steps.stage2b-cache.outputs.cache-hit != 'true'
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
+        with:
+          name: stage2b-canonical-export-${{ inputs.stage2b_run_id }}
+          path: ${{ runner.temp }}/stage2b-download
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.stage2b_run_id }}
+      - name: Unpack and hash-check canonical graph
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if [[ ! -s "$STAGE2B_ARCHIVE" ]]; then
+            downloaded="$(find "${RUNNER_TEMP}/stage2b-download" -name '*.tar.zst' -print -quit)"
+            test -n "$downloaded"
+            cp "$downloaded" "$STAGE2B_ARCHIVE"
+          fi
+          mkdir -p "$STAGE2B_ARTIFACTS" "$STAGE4_WORK" results/stage4/input-validation
+          tar --extract --use-compress-program=unzstd --file="$STAGE2B_ARCHIVE" --directory="$STAGE2B_ARTIFACTS"
+          PYTHONPATH=scripts python3 - "$STAGE2B_ARTIFACTS" <<'PY'
+          import sys
+          from pathlib import Path
+          from stage4_incumbent import verify_artifacts
+          verify_artifacts(Path('.').resolve(), Path(sys.argv[1]))
+          PY
+      - name: Recover and replay the single Stage 3.1 incumbent
+        if: inputs.operation == 'recover-incumbent'
+        env:
+          PYTHONUNBUFFERED: "1"
+        run: |
+          PYTHONPATH=scripts python3 scripts/stage4_incumbent.py \
+            --stage2b-artifacts "$STAGE2B_ARTIFACTS" --model "$MODEL" \
+            --output results/stage4/input-validation --timeout-seconds "$CHUNK_SECONDS"
+      - name: Restore explicit prior checkpoint
+        if: inputs.operation == 'exact-chunk' && inputs.prior_run_id != ''
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
+        with:
+          name: stage4-checkpoint-${{ inputs.model }}-${{ inputs.prior_run_id }}
+          path: ${{ env.STAGE4_WORK }}
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.prior_run_id }}
+      - name: Build exact integer graph and run one resumable chunk
+        if: inputs.operation == 'exact-chunk'
+        env:
+          PYTHONUNBUFFERED: "1"
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          graph="$STAGE4_WORK/$MODEL-road.sqlite"
+          if [[ ! -s "$graph" ]]; then
+            PYTHONPATH=scripts python3 scripts/stage4_disk_solver.py build-graph \
+              --stage2b-artifacts "$STAGE2B_ARTIFACTS" --model "$MODEL" --output "$graph"
+          fi
+          incumbent="results/stage4/input-validation/$MODEL-incumbent-replay.json"
+          incumbent_args=()
+          if [[ -s "$incumbent" ]] && python3 -c \
+            'import json,sys; d=json.load(open(sys.argv[1])); raise SystemExit(0 if d.get("status")=="INCUMBENT_REPLAY_VALID" and d.get("incumbent_enabled") is True else 1)' \
+            "$incumbent"; then
+            incumbent_args=(--incumbent-replay "$incumbent")
+          fi
+          mkdir -p "results/stage4/$MODEL"
+          PYTHONPATH=scripts python3 scripts/stage4_disk_solver.py run-chunk \
+            --graph "$graph" --checkpoint "$STAGE4_WORK/$MODEL-checkpoint.sqlite" \
+            --seconds "$CHUNK_SECONDS" "${incumbent_args[@]}" \
+            --output "results/stage4/$MODEL/chunk-${{ github.run_id }}.json"
+      - name: Upload compact recovery/progress certificates
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: stage4-certificates-${{ inputs.model }}-${{ github.run_id }}
+          path: results/stage4/
+          if-no-files-found: warn
+          retention-days: 90
+      - name: Upload resumable checkpoint
+        if: always() && inputs.operation == 'exact-chunk'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: stage4-checkpoint-${{ inputs.model }}-${{ github.run_id }}
+          path: |
+            ${{ env.STAGE4_WORK }}/${{ inputs.model }}-checkpoint.sqlite
+            ${{ env.STAGE4_WORK }}/${{ inputs.model }}-checkpoint.sqlite-wal
+            ${{ env.STAGE4_WORK }}/${{ inputs.model }}-checkpoint.sqlite-shm
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0
